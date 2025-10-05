@@ -1,0 +1,14 @@
+compile_commands.json
+
+# build artifacts
+build
+**/*.o
+**/*.dSYM
+*.plist
+.cache
+
+# binaries
+bin/zork
+
+# models
+models/*
