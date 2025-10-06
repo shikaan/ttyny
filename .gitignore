@@ -3,6 +3,7 @@ compile_commands.json
 # build artifacts
 build
 **/*.o
+**/*.test
 **/*.dSYM
 *.plist
 .cache

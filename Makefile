@@ -3,34 +3,45 @@ include flags.mk
 .PHONY: all
 all: bin/zork
 
+LLAMA_BUILD := build/llama.cpp
+LLAMA_STATIC_LIBS := $(LLAMA_BUILD)/src/libllama.a \
+	$(LLAMA_BUILD)/ggml/src/libggml.a \
+	$(LLAMA_BUILD)/ggml/src/libggml-cpu.a \
+	$(LLAMA_BUILD)/ggml/src/libggml-base.a \
+	$(LLAMA_BUILD)/ggml/src/ggml-metal/libggml-metal.a \
+	$(LLAMA_BUILD)/ggml/src/ggml-blas/libggml-blas.a
+
 build/llama.cpp/src/libllama.a:
-	mkdir -p build/llama.cpp
-	cmake -S vendor/llama.cpp -B build/llama.cpp \
+	mkdir -p $(LLAMA_BUILD)
+	cmake -S vendor/llama.cpp -B $(LLAMA_BUILD) \
 		-DLLAMA_BUILD_TESTS=OFF \
 		-DLLAMA_BUILD_EXAMPLES=OFF \
 		-DLLAMA_BUILD_TOOLS=OFF \
 		-DLLAMA_BUILD_SERVER=OFF \
 		-DLLAMA_TOOLS_INSTALL=OFF \
 		-DBUILD_SHARED_LIBS=OFF
-	cmake --build build/llama.cpp -j --config Release
+	cmake --build $(LLAMA_BUILD) -j --config Release
 
-bin/zork: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include -Ivendor/llama.cpp/ggml/include
-bin/zork: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++
-bin/zork: build/llama.cpp/ggml/src/libggml.a build/llama.cpp/src/libllama.a
-	$(CC) $(CFLAGS) $(LDFLAGS) bin/zork.c \
-		build/llama.cpp/src/libllama.a \
-		build/llama.cpp/ggml/src/libggml.a \
-		build/llama.cpp/ggml/src/libggml-cpu.a \
-		build/llama.cpp/ggml/src/libggml-base.a \
-		build/llama.cpp/ggml/src/ggml-metal/libggml-metal.a \
-		build/llama.cpp/ggml/src/ggml-blas/libggml-blas.a \
-		-framework Accelerate -framework Foundation -framework Metal -framework MetalKit \
-		-o bin/zork
+bin/zork: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
+	-Ivendor/llama.cpp/ggml/include
+bin/zork: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
+	-framework Foundation -framework Metal -framework MetalKit
+bin/zork: src/ai.o $(LLAMA_STATIC_LIBS)
+
+.PHONY: test
+test: tests/buffers.test
+	tests/buffers.test
 
 .PHONY: clean
 clean:
 	rm -f bin/zork
+	rm -f tests/*.test
+	rm -rf **/*.dSYM **/*.plist *.plist
 
 .PHONY: deep-clean
 deep-clean: clean
 	rm -rf build/*
+
+.PHONY: start
+start: all
+	bin/zork
