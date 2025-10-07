@@ -36,7 +36,7 @@ test: tests/buffers.test
 clean:
 	rm -f bin/zork
 	rm -f tests/*.test
-	rm -rf **/*.dSYM **/*.plist *.plist
+	rm -rf **/*.dSYM **/*.plist *.plist **/*.o
 
 .PHONY: deep-clean
 deep-clean: clean
@@ -44,4 +44,4 @@ deep-clean: clean
 
 .PHONY: start
 start: all
-	bin/zork
+	ASAN_OPTIONS=detect_leaks=1 LSAN_OPTIONS=suppressions=asan.supp bin/zork
