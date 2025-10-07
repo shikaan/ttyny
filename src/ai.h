@@ -16,6 +16,7 @@ typedef enum {
   AI_RESULT_ERROR,
 } ai_result_t;
 
-ai_result_t aiInit(const char *model_path);
-ai_result_t aiGenerate(const string_t *prompt, string_t *response);
-void aiFormatResult(ai_result_t result, string_t *response);
+[[nodiscard]] ai_result_t aiInit(const char *);
+[[nodiscard]] ai_result_t aiGenerate(const string_t *, string_t *);
+void aiTeardown(void);
+void aiFormatResult(ai_result_t, string_t *);
