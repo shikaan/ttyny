@@ -28,6 +28,8 @@ typedef enum {
 
 typedef struct {
   const string_t *prompts[PROMPT_TYPES];
+  float min_p;
+  float temp;
 } config_t;
 
 typedef struct {
@@ -56,7 +58,9 @@ static string_t LFM2_SYS_PROMPT = {
     {"<|startoftext|><|im_start|>system\n%s<|im_end|>\n"},
 };
 
-static config_t LFM2 = {
+static config_t LFM2_PROMPT = {
+    .min_p = 0.05F,
+    .temp = 0.3F,
     .prompts =
         {
             &LFM2_USR_PROMPT,

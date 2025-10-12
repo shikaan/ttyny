@@ -11,7 +11,7 @@ int main(void) {
   string_t *errors = strCreate(512);
   ai_result_t result;
 
-  ai_t *ai = aiCreate("./models/LFM2-1.2B-Q4_k_m.gguf", &LFM2);
+  ai_t *ai = aiCreate("./models/LFM2-1.2B-Q4_k_m.gguf", &LFM2_PROMPT);
   result = aiResultGetLast();
 
   if (result != AI_RESULT_OK) {

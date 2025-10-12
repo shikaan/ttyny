@@ -9,8 +9,6 @@
 #include <string.h>
 
 #define GPU_LAYERS 99
-#define MIN_P 0.05f
-#define TEMP 0.3f
 
 static ai_result_t result = AI_RESULT_ERROR;
 #define throw(Error)                                                           \
@@ -89,8 +87,10 @@ ai_t *aiCreate(const char *model_path, config_t *configuration) {
   }
 
   ai->sampler = llama_sampler_chain_init(llama_sampler_chain_default_params());
-  llama_sampler_chain_add(ai->sampler, llama_sampler_init_min_p(MIN_P, 1));
-  llama_sampler_chain_add(ai->sampler, llama_sampler_init_temp(TEMP));
+  llama_sampler_chain_add(ai->sampler,
+                          llama_sampler_init_min_p(configuration->min_p, 1));
+  llama_sampler_chain_add(ai->sampler,
+                          llama_sampler_init_temp(configuration->temp));
   llama_sampler_chain_add(ai->sampler,
                           llama_sampler_init_dist(LLAMA_DEFAULT_SEED));
 
