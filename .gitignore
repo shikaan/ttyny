@@ -1,4 +1,6 @@
 compile_commands.json
+.todo
+.DS_Store
 
 # build artifacts
 build

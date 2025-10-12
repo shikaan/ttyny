@@ -6,19 +6,54 @@
 #include <llama.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 
 #define GPU_LAYERS 99
 #define MIN_P 0.05f
-#define TEMP 0.1f
+#define TEMP 0.3f
 
-static struct llama_model *model = NULL;
-static const struct llama_vocab *vocabulary = NULL;
-static struct llama_context *context = NULL;
-static struct llama_sampler *sampler = NULL;
-
+static ai_result_t result = AI_RESULT_ERROR;
 #define throw(Error)                                                           \
-  result = AI_RESULT_ERROR_LOAD_MODEL_FAILED;                                  \
+  result = Error;                                                              \
   goto error;
+
+ai_result_t aiResultGetLast(void) { return result; }
+
+void aiResultFormat(ai_result_t res, string_t *response) {
+  switch (res) {
+  case AI_RESULT_OK:
+    strWrite(response, "ok", 0);
+    return;
+  case AI_RESULT_ERROR_LOAD_MODEL_FAILED:
+    strWrite(response, "cannot load model", 0);
+    return;
+  case AI_RESULT_ERROR_CREATE_CONTEXT_FAILED:
+    strWrite(response, "cannot create context", 0);
+    return;
+  case AI_RESULT_ERROR_TOKENIZATION_FAILED:
+    strWrite(response, "tokenization failed", 0);
+    return;
+  case AI_RESULT_ERROR_CONTEXT_LENGTH_EXCEEDED:
+    strWrite(response, "context length exceeded", 0);
+    return;
+  case AI_RESULT_ERROR_BATCH_DECODING_FAILED:
+    strWrite(response, "batch decoding failed", 0);
+    return;
+  case AI_RESULT_ERROR_TOKEN_PARSING_FAILED:
+    strWrite(response, "token parsing failed", 0);
+    return;
+  case AI_RESULT_ERROR_RESPONSE_LENGTH_EXCEEDED:
+    strWrite(response, "response length exceeded", 0);
+    return;
+  case AI_RESULT_ERROR_ALLOCATION_FAILED:
+    strWrite(response, "allocation failed", 0);
+    return;
+  default:
+  case AI_RESULT_ERROR:
+    strWrite(response, "unexpected error", 0);
+    return;
+  }
+}
 
 static void filterLogs(enum ggml_log_level level, const char *text,
                        void *data) {
@@ -28,53 +63,60 @@ static void filterLogs(enum ggml_log_level level, const char *text,
   }
 }
 
-ai_result_t aiInit(const char *model_path) {
-  ai_result_t result;
+ai_t *aiCreate(const char *model_path, config_t *configuration) {
   llama_log_set(filterLogs, NULL);
+
+  ai_t *ai = allocate(sizeof(ai_t));
+  if (!ai) {
+    throw(AI_RESULT_ERROR_ALLOCATION_FAILED);
+  }
 
   ggml_backend_load_all();
   struct llama_model_params params = llama_model_default_params();
   params.n_gpu_layers = GPU_LAYERS;
 
-  model = llama_model_load_from_file(model_path, params);
-  if (!model) {
+  ai->model = llama_model_load_from_file(model_path, params);
+  if (!ai->model) {
     throw(AI_RESULT_ERROR_LOAD_MODEL_FAILED);
   }
 
-  vocabulary = llama_model_get_vocab(model);
+  ai->vocabulary = llama_model_get_vocab(ai->model);
 
   struct llama_context_params ctx_params = llama_context_default_params();
-  context = llama_init_from_model(model, ctx_params);
-  if (!context) {
+  ai->context = llama_init_from_model(ai->model, ctx_params);
+  if (!ai->context) {
     throw(AI_RESULT_ERROR_CREATE_CONTEXT_FAILED);
   }
 
-  sampler = llama_sampler_chain_init(llama_sampler_chain_default_params());
-  llama_sampler_chain_add(sampler, llama_sampler_init_min_p(MIN_P, 1));
-  llama_sampler_chain_add(sampler, llama_sampler_init_temp(TEMP));
-  llama_sampler_chain_add(sampler, llama_sampler_init_dist(LLAMA_DEFAULT_SEED));
+  ai->sampler = llama_sampler_chain_init(llama_sampler_chain_default_params());
+  llama_sampler_chain_add(ai->sampler, llama_sampler_init_min_p(MIN_P, 1));
+  llama_sampler_chain_add(ai->sampler, llama_sampler_init_temp(TEMP));
+  llama_sampler_chain_add(ai->sampler,
+                          llama_sampler_init_dist(LLAMA_DEFAULT_SEED));
 
-  return AI_RESULT_OK;
+  ai->configuration = configuration;
+  result = AI_RESULT_OK;
+  return ai;
 
 error:
-  aiTeardown();
-  return result;
+  aiDestory(&ai);
+  return NULL;
 }
 
-ai_result_t aiGenerate(const string_t *prompt, string_t *response) {
-  int response_offset = 0;
-  ai_result_t result;
+static void aiGenerate(ai_t *ai, const string_t *prompt, string_t *response) {
+  size_t response_offset = 0;
+  int length = (int)strUsed(prompt);
 
   const bool is_first =
-      llama_memory_seq_pos_max(llama_get_memory(context), 0) == -1;
+      llama_memory_seq_pos_max(llama_get_memory(ai->context), 0) == -1;
 
-  const int tok_count = -llama_tokenize(
-      vocabulary, prompt->data, prompt->length, NULL, 0, is_first, true);
+  const int tok_count = -llama_tokenize(ai->vocabulary, prompt->data, length,
+                                        NULL, 0, is_first, true);
 
   llama_token *tokens = malloc(sizeof(llama_token) * (size_t)tok_count);
 
-  if (llama_tokenize(vocabulary, prompt->data, prompt->length, tokens,
-                     tok_count, is_first, true) < 0) {
+  if (llama_tokenize(ai->vocabulary, prompt->data, length, tokens, tok_count,
+                     is_first, true) < 0) {
     throw(AI_RESULT_ERROR_TOKENIZATION_FAILED);
   }
 
@@ -82,97 +124,73 @@ ai_result_t aiGenerate(const string_t *prompt, string_t *response) {
   llama_token token_id;
 
   while (true) {
-    uint32_t context_size = llama_n_ctx(context);
-    llama_memory_t memory = llama_get_memory(context);
+    uint32_t context_size = llama_n_ctx(ai->context);
+    llama_memory_t memory = llama_get_memory(ai->context);
     llama_pos current_context_length = llama_memory_seq_pos_max(memory, 0) + 1;
 
     if (current_context_length + batch.n_tokens > (int)context_size) {
       throw(AI_RESULT_ERROR_CONTEXT_LENGTH_EXCEEDED);
     }
 
-    if (llama_decode(context, batch) != 0) {
+    if (llama_decode(ai->context, batch) != 0) {
       throw(AI_RESULT_ERROR_BATCH_DECODING_FAILED);
     };
 
-    token_id = llama_sampler_sample(sampler, context, -1);
+    token_id = llama_sampler_sample(ai->sampler, ai->context, -1);
 
-    if (llama_vocab_is_eog(vocabulary, token_id)) {
+    if (llama_vocab_is_eog(ai->vocabulary, token_id)) {
       break;
     }
 
     char parsed_token[256] = {};
-    ssize_t offset =
-        llama_token_to_piece(vocabulary, token_id, parsed_token, 256, 0, false);
+    ssize_t offset = llama_token_to_piece(ai->vocabulary, token_id,
+                                          parsed_token, 256, 0, false);
 
     if (offset < 0) {
       throw(AI_RESULT_ERROR_TOKEN_PARSING_FAILED);
     }
 
-    if (response_offset + offset > response->length) {
+    if (response_offset + (size_t)offset > response->length) {
       throw(AI_RESULT_ERROR_RESPONSE_LENGTH_EXCEEDED);
     }
 
-    response_offset += snprintf(response->data + response_offset,
-                                (size_t)response->length, "%s", parsed_token);
+    response_offset += strWrite(response, parsed_token, response_offset);
 
     batch = llama_batch_get_one(&token_id, 1);
   }
 
-  deallocate(&tokens);
-  return AI_RESULT_OK;
-
+  result = AI_RESULT_OK;
 error:
   deallocate(&tokens);
-  return result;
 }
 
-void aiFormatResult(ai_result_t result, string_t *response) {
-  switch (result) {
-  case AI_RESULT_OK:
-    snprintf(response->data, (size_t)response->length, "ok");
-    break;
-  case AI_RESULT_ERROR_LOAD_MODEL_FAILED:
-    snprintf(response->data, (size_t)response->length, "cannot load model");
-    break;
-  case AI_RESULT_ERROR_CREATE_CONTEXT_FAILED:
-    snprintf(response->data, (size_t)response->length, "cannot create context");
-    break;
-  case AI_RESULT_ERROR_TOKENIZATION_FAILED:
-    snprintf(response->data, (size_t)response->length, "tokenization failed");
-    break;
-  case AI_RESULT_ERROR_CONTEXT_LENGTH_EXCEEDED:
-    snprintf(response->data, (size_t)response->length,
-             "context length exceeded");
-    break;
-  case AI_RESULT_ERROR_BATCH_DECODING_FAILED:
-    snprintf(response->data, (size_t)response->length, "batch decoding failed");
-    break;
-  case AI_RESULT_ERROR_TOKEN_PARSING_FAILED:
-    snprintf(response->data, (size_t)response->length, "token parsing failed");
-    break;
-  case AI_RESULT_ERROR_RESPONSE_LENGTH_EXCEEDED:
-    snprintf(response->data, (size_t)response->length,
-             "response length exceeded");
-    break;
-  default:
-  case AI_RESULT_ERROR:
-    snprintf(response->data, (size_t)response->length, "unexpected error");
-    break;
-  }
+void aiPrompt(ai_t *self, prompt_type_t type, const string_t *input,
+              string_t *response) {
+  const string_t *template = self->configuration->prompts[type];
+
+  string_t *templated_prompt = strCreate(template->length + input->length);
+  snprintf(templated_prompt->data, templated_prompt->length, template->data,
+           input->data);
+
+  (void)aiGenerate(self, templated_prompt, response);
+  strDestroy(&templated_prompt);
 }
 
-void aiTeardown(void) {
+void aiDestory(ai_t **self) {
+  if (!self || !*self)
+    return;
   // TODO: ggml stuff is leaking, but I cannot understand how to free it
   // It's currently ignored in asan.supp
 
-  llama_sampler_free(sampler);
-  sampler = NULL;
+  llama_sampler_free((*self)->sampler);
+  (*self)->sampler = NULL;
 
-  llama_free(context);
-  context = NULL;
+  llama_free((*self)->context);
+  (*self)->context = NULL;
 
-  llama_model_free(model);
-  model = NULL;
+  llama_model_free((*self)->model);
+  (*self)->model = NULL;
 
   llama_backend_free();
+  deallocate(self);
 }

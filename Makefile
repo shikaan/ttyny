@@ -44,4 +44,8 @@ deep-clean: clean
 
 .PHONY: start
 start: all
+	bin/zork
+
+.PHONY: start-profile
+start-profile: all
 	ASAN_OPTIONS=detect_leaks=1 LSAN_OPTIONS=suppressions=asan.supp bin/zork
