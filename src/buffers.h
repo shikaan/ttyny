@@ -2,11 +2,14 @@
 
 #include "./alloc.h"
 #include <assert.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include <string.h>
 
 #define Buffer(Type)                                                           \
   struct {                                                                     \
     size_t length;                                                             \
+    size_t used;                                                               \
     Type data[];                                                               \
   }
 
@@ -36,6 +39,7 @@ static inline string_t *strCreate(size_t length) {
   string_t *result = NULL;
   makeBufCreate(string_t, char, result, length + 1);
   result->length = length;
+  result->used = 0;
   result->data[length] = 0;
   return result;
 }
@@ -51,32 +55,35 @@ static inline string_t *strFrom(const char *initial) {
     bufSet(result, i, initial[i]);
   }
 
+  result->used = length;
   return result;
 }
 
 static inline void strDestroy(string_t **self) { deallocate(self); }
 
-static inline size_t strWrite(string_t *self, const char *text, size_t offset) {
-  if (offset >= self->length)
-    return 0;
+static inline void strFmt(string_t *self, const char *fmt, ...) {
+  va_list arguments;
+  va_start(arguments, fmt);
+  int offset = vsnprintf(self->data, self->length + 1, fmt, arguments);
+  va_end(arguments);
 
-  size_t text_length = strlen(text);
-  size_t available = self->length - offset;
-  size_t to_copy = text_length < available ? text_length : available;
-
-  for (size_t i = 0; i < to_copy; ++i) {
-    bufSet(self, offset + i, text[i]);
+  if (offset < 0) {
+    self->data[0] = 0;
+    self->used = 0;
+    return;
   }
 
-  if (to_copy < available) {
-    bufSet(self, offset + to_copy, 0);
+  if ((size_t)offset > self->length) {
+    // Truncated
+    self->used = self->length;
+  } else {
+    self->used = (size_t)offset;
   }
-
-  return to_copy;
 }
 
-static inline size_t strUsed(const string_t *self) {
-  return strlen(self->data);
+static inline void strClear(string_t *self) {
+  self->data[0] = 0;
+  self->used = 0;
 }
 
 #undef makeBufCreate

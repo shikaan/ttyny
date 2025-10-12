@@ -21,7 +21,7 @@ void aiResultFormat(ai_result_t, string_t *);
 
 typedef enum {
   PROMPT_TYPE_USR = 0,
-  PROMPT_TYPE_SYS = 1,
+  PROMPT_TYPE_SYS,
 
   PROMPT_TYPES,
 } prompt_type_t;
@@ -46,12 +46,20 @@ void aiDestory(ai_t **);
 
 static string_t LFM2_USR_PROMPT = {
     31,
+    31,
     {"<|im_start|>user\n%s<|im_end|>\n"},
 };
 
 static string_t LFM2_SYS_PROMPT = {
     48,
+    48,
     {"<|startoftext|><|im_start|>system\n%s<|im_end|>\n"},
 };
 
-static config_t LFM2 = {.prompts = {&LFM2_USR_PROMPT, &LFM2_SYS_PROMPT}};
+static config_t LFM2 = {
+    .prompts =
+        {
+            &LFM2_USR_PROMPT,
+            &LFM2_SYS_PROMPT,
+        },
+};

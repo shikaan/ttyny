@@ -22,35 +22,35 @@ ai_result_t aiResultGetLast(void) { return result; }
 void aiResultFormat(ai_result_t res, string_t *response) {
   switch (res) {
   case AI_RESULT_OK:
-    strWrite(response, "ok", 0);
+    strFmt(response, "ok");
     return;
   case AI_RESULT_ERROR_LOAD_MODEL_FAILED:
-    strWrite(response, "cannot load model", 0);
+    strFmt(response, "cannot load model");
     return;
   case AI_RESULT_ERROR_CREATE_CONTEXT_FAILED:
-    strWrite(response, "cannot create context", 0);
+    strFmt(response, "cannot create context");
     return;
   case AI_RESULT_ERROR_TOKENIZATION_FAILED:
-    strWrite(response, "tokenization failed", 0);
+    strFmt(response, "tokenization failed");
     return;
   case AI_RESULT_ERROR_CONTEXT_LENGTH_EXCEEDED:
-    strWrite(response, "context length exceeded", 0);
+    strFmt(response, "context length exceeded");
     return;
   case AI_RESULT_ERROR_BATCH_DECODING_FAILED:
-    strWrite(response, "batch decoding failed", 0);
+    strFmt(response, "batch decoding failed");
     return;
   case AI_RESULT_ERROR_TOKEN_PARSING_FAILED:
-    strWrite(response, "token parsing failed", 0);
+    strFmt(response, "token parsing failed");
     return;
   case AI_RESULT_ERROR_RESPONSE_LENGTH_EXCEEDED:
-    strWrite(response, "response length exceeded", 0);
+    strFmt(response, "response length exceeded");
     return;
   case AI_RESULT_ERROR_ALLOCATION_FAILED:
-    strWrite(response, "allocation failed", 0);
+    strFmt(response, "allocation failed");
     return;
   default:
   case AI_RESULT_ERROR:
-    strWrite(response, "unexpected error", 0);
+    strFmt(response, "unexpected error");
     return;
   }
 }
@@ -105,18 +105,20 @@ error:
 
 static void aiGenerate(ai_t *ai, const string_t *prompt, string_t *response) {
   size_t response_offset = 0;
-  int length = (int)strUsed(prompt);
 
   const bool is_first =
       llama_memory_seq_pos_max(llama_get_memory(ai->context), 0) == -1;
 
-  const int tok_count = -llama_tokenize(ai->vocabulary, prompt->data, length,
-                                        NULL, 0, is_first, true);
+  const int tok_count = -llama_tokenize(
+      ai->vocabulary, prompt->data, (int)prompt->used, NULL, 0, is_first, true);
 
-  llama_token *tokens = malloc(sizeof(llama_token) * (size_t)tok_count);
+  llama_token *tokens = allocate(sizeof(llama_token) * (size_t)tok_count);
+  if (!tokens) {
+    throw(AI_RESULT_ERROR_ALLOCATION_FAILED);
+  }
 
-  if (llama_tokenize(ai->vocabulary, prompt->data, length, tokens, tok_count,
-                     is_first, true) < 0) {
+  if (llama_tokenize(ai->vocabulary, prompt->data, (int)prompt->used, tokens,
+                     tok_count, is_first, true) < 0) {
     throw(AI_RESULT_ERROR_TOKENIZATION_FAILED);
   }
 
@@ -154,8 +156,7 @@ static void aiGenerate(ai_t *ai, const string_t *prompt, string_t *response) {
       throw(AI_RESULT_ERROR_RESPONSE_LENGTH_EXCEEDED);
     }
 
-    response_offset += strWrite(response, parsed_token, response_offset);
-
+    strFmt(response, "%s%s", response->data, parsed_token);
     batch = llama_batch_get_one(&token_id, 1);
   }
 
@@ -168,9 +169,8 @@ void aiPrompt(ai_t *self, prompt_type_t type, const string_t *input,
               string_t *response) {
   const string_t *template = self->configuration->prompts[type];
 
-  string_t *templated_prompt = strCreate(template->length + input->length);
-  snprintf(templated_prompt->data, templated_prompt->length, template->data,
-           input->data);
+  string_t *templated_prompt = strCreate(template->used + input->used);
+  strFmt(templated_prompt, template->data, input->data);
 
   (void)aiGenerate(self, templated_prompt, response);
   strDestroy(&templated_prompt);

@@ -45,10 +45,11 @@ int main(void) {
     }
 
     puts(response->data);
+    strClear(response);
 
     printf("> ");
     fgets(user_input, 256, stdin);
-    strWrite(prompt, user_input, 0);
+    strFmt(prompt, user_input, 0);
   }
 
   strDestroy(&prompt);

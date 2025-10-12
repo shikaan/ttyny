@@ -1,22 +1,49 @@
 #include "../src/buffers.h"
 #include "test.h"
 
-void string(void) {
+void stringCreate(void) {
   string_t *subject = strCreate(3);
-  bufSet(subject, 0, 'a');
-  bufSet(subject, 1, 'b');
-  bufSet(subject, 2, 'c');
-  expectEqls(subject->data, "abc", 3, "has correct content");
-  expectEqli(subject->length, 3, "has correct size");
+  expectEqls(subject->data, "", 3, "has correct content");
+  expectEqllu(subject->length, 3, "has correct length");
+  expectEqllu(subject->used, 0, "has correct used");
   strDestroy(&subject);
+}
 
-  subject = strFrom("lol");
+void stringFrom(void) {
+  string_t *subject = strFrom("lol");
   expectEqls(subject->data, "lol", 3, "has correct content");
-  expectEqli(subject->length, 3, "has correct size");
+  expectEqllu(subject->length, 3, "has correct length");
+  expectEqllu(subject->used, 3, "has correct used");
+  strDestroy(&subject);
+}
+
+void stringFormat(void) {
+  string_t *subject = strCreate(4);
+  strFmt(subject, "%s", "longer");
+  expectEqls(subject->data, "long", 4, "truncates content");
+  expectEqllu(subject->used, 4, "has correct used");
+
+  strFmt(subject, "%s", "rr");
+  expectEqls(subject->data, "rr", subject->length, "overwrites content");
+  expectEqllu(subject->used, 2, "has correct used");
+  strDestroy(&subject);
+}
+
+void stringClear(void) {
+  string_t *subject = strFrom("hello");
+  size_t length = subject->length;
+  strClear(subject);
+  expectEqls(subject->data, "", length, "truncates content");
+  expectEqllu(subject->length, length, "preserves length");
+  expectEqllu(subject->used, 0, "updates used");
   strDestroy(&subject);
 }
 
 int main(void) {
-  suite(string);
+  suite(stringCreate);
+  suite(stringFrom);
+  suite(stringFormat);
+  suite(stringClear);
+
   return report();
 }
