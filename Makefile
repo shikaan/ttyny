@@ -1,7 +1,7 @@
 include flags.mk
 
 .PHONY: all
-all: bin/zork
+all: zork
 
 LLAMA_BUILD := build/llama.cpp
 LLAMA_STATIC_LIBS := $(LLAMA_BUILD)/src/libllama.a \
@@ -22,11 +22,11 @@ build/llama.cpp/src/libllama.a:
 		-DBUILD_SHARED_LIBS=OFF
 	cmake --build $(LLAMA_BUILD) -j --config Release
 
-bin/zork: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
+zork: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
 	-Ivendor/llama.cpp/ggml/include
-bin/zork: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
+zork: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
 	-framework Foundation -framework Metal -framework MetalKit
-bin/zork: src/ai.o $(LLAMA_STATIC_LIBS)
+zork: src/ai.o $(LLAMA_STATIC_LIBS)
 
 .PHONY: test
 test: tests/buffers.test
@@ -34,7 +34,7 @@ test: tests/buffers.test
 
 .PHONY: clean
 clean:
-	rm -f bin/zork
+	rm -f ./zork
 	rm -f tests/*.test
 	rm -rf **/*.dSYM **/*.plist *.plist **/*.o
 
@@ -44,8 +44,8 @@ deep-clean: clean
 
 .PHONY: start
 start: all
-	bin/zork
+	./zork
 
 .PHONY: start-profile
 start-profile: all
-	ASAN_OPTIONS=detect_leaks=1 LSAN_OPTIONS=suppressions=asan.supp bin/zork
+	ASAN_OPTIONS=detect_leaks=1 LSAN_OPTIONS=suppressions=asan.supp ./zork

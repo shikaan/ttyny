@@ -11,7 +11,7 @@ build
 .cache
 
 # binaries
-bin/zork
+zork
 
 # models
 models/*
