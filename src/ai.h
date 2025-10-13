@@ -2,6 +2,7 @@
 
 #include "buffers.h"
 #include <llama.h>
+#include <stdint.h>
 
 typedef enum {
   AI_RESULT_OK = 0,
@@ -30,6 +31,9 @@ typedef struct {
   const string_t *prompts[PROMPT_TYPES];
   float min_p;
   float temp;
+  float repetition_penalty;
+  uint32_t context_size;
+  int32_t top_k;
 } config_t;
 
 typedef struct {
@@ -61,6 +65,9 @@ static string_t LFM2_SYS_PROMPT = {
 static config_t LFM2_PROMPT = {
     .min_p = 0.05F,
     .temp = 0.3F,
+    .context_size = 1024,
+    .top_k = 50,
+    .repetition_penalty = 1.2F,
     .prompts =
         {
             &LFM2_USR_PROMPT,

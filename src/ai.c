@@ -81,6 +81,7 @@ ai_t *aiCreate(const char *model_path, config_t *configuration) {
   ai->vocabulary = llama_model_get_vocab(ai->model);
 
   struct llama_context_params ctx_params = llama_context_default_params();
+  ctx_params.n_ctx = configuration->context_size;
   ai->context = llama_init_from_model(ai->model, ctx_params);
   if (!ai->context) {
     throw(AI_RESULT_ERROR_CREATE_CONTEXT_FAILED);
@@ -91,6 +92,10 @@ ai_t *aiCreate(const char *model_path, config_t *configuration) {
                           llama_sampler_init_min_p(configuration->min_p, 1));
   llama_sampler_chain_add(ai->sampler,
                           llama_sampler_init_temp(configuration->temp));
+  llama_sampler_chain_add(ai->sampler, llama_sampler_init_top_k(50));
+  llama_sampler_chain_add(ai->sampler,
+                          llama_sampler_init_penalties(
+                              -1, configuration->repetition_penalty, 0, 0));
   llama_sampler_chain_add(ai->sampler,
                           llama_sampler_init_dist(LLAMA_DEFAULT_SEED));
 
