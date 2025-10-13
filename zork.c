@@ -1,4 +1,5 @@
 #include "src/ai.h"
+#include "src/buffers.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -6,6 +7,13 @@ void error(const char *string) {
   fprintf(stderr, "error: %s\n", string);
   exit(EXIT_FAILURE);
 }
+
+const char *SYS_PROMPT =
+    "You are a creative dungeon master for a text adventure game. Generate "
+    "vivid, atmospheric descriptions of fantasy environments and scenarios. "
+    "Keep descriptions concise (2-4 sentences) but evocative. Focus on sensory "
+    "details and actionable elements the player can interact with. Maintain "
+    "consistency with the established setting.";
 
 int main(void) {
   string_t *errors = strCreate(512);
@@ -19,14 +27,7 @@ int main(void) {
     error(errors->data);
   }
 
-  string_t *prompt = strFrom(
-      "You are the NARRATOR of a classic interactive text adventure."
-      "Output only evocative narration (present tense, second person)."
-      "Do NOT invent new objects or characters except those explicitly listed."
-      "Do NOT show response options."
-      "NEVER show roles."
-      "Keep under 110 words. Never show internal reasoning."
-      "No player commands in output.");
+  string_t *prompt = strFrom(SYS_PROMPT);
   string_t *response = strCreate(4096);
 
   aiPrompt(ai, PROMPT_TYPE_SYS, prompt, response);
