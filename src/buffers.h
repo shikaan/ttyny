@@ -13,11 +13,7 @@
     Type data[];                                                               \
   }
 
-#define bufAt(BufferPtr, Index)                                                \
-  {                                                                            \
-    assert(Index < BufferPtr->length);                                         \
-    BufferPtr->data[Index];                                                    \
-  }
+#define bufAt(BufferPtr, Index) BufferPtr->data[Index];
 
 #define bufSet(BufferPtr, Index, Value)                                        \
   {                                                                            \
@@ -33,6 +29,7 @@
   }                                                                            \
   Result->length = Length;
 
+// String
 typedef Buffer(char) string_t;
 
 static inline string_t *strCreate(size_t length) {
