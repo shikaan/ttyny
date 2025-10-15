@@ -64,8 +64,8 @@ static string_t LFM2_SYS_PROMPT = {
 
 static config_t LFM2_PROMPT = {
     .min_p = 0.05F,
-    .temp = 0.3F,
-    .context_size = 1024,
+    .temp = 0.1F,
+    .context_size = 2048,
     .top_k = 50,
     .repetition_penalty = 1.2F,
     .prompts =

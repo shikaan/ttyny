@@ -26,9 +26,12 @@
 // (6-7) = 4 possible states
 typedef uint8_t traits_t;
 
+typedef uint8_t state_t;
+
 // 4 Transitions from one state to the next.
 // 0010 1011 1101 0100 means 0 -> 2, 2 -> 3, 3 -> 1, 1 -> 0
 typedef uint16_t transitions_t;
+
 
 // TODO: ADD NPC
 
@@ -45,7 +48,7 @@ typedef struct {
   transitions_t transitions;
 } object_t;
 
-typedef Buffer(object_t*) objects_t;
+typedef Buffer(object_t *) objects_t;
 
 // forward declaration
 struct locations_t;
@@ -65,7 +68,7 @@ typedef struct {
   transitions_t transitions;
 } location_t;
 
-typedef Buffer(location_t*) locations_t;
+typedef Buffer(location_t *) locations_t;
 
 typedef struct {
   // How many turns since the game has started
@@ -89,27 +92,24 @@ typedef game_state_t (*digest_t)(world_state_t *);
 
 typedef struct {
   // Introduction to the settings
-  const char *premise;
-  // Pointer to the location where the adventure starts
-  location_t *initial_location;
-  // Callback to call on each round to see if the game is over
-  digest_t digest;
-} setting_t;
-
-typedef struct {
-  // The world setting when the story starts
-  setting_t setting;
+  const char *context;
   // State of the world
   world_state_t state;
   // Locations of the world
   locations_t *locations;
   // Objects in the world
   objects_t *objects;
+  // Pointer to the location where the adventure starts
+  location_t *current_location;
+  // Callback to call on each round to see if the game is over
+  digest_t digest;
 } world_t;
+
+static inline state_t getState(traits_t traits) { return traits & 0b11; }
 
 // Executes a state transition
 static inline traits_t transition(traits_t traits, transitions_t transitions) {
-  uint8_t current_state = traits & 0b11;
+  state_t current_state = getState(traits);
   for (uint8_t i = 0; i < 4; i++) {
     uint8_t entry = (transitions >> (i * 4)) & 0xF;
     uint8_t from = (entry >> 2) & 0x3;

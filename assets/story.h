@@ -1,5 +1,4 @@
 #include "../src/world.h"
-#include "ggml.h"
 
 // --- Objects ---
 static object_t sword = {
@@ -118,11 +117,6 @@ static game_state_t bridge_troll_digest(world_state_t *state) {
 }
 
 // --- Setting and world ---
-static const setting_t bridge_troll_setting = {
-    .premise = "Defeat the troll and cross the bridge to win.",
-    .initial_location = &forest,
-    .digest = bridge_troll_digest};
-
 static objects_t inventory = {
     .length = 5,
     .used = 0,
@@ -130,7 +124,12 @@ static objects_t inventory = {
 };
 
 world_t world = {
-    .setting = bridge_troll_setting,
+    .context = "Medieval forest, late autumn. Cold, misty air. Fallen leaves, "
+               "muddy paths, bare trees. Rickety bridge, mossy stones, "
+               "sluggish river. Peasant huts, worn cobblestone, wooden carts. "
+               "Travelers: tattered cloaks, rusted swords, hand-forged keys.",
     .state = {.turns = 0, .health = 20, .damage = 2, .inventory = &inventory},
     .locations = &all_locations,
+    .digest = bridge_troll_digest,
+    .current_location = &forest,
     .objects = &all_objects};

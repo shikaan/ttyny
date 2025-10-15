@@ -13,7 +13,7 @@
     Type data[];                                                               \
   }
 
-#define bufAt(BufferPtr, Index) BufferPtr->data[Index];
+#define bufAt(BufferPtr, Index) BufferPtr->data[Index]
 
 #define bufSet(BufferPtr, Index, Value)                                        \
   {                                                                            \
@@ -27,7 +27,8 @@
   if (!Result) {                                                               \
     return NULL;                                                               \
   }                                                                            \
-  Result->length = Length;
+  Result->length = Length;                                                     \
+  Result->used = 0;
 
 // String
 typedef Buffer(char) string_t;
@@ -36,7 +37,6 @@ static inline string_t *strCreate(size_t length) {
   string_t *result = NULL;
   makeBufCreate(string_t, char, result, length + 1);
   result->length = length;
-  result->used = 0;
   result->data[length] = 0;
   return result;
 }
@@ -82,5 +82,3 @@ static inline void strClear(string_t *self) {
   self->data[0] = 0;
   self->used = 0;
 }
-
-#undef makeBufCreate
