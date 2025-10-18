@@ -18,40 +18,8 @@
   }
 
 const char *SYS_PROMPT =
-    "You are a creative dungeon master for a text adventure game. Generate "
-    "vivid, atmospheric descriptions of fantasy environments and scenarios. "
-    "Keep descriptions CONCISE (2-4 sentences) but evocative. "
-    "DON'T TAKE ACTIONS ON BEHALF OF THE PLAYER."
-    "WHEN ACTION IS UNCLEAR, DESCRIBE CURRENT LOCATION."
-    "FOCUS ON OBJECTS. Maintain consistency with the established setting.";
-
-typedef Buffer(string_t *) history_t;
-history_t *historyCreate(size_t length) {
-  const size_t size = sizeof(history_t);
-  history_t *result =
-      allocate(size + ((unsigned)(length) * sizeof(string_t *)));
-  if (!result) {
-    return NULL;
-  }
-  result->length = length;
-  result->used = 0;
-  return result;
-}
-
-void historyPush(history_t *self, const char *string) {
-  // if buffer is full, make space for one mosre string
-  if (self->used >= self->length) {
-    string_t *first = bufAt(self, 0);
-    strDestroy(&first);
-    for (size_t i = 1; i < self->length - 1; i++) {
-      bufSet(self, i - 1, bufAt(self, i));
-    }
-    self->used--;
-  }
-
-  self->data[self->used] = strFrom(string);
-  self->used++;
-}
+    "You write 2 sentences about LOCATION."
+    "You emphasize EXITS and ITEMS. Explain where EXITS and ITEMS are.\n";
 
 int main(void) {
   string_t *errors = strCreate(512);
@@ -66,12 +34,12 @@ int main(void) {
 
   try(aiPrompt(ai, PROMPT_TYPE_SYS, prompt, response));
 
-  char input_buffer[256] = {};
+  string_t *input = strCreate(256);
   string_t *objects = strCreate(512);
-  string_t *actions = strCreate(512);
-  history_t *history = historyCreate(10);
+  string_t *exits = strCreate(512);
+  string_t *location = strCreate(128);
+  string_t *temp = strCreate(512);
 
-  strFmt(prompt, "%s", "Look Around");
   while (1) {
     location_t *current_location = world.current_location;
     state_t current_location_state = getState(current_location->traits);
@@ -80,27 +48,42 @@ int main(void) {
     for (size_t i = 0; i < current_location->objects->used; i++) {
       object_t *object = bufAt(current_location->objects, i);
       state_t object_state = getState(object->traits);
-      strFmt(objects, "%s\n  - %s: %s", objects->data, object->name,
-             object->descriptions[object_state]);
+      strFmt(temp, "\n - %s (%s) [%s]", object->name, object->description,
+             object->states[object_state]);
+      strCat(objects, temp);
+    }
+    strClear(temp);
+
+    strClear(exits);
+    for (size_t i = 0; i < current_location->exits->used; i++) {
+      location_t *exit = (location_t *)bufAt(current_location->exits, i);
+      state_t object_state = getState(exit->traits);
+      strFmt(temp, "\n - %s (%s) [%s]", exit->name, exit->description,
+             exit->states[object_state]);
+      strCat(exits, temp);
+    }
+    strClear(temp);
+
+    strClear(location);
+    strFmt(location, "%s (%s) [%s]", current_location->name,
+           current_location->description,
+           current_location->states[current_location_state]);
+
+    if (input->used) {
+      strFmt(prompt,
+             "ACTION: %s\n"
+             "LOCATION: %s\n"
+             "ITEMS: %s\n"
+             "EXITS: %s\nOUTPUT:",
+             input->data, location->data, objects->data, exits->data);
+    } else {
+      strFmt(prompt,
+             "LOCATION: %s\n"
+             "ITEMS: %s\n"
+             "EXITS: %s\nOUTPUT:",
+             location->data, objects->data, exits->data);
     }
 
-    strClear(actions);
-    for (size_t i = 0; i < history->used; i++) {
-      string_t *entry = bufAt(history, i);
-      strFmt(objects, "%s\n  - %s", actions->data, entry->data);
-    }
-
-    strFmt(prompt,
-           "World: %s\n"
-           "Location: %s - %s\n"
-           "Objects: %s\n"
-           "Last User Actions: %s\n"
-           "Player Action: %s.\n"
-           "Respond to player actions describing the location. DON'T OFFER "
-           "OPTIONS. USE SECOND PERSON.",
-           world.context, world.current_location->name,
-           world.current_location->descriptions[current_location_state],
-           objects->data, actions->data, input_buffer);
     try(aiPrompt(ai, PROMPT_TYPE_USR, prompt, response));
 
     puts(response->data);
@@ -108,13 +91,14 @@ int main(void) {
     strClear(prompt);
 
     printf("> ");
-    fgets(input_buffer, 256, stdin);
-    historyPush(history, input_buffer);
+    strReadFrom(input, stdin);
   }
 
   strDestroy(&prompt);
+  strDestroy(&location);
   strDestroy(&response);
   strDestroy(&errors);
+  strDestroy(&temp);
   aiDestory(&ai);
   return 0;
 }
