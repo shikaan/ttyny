@@ -3,40 +3,37 @@
 // --- Objects ---
 static object_t sword = {
     .name = "Old Sword",
-    .descriptions =
+    .description = "rusty,heavy,old",
+    .states =
         {
-            "A rusty sword lies on the ground.",
-            "The sword gleams after being cleaned.",
-            "The sword is chipped from battle.",
-            "The sword is broken and useless.",
+            "on the ground",
+            "held",
+            "chipped",
+            "broken",
         },
     .traits = 0b00000011, // collectible + change damage
     .value = 5,
-    .transitions = 0b0001101000110010,
+    .transitions = 0b0001101101101010,
 };
 
 static object_t apple = {
     .name = "Red Apple",
-    .descriptions =
-        {
-            "A shiny red apple hangs from a tree.",
-            "The apple is in your hand.",
-            "The apple has a bite taken out of it.",
-            "The apple core is discarded.",
-        },
+    .description = "shiny,red",
+    .states = {"on a tree", "held", "bitten", "eaten"},
     .traits = 0b00000101, // collectible + change health
     .value = 10,
-    .transitions = 0b0001101000110010,
+    .transitions = 0b0001101101101010,
 };
 
 static object_t troll = {
     .name = "Bridge Troll",
-    .descriptions =
+    .description = "grumpy,smelly,huge,violent",
+    .states =
         {
-            "A grumpy troll blocks the bridge.",
-            "The troll eyes you warily.",
-            "The troll is wounded.",
-            "The troll has fled!",
+            "standing",
+            "aggressive",
+            "wounded",
+            "fled",
         },
     .traits = 0b00001000, // ephemeral
     .value = -10,
@@ -55,48 +52,49 @@ static locations_t clearing_exits, forest_exits, bridge_exits;
 static location_t clearing, forest, bridge;
 
 // --- Location buffers for exits ---
-static locations_t clearing_exits = {.length = 1, .used = 1, .data = {&forest}};
+static locations_t clearing_exits = {
+    .length = 1, .used = 1, .data = {(struct location_t *)&forest}};
 
 static locations_t forest_exits = {
-    .length = 2, .used = 2, .data = {&clearing, &bridge}};
+    .length = 2,
+    .used = 2,
+    .data = {(struct location_t *)&clearing, (struct location_t *)&bridge}};
 
-static locations_t bridge_exits = {.length = 1, .used = 1, .data = {&forest}};
+static locations_t bridge_exits = {
+    .length = 1, .used = 1, .data = {(struct location_t *)&forest}};
 
 // --- Locations ---
-static location_t clearing = {
-    .name = "Clearing",
-    .descriptions = {"A sunny clearing with soft grass.",
-                     "The clearing feels peaceful.",
-                     "You notice signs of a struggle.",
-                     "The clearing is eerily quiet."},
-    .objects = &clearing_objects,
-    .exits = (struct locations_t *)&clearing_exits,
-    .traits = 0,
-    .transitions = 0b0001101000110010};
+static location_t clearing = {.name = "Clearing",
+                              .description = "sunny,grassy,peaceful",
+                              .states = {"sunny"},
+                              .objects = &clearing_objects,
+                              .exits = &clearing_exits,
+                              .traits = 0,
+                              .transitions = 0};
 
-static location_t forest = {
-    .name = "Forest",
-    .descriptions = {"Tall trees surround you.", "The forest is dark and cool.",
-                     "You hear distant growling.", "The forest is silent."},
-    .objects = &forest_objects,
-    .exits = (struct locations_t *)&forest_exits,
-    .traits = 0,
-    .transitions = 0b0001101000110010};
+static location_t forest = {.name = "Forest",
+                            .description = "dark,cool,ominous",
+                            .states = {"dark"},
+                            .objects = &forest_objects,
+                            .exits = &forest_exits,
+                            .traits = 0,
+                            .transitions = 0};
 
 static location_t bridge = {
     .name = "Bridge",
-    .descriptions = {"A rickety bridge crosses a deep chasm.",
-                     "The bridge sways in the wind.",
-                     "The bridge is stained with blood.",
-                     "The bridge is safe and quiet."},
+    .description = "rickety,over chasm,windy",
+    .states = {"safe", "swaying"},
     .objects = &bridge_objects,
-    .exits = (struct locations_t *)&bridge_exits,
+    .exits = &bridge_exits,
     .traits = 0,
     .transitions = 0b0001101000110010};
 
 // --- All locations and objects buffers ---
-static locations_t all_locations = {
-    .length = 3, .used = 3, .data = {&clearing, &forest, &bridge}};
+static locations_t all_locations = {.length = 3,
+                                    .used = 3,
+                                    .data = {(struct location_t *)&clearing,
+                                             (struct location_t *)&forest,
+                                             (struct location_t *)&bridge}};
 
 static objects_t all_objects = {
     .length = 3, .used = 3, .data = {&sword, &apple, &troll}};
@@ -124,10 +122,8 @@ static objects_t inventory = {
 };
 
 world_t world = {
-    .context = "Medieval forest, late autumn. Cold, misty air. Fallen leaves, "
-               "muddy paths, bare trees. Rickety bridge, mossy stones, "
-               "sluggish river. Peasant huts, worn cobblestone, wooden carts. "
-               "Travelers: tattered cloaks, rusted swords, hand-forged keys.",
+    .context = "autumn,dusk,misty,cold,muddy,silent,distant crows,"
+               "woodsmoke,mossy,rickety,sluggish,peasant",
     .state = {.turns = 0, .health = 20, .damage = 2, .inventory = &inventory},
     .locations = &all_locations,
     .digest = bridge_troll_digest,
