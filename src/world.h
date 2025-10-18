@@ -32,14 +32,15 @@ typedef uint8_t state_t;
 // 0010 1011 1101 0100 means 0 -> 2, 2 -> 3, 3 -> 1, 1 -> 0
 typedef uint16_t transitions_t;
 
-
 // TODO: ADD NPC
 
 typedef struct {
   // Name of the object
   const char *name;
-  // Descriptions of the object. One description per state (see traits).
-  const char *descriptions[4];
+  // Description of the objects
+  const char *description;
+  // Human-readable state descriptions
+  const char *states[4];
   // Object traits as per above
   traits_t traits;
   // In case the object changes damage or health, see by how much
@@ -50,25 +51,25 @@ typedef struct {
 
 typedef Buffer(object_t *) objects_t;
 
-// forward declaration
-struct locations_t;
+struct location_t; // Forward declaration
+typedef Buffer(struct location_t *) locations_t;
 
 typedef struct {
   // Name of the locations
   const char *name;
+  // Description of the locations
+  const char *description;
   // Descriptions of the location. One description per state (see traits).
-  const char *descriptions[4];
+  const char *states[4];
   // Objects to be found in this location
   objects_t *objects;
   // Exits from this location into other locations
-  struct locations_t *exits;
+  locations_t *exits;
   // Location traits
   traits_t traits;
   // Transitions from one state to the next
   transitions_t transitions;
 } location_t;
-
-typedef Buffer(location_t *) locations_t;
 
 typedef struct {
   // How many turns since the game has started
@@ -105,7 +106,9 @@ typedef struct {
   digest_t digest;
 } world_t;
 
-static inline state_t getState(traits_t traits) { return traits & 0b11; }
+static inline state_t getState(traits_t traits) {
+  return (traits & 0b11000000) >> 6;
+}
 
 // Executes a state transition
 static inline traits_t transition(traits_t traits, transitions_t transitions) {
@@ -113,9 +116,9 @@ static inline traits_t transition(traits_t traits, transitions_t transitions) {
   for (uint8_t i = 0; i < 4; i++) {
     uint8_t entry = (transitions >> (i * 4)) & 0xF;
     uint8_t from = (entry >> 2) & 0x3;
-    uint8_t to = entry & 0x3;
     if (from == current_state) {
-      return (traits & 0b11111100) | to;
+      uint8_t to = (uint8_t)((entry & 0x3) << 6);
+      return (traits & 0b00111111) | to;
     }
   }
   return traits;
