@@ -78,6 +78,20 @@ static inline void strFmt(string_t *self, const char *fmt, ...) {
   }
 }
 
+static inline void strCat(string_t *self, string_t *other) {
+  size_t available = self->length - self->used;
+  size_t to_copy = other->used < available ? other->used : available;
+
+  memcpy(self->data + self->used, other->data, to_copy);
+  self->used += to_copy;
+
+  self->data[self->used] = 0;
+}
+
+static inline void strReadFrom(string_t *self, FILE *file) {
+  self->used = strlen(fgets(self->data, (int)self->length, file));
+}
+
 static inline void strClear(string_t *self) {
   self->data[0] = 0;
   self->used = 0;
