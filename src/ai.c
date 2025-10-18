@@ -1,7 +1,8 @@
 #include "ai.h"
 #include "alloc.h"
 #include "buffers.h"
-#include "ggml-backend.h"
+#include "utils.h"
+#include <ggml-backend.h>
 #include <ggml.h>
 #include <llama.h>
 #include <stddef.h>
@@ -172,6 +173,7 @@ error:
 
 void aiPrompt(ai_t *self, prompt_type_t type, const string_t *input,
               string_t *response) {
+  debug(input->data);
   const string_t *template = self->configuration->prompts[type];
 
   string_t *templated_prompt = strCreate(template->used + input->used);
