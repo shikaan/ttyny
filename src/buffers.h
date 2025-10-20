@@ -58,27 +58,32 @@ static inline string_t *strFrom(const char *initial) {
 
 static inline void strDestroy(string_t **self) { deallocate(self); }
 
-static inline void strFmt(string_t *self, const char *fmt, ...) {
+static inline void strFmtOffset(string_t *self, size_t offset, const char *fmt,
+                                ...) {
   va_list arguments;
   va_start(arguments, fmt);
-  int offset = vsnprintf(self->data, self->length + 1, fmt, arguments);
+  int end_offset =
+      vsnprintf(self->data + offset, self->length + 1 - offset, fmt, arguments);
   va_end(arguments);
 
-  if (offset < 0) {
+  if (end_offset < 0) {
     self->data[0] = 0;
     self->used = 0;
     return;
   }
 
-  if ((size_t)offset > self->length) {
+  if ((size_t)end_offset + offset > self->length) {
     // Truncated
     self->used = self->length;
   } else {
-    self->used = (size_t)offset;
+    self->used = (size_t)end_offset + offset;
   }
 }
 
-static inline void strCat(string_t *self, string_t *other) {
+#define strFmt(Self, Fmt, ...)                                                 \
+  strFmtOffset(Self, 0, Fmt __VA_OPT__(, __VA_ARGS__));
+
+static inline void strCat(string_t *self, const string_t *other) {
   size_t available = self->length - self->used;
   size_t to_copy = other->used < available ? other->used : available;
 
@@ -90,6 +95,8 @@ static inline void strCat(string_t *self, string_t *other) {
 
 static inline void strReadFrom(string_t *self, FILE *file) {
   self->used = strlen(fgets(self->data, (int)self->length, file));
+  self->data[self->used] = 0;
+  self->used--;
 }
 
 static inline void strClear(string_t *self) {

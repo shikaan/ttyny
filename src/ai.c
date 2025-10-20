@@ -93,7 +93,8 @@ ai_t *aiCreate(const char *model_path, config_t *configuration) {
                           llama_sampler_init_min_p(configuration->min_p, 1));
   llama_sampler_chain_add(ai->sampler,
                           llama_sampler_init_temp(configuration->temp));
-  llama_sampler_chain_add(ai->sampler, llama_sampler_init_top_k(50));
+  llama_sampler_chain_add(ai->sampler,
+                          llama_sampler_init_top_k(configuration->top_k));
   llama_sampler_chain_add(ai->sampler,
                           llama_sampler_init_penalties(
                               -1, configuration->repetition_penalty, 0, 0));
@@ -110,8 +111,7 @@ error:
 }
 
 static void aiGenerate(ai_t *ai, const string_t *prompt, string_t *response) {
-  size_t response_offset = 0;
-
+  debug(prompt->data);
   const bool is_first =
       llama_memory_seq_pos_max(llama_get_memory(ai->context), 0) == -1;
 
@@ -158,7 +158,7 @@ static void aiGenerate(ai_t *ai, const string_t *prompt, string_t *response) {
       throw(AI_RESULT_ERROR_TOKEN_PARSING_FAILED);
     }
 
-    if (response_offset + (size_t)offset > response->length) {
+    if (response->used + (size_t)offset > response->length) {
       throw(AI_RESULT_ERROR_RESPONSE_LENGTH_EXCEEDED);
     }
 
@@ -171,16 +171,43 @@ error:
   deallocate(&tokens);
 }
 
-void aiPrompt(ai_t *self, prompt_type_t type, const string_t *input,
-              string_t *response) {
-  debug(input->data);
+static void aiTemplatePrompt(ai_t *self, prompt_type_t type,
+                             const string_t *input, string_t *templated) {
   const string_t *template = self->configuration->prompts[type];
+  if (templated->length < template->used + input->used) {
+    result = AI_RESULT_ERROR;
+    return;
+  }
+  strFmt(templated, template->data, input->data);
+}
 
-  string_t *templated_prompt = strCreate(template->used + input->used);
-  strFmt(templated_prompt, template->data, input->data);
+void aiUserPrompt(ai_t *self, const string_t *input, string_t *response) {
+  const string_t *template = self->configuration->prompts[PROMPT_TYPE_USR];
+  string_t *templated = strCreate(template->used + input->used);
+  aiTemplatePrompt(self, PROMPT_TYPE_USR, input, templated);
 
-  (void)aiGenerate(self, templated_prompt, response);
-  strDestroy(&templated_prompt);
+  aiGenerate(self, templated, response);
+  strDestroy(&templated);
+}
+
+void aiSystemPrompt(ai_t *self, const string_t *system, const string_t *user,
+                    string_t *response) {
+  const string_t *sys_tpl = self->configuration->prompts[PROMPT_TYPE_SYS];
+  const string_t *usr_tpl = self->configuration->prompts[PROMPT_TYPE_USR];
+
+  string_t *user_templated = strCreate(usr_tpl->used + user->used);
+  aiTemplatePrompt(self, PROMPT_TYPE_USR, user, user_templated);
+
+  string_t *system_templated =
+      strCreate(sys_tpl->used + system->used + usr_tpl->used + user->used);
+  aiTemplatePrompt(self, PROMPT_TYPE_SYS, system, system_templated);
+
+  strCat(system_templated, user_templated);
+
+  aiGenerate(self, system_templated, response);
+
+  strDestroy(&system_templated);
+  strDestroy(&user_templated);
 }
 
 void aiDestory(ai_t **self) {

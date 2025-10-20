@@ -44,3 +44,14 @@ OUTPUT: You are in a dark room. You don't see much except for an old oil lamp.
 Too dangerous to proceed with lights off.
 ## EXAMPLE END
 ```
+
+Problem: still can't discern the example from the prompt
+
+### Short prompt
+
+```
+You write 2 sentences about LOCATION. You emphasize EXITS and ITEMS.
+Explain where EXITS and ITEMS are.
+```
+
+Seems to work the best - when it does. Sometimes output is blank...

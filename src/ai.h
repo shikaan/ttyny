@@ -45,26 +45,28 @@ typedef struct {
 } ai_t;
 
 [[nodiscard]] ai_t *aiCreate(const char *, config_t *);
-void aiPrompt(ai_t *, prompt_type_t, const string_t *, string_t *);
 void aiDestory(ai_t **);
+
+void aiUserPrompt(ai_t *, const string_t *, string_t *);
+void aiSystemPrompt(ai_t *, const string_t *, const string_t *, string_t *);
 
 /// MODEL CONFIGURATIONS
 
 static string_t LFM2_USR_PROMPT = {
-    31,
-    31,
-    {"<|im_start|>user\n%s<|im_end|>\n"},
+    64,
+    64,
+    {"<|im_end|>\n<|im_start|>user\n%s<|im_end|>\n<|im_start|>assistant\n"},
 };
 
 static string_t LFM2_SYS_PROMPT = {
     48,
     48,
-    {"<|startoftext|><|im_start|>system\n%s<|im_end|>\n"},
+    {"<|startoftext|><|im_start|>system\n%s"},
 };
 
 static config_t LFM2_PROMPT = {
     .min_p = 0.05F,
-    .temp = 0.1F,
+    .temp = 0.3F,
     .context_size = 2048,
     .top_k = 50,
     .repetition_penalty = 1.2F,

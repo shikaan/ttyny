@@ -47,9 +47,9 @@ typedef struct {
   int8_t value;
   // Transitions from one state to the next
   transitions_t transitions;
-} object_t;
+} item_t;
 
-typedef Buffer(object_t *) objects_t;
+typedef Buffer(item_t *) items_t;
 
 struct location_t; // Forward declaration
 typedef Buffer(struct location_t *) locations_t;
@@ -62,7 +62,7 @@ typedef struct {
   // Descriptions of the location. One description per state (see traits).
   const char *states[4];
   // Objects to be found in this location
-  objects_t *objects;
+  items_t *items;
   // Exits from this location into other locations
   locations_t *exits;
   // Location traits
@@ -79,7 +79,7 @@ typedef struct {
   // How much damage does the character deal
   uint8_t damage;
   // Objects carried by the character
-  objects_t *inventory;
+  items_t *inventory;
 } world_state_t;
 
 typedef enum {
@@ -99,20 +99,21 @@ typedef struct {
   // Locations of the world
   locations_t *locations;
   // Objects in the world
-  objects_t *objects;
+  items_t *items;
   // Pointer to the location where the adventure starts
   location_t *current_location;
   // Callback to call on each round to see if the game is over
   digest_t digest;
 } world_t;
 
-static inline state_t getState(traits_t traits) {
+static inline state_t objectGetState(traits_t traits) {
   return (traits & 0b11000000) >> 6;
 }
 
 // Executes a state transition
-static inline traits_t transition(traits_t traits, transitions_t transitions) {
-  state_t current_state = getState(traits);
+static inline traits_t objectTransition(traits_t traits,
+                                       transitions_t transitions) {
+  state_t current_state = objectGetState(traits);
   for (uint8_t i = 0; i < 4; i++) {
     uint8_t entry = (transitions >> (i * 4)) & 0xF;
     uint8_t from = (entry >> 2) & 0x3;

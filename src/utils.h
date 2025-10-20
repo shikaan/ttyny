@@ -7,7 +7,7 @@ static inline void debug(const char *fmt, ...) {
   va_start(args, fmt);
   printf("\x1b[2m");
   vprintf(fmt, args);
-  printf("\x1b[0m\n");
+  printf("\x1b[0m");
   va_end(args);
 }
 #else
