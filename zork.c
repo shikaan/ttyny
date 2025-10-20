@@ -1,6 +1,7 @@
 #include "assets/story.h"
 #include "src/ai.h"
 #include "src/buffers.h"
+#include "src/ui.h"
 #include "src/world.h"
 #include <ggml.h>
 #include <stddef.h>
@@ -62,10 +63,12 @@ int main(void) {
   ai_t *ai = NULL;
   try(aiCreate("./models/LFM2-1.2B-Q4_k_m.gguf", &LFM2_PROMPT), ai);
 
+  ui_handle_t handle = loadingStart();
   writeUserPrompt(&troll_bridge_world, action, usr_prompt);
   strFmt(sys_prompt, "%s", SYS_PROMPT);
 
   try(aiSystemPrompt(ai, sys_prompt, usr_prompt, response));
+  loadingWait(handle);
   puts(response->data);
 
   strDestroy(&sys_prompt);
@@ -77,7 +80,9 @@ int main(void) {
     strClear(response);
     writeUserPrompt(&troll_bridge_world, action, usr_prompt);
 
+    handle = loadingStart();
     try(aiUserPrompt(ai, usr_prompt, response));
+    loadingWait(handle);
     puts(response->data);
   }
 
