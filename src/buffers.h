@@ -13,7 +13,8 @@
     Type data[];                                                               \
   }
 
-#define bufAt(BufferPtr, Index) BufferPtr->data[Index]
+#define bufAt(BufferPtr, Index)                                                \
+  (assert(Index < BufferPtr->length), BufferPtr->data[Index])
 
 #define bufSet(BufferPtr, Index, Value)                                        \
   {                                                                            \
