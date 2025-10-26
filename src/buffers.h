@@ -1,10 +1,14 @@
 #pragma once
 
-#include "./alloc.h"
-#include <assert.h>
+#include "alloc.h"
+#include "panic.h"
+#include <ctype.h>
 #include <stdarg.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+
+#define arrLen(Array) (sizeof(Array) / sizeof(Array[0]))
 
 #define Buffer(Type)                                                           \
   struct {                                                                     \
@@ -14,12 +18,26 @@
   }
 
 #define bufAt(BufferPtr, Index)                                                \
-  (assert(Index < BufferPtr->length), BufferPtr->data[Index])
+  (panicif((Index) > (BufferPtr)->length || Index < 0, "index out of bounds"), \
+   BufferPtr->data[(Index)])
 
 #define bufSet(BufferPtr, Index, Value)                                        \
   {                                                                            \
-    assert(Index < BufferPtr->length);                                         \
-    BufferPtr->data[Index] = Value;                                            \
+    panicif((Index) > (BufferPtr)->length || Index < 0,                        \
+            "index out of bounds");                                            \
+    (BufferPtr)->data[(Index)] = (Value);                                      \
+  }
+
+#define bufPush(BufferPtr, Value)                                              \
+  {                                                                            \
+    bufSet((BufferPtr), (BufferPtr)->used, (Value));                           \
+    (BufferPtr)->used++;                                                       \
+  }
+
+#define bufClear(BufferPtr, NullValue)                                         \
+  {                                                                            \
+    bufSet((BufferPtr), 0, (NullValue));                                       \
+    (BufferPtr)->used = 0;                                                     \
   }
 
 #define makeBufCreate(BufferType, ItemType, Result, Length)                    \
@@ -33,6 +51,13 @@
 
 // String
 typedef Buffer(char) string_t;
+
+#define strConst(String)                                                       \
+  {                                                                            \
+      .data = String,                                                          \
+      .used = sizeof(String) - 1,                                              \
+      .length = sizeof(String) - 1,                                            \
+  }
 
 static inline string_t *strCreate(size_t length) {
   string_t *result = NULL;
@@ -84,6 +109,9 @@ static inline void strFmtOffset(string_t *self, size_t offset, const char *fmt,
 #define strFmt(Self, Fmt, ...)                                                 \
   strFmtOffset(Self, 0, Fmt __VA_OPT__(, __VA_ARGS__));
 
+#define strFmtAppend(Self, Fmt, ...)                                           \
+  strFmtOffset(Self, Self->used, Fmt __VA_OPT__(, __VA_ARGS__));
+
 static inline void strCat(string_t *self, const string_t *other) {
   size_t available = self->length - self->used;
   size_t to_copy = other->used < available ? other->used : available;
@@ -95,12 +123,32 @@ static inline void strCat(string_t *self, const string_t *other) {
 }
 
 static inline void strReadFrom(string_t *self, FILE *file) {
-  self->used = strlen(fgets(self->data, (int)self->length, file));
+  self->used = strlen(fgets(self->data, (int)self->length, file)) - 1;
   self->data[self->used] = 0;
   self->used--;
 }
 
-static inline void strClear(string_t *self) {
-  self->data[0] = 0;
-  self->used = 0;
+static inline int strEq(const string_t *self, const string_t *other) {
+  return self->used == other->used &&
+         (strncmp(self->data, other->data, self->used) == 0);
 }
+
+static inline void strTrim(string_t *self) {
+  size_t begin = 0;
+  while (begin < self->used && isspace(bufAt(self, begin)))
+    begin++;
+
+  size_t end = self->used - 1;
+  while (end > begin && isspace(bufAt(self, end)))
+    end--;
+
+  for (size_t i = 0; i < end - begin + 1; i++) {
+    bufSet(self, i, bufAt(self, i + begin));
+  }
+
+  for (size_t i = end - begin + 1; i < self->used; i++) {
+    bufSet(self, i, '\0');
+  }
+}
+
+static inline void strClear(string_t *self) { bufClear(self, 0); }

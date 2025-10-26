@@ -62,7 +62,44 @@ static void filterLogs(enum ggml_log_level level, const char *text,
   }
 }
 
-ai_t *aiCreate(const char *model_path, config_t *configuration) {
+static void aiInitSampler(ai_t *ai, ai_result_t *res, config_t *configuration) {
+  if (ai->sampler) {
+    llama_sampler_free(ai->sampler);
+  }
+
+  ai->sampler = llama_sampler_chain_init(llama_sampler_chain_default_params());
+  if (!ai->sampler) {
+    *res = AI_RESULT_ERROR;
+    return;
+  }
+
+  if (configuration->grammar) {
+    struct llama_sampler *grammar_sampler = llama_sampler_init_grammar(
+        ai->vocabulary, configuration->grammar->data, "root");
+
+    if (!grammar_sampler) {
+      *res = AI_RESULT_ERROR;
+      return;
+    }
+    llama_sampler_chain_add(ai->sampler, grammar_sampler);
+  }
+
+  llama_sampler_chain_add(ai->sampler,
+                          llama_sampler_init_min_p(configuration->min_p, 1));
+  llama_sampler_chain_add(ai->sampler,
+                          llama_sampler_init_temp(configuration->temp));
+  llama_sampler_chain_add(ai->sampler,
+                          llama_sampler_init_top_k(configuration->top_k));
+  llama_sampler_chain_add(ai->sampler,
+                          llama_sampler_init_penalties(
+                              -1, configuration->repetition_penalty, 0, 0));
+  llama_sampler_chain_add(ai->sampler,
+                          llama_sampler_init_dist(LLAMA_DEFAULT_SEED));
+  *res = AI_RESULT_OK;
+  return;
+}
+
+ai_t *aiCreate(config_t *configuration) {
   llama_log_set(filterLogs, NULL);
 
   ai_t *ai = allocate(sizeof(ai_t));
@@ -74,7 +111,7 @@ ai_t *aiCreate(const char *model_path, config_t *configuration) {
   struct llama_model_params params = llama_model_default_params();
   params.n_gpu_layers = GPU_LAYERS;
 
-  ai->model = llama_model_load_from_file(model_path, params);
+  ai->model = llama_model_load_from_file(configuration->path, params);
   if (!ai->model) {
     throw(AI_RESULT_ERROR_LOAD_MODEL_FAILED);
   }
@@ -88,18 +125,7 @@ ai_t *aiCreate(const char *model_path, config_t *configuration) {
     throw(AI_RESULT_ERROR_CREATE_CONTEXT_FAILED);
   }
 
-  ai->sampler = llama_sampler_chain_init(llama_sampler_chain_default_params());
-  llama_sampler_chain_add(ai->sampler,
-                          llama_sampler_init_min_p(configuration->min_p, 1));
-  llama_sampler_chain_add(ai->sampler,
-                          llama_sampler_init_temp(configuration->temp));
-  llama_sampler_chain_add(ai->sampler,
-                          llama_sampler_init_top_k(configuration->top_k));
-  llama_sampler_chain_add(ai->sampler,
-                          llama_sampler_init_penalties(
-                              -1, configuration->repetition_penalty, 0, 0));
-  llama_sampler_chain_add(ai->sampler,
-                          llama_sampler_init_dist(LLAMA_DEFAULT_SEED));
+  aiInitSampler(ai, &result, configuration);
 
   ai->configuration = configuration;
   result = AI_RESULT_OK;
@@ -110,7 +136,7 @@ error:
   return NULL;
 }
 
-static void aiGenerate(ai_t *ai, const string_t *prompt, string_t *response) {
+void aiGenerate(ai_t *ai, const string_t *prompt, string_t *response) {
   debug(prompt->data);
   const bool is_first =
       llama_memory_seq_pos_max(llama_get_memory(ai->context), 0) == -1;
@@ -171,43 +197,15 @@ error:
   deallocate(&tokens);
 }
 
-static void aiTemplatePrompt(ai_t *self, prompt_type_t type,
-                             const string_t *input, string_t *templated) {
-  const string_t *template = self->configuration->prompts[type];
-  if (templated->length < template->used + input->used) {
-    result = AI_RESULT_ERROR;
-    return;
-  }
-  strFmt(templated, template->data, input->data);
+void aiSetGrammar(ai_t *self, string_t *grammar) {
+  self->configuration->grammar = grammar;
+  llama_memory_clear(llama_get_memory(self->context), true);
+  aiInitSampler(self, &result, self->configuration);
 }
 
-void aiUserPrompt(ai_t *self, const string_t *input, string_t *response) {
-  const string_t *template = self->configuration->prompts[PROMPT_TYPE_USR];
-  string_t *templated = strCreate(template->used + input->used);
-  aiTemplatePrompt(self, PROMPT_TYPE_USR, input, templated);
-
-  aiGenerate(self, templated, response);
-  strDestroy(&templated);
-}
-
-void aiSystemPrompt(ai_t *self, const string_t *system, const string_t *user,
-                    string_t *response) {
-  const string_t *sys_tpl = self->configuration->prompts[PROMPT_TYPE_SYS];
-  const string_t *usr_tpl = self->configuration->prompts[PROMPT_TYPE_USR];
-
-  string_t *user_templated = strCreate(usr_tpl->used + user->used);
-  aiTemplatePrompt(self, PROMPT_TYPE_USR, user, user_templated);
-
-  string_t *system_templated =
-      strCreate(sys_tpl->used + system->used + usr_tpl->used + user->used);
-  aiTemplatePrompt(self, PROMPT_TYPE_SYS, system, system_templated);
-
-  strCat(system_templated, user_templated);
-
-  aiGenerate(self, system_templated, response);
-
-  strDestroy(&system_templated);
-  strDestroy(&user_templated);
+void aiReset(ai_t *self) {
+  llama_memory_clear(llama_get_memory(self->context), true);
+  aiInitSampler(self, &result, self->configuration);
 }
 
 void aiDestory(ai_t **self) {

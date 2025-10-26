@@ -1,7 +1,36 @@
 #pragma once
 
+#include "alloc.h"
 #include "buffers.h"
+#include <stddef.h>
 #include <stdint.h>
+
+typedef enum {
+  OBJ_TYPE_UNKNOWN = -1,
+  OBJ_TYPE_ITEM = 0,
+  OBJ_TYPE_LOCATION,
+
+  OBJ_TYPES,
+} obj_type_t;
+
+typedef enum {
+  ACTION_UNKNOWN = -1,
+  ACTION_MOVE = 0,
+  ACTION_TAKE,
+  ACTION_DROP,
+  ACTION_USE,
+  ACTION_EXAMINE,
+
+  ACTIONS,
+} action_t;
+
+typedef const char *obj_id_t;
+
+static inline int objectIdEq(obj_id_t self, obj_id_t other) {
+  return strcmp(self, other) == 0;
+}
+
+typedef Buffer(obj_id_t) objects_t;
 
 // Boolean map of traits for objects and location.
 // The traits are fixed. Interactions in the game change the state (last 2 bits)
@@ -36,7 +65,7 @@ typedef uint16_t transitions_t;
 
 typedef struct {
   // Name of the object
-  const char *name;
+  obj_id_t name;
   // Description of the objects
   const char *description;
   // Human-readable state descriptions
@@ -51,12 +80,20 @@ typedef struct {
 
 typedef Buffer(item_t *) items_t;
 
+static inline items_t *itemsCreate(size_t length) {
+  items_t *items = NULL;
+  makeBufCreate(items_t, item_t, items, length);
+  return items;
+}
+
+static inline void itemsDestroy(items_t **self) { deallocate(self); }
+
 struct location_t; // Forward declaration
 typedef Buffer(struct location_t *) locations_t;
 
 typedef struct {
   // Name of the locations
-  const char *name;
+  obj_id_t name;
   // Description of the locations
   const char *description;
   // Descriptions of the location. One description per state (see traits).
@@ -70,6 +107,14 @@ typedef struct {
   // Transitions from one state to the next
   transitions_t transitions;
 } location_t;
+
+static inline locations_t *locationsCreate(size_t length) {
+  locations_t *locations = NULL;
+  makeBufCreate(locations_t, location_t, locations, length);
+  return locations;
+}
+
+static inline void locationsDestroy(locations_t **self) { deallocate(self); }
 
 typedef struct {
   // How many turns since the game has started
@@ -92,8 +137,6 @@ typedef enum {
 typedef game_state_t (*digest_t)(world_state_t *);
 
 typedef struct {
-  // Introduction to the settings
-  const char *context;
   // State of the world
   world_state_t state;
   // Locations of the world
@@ -112,7 +155,7 @@ static inline state_t objectGetState(traits_t traits) {
 
 // Executes a state transition
 static inline traits_t objectTransition(traits_t traits,
-                                       transitions_t transitions) {
+                                        transitions_t transitions) {
   state_t current_state = objectGetState(traits);
   for (uint8_t i = 0; i < 4; i++) {
     uint8_t entry = (transitions >> (i * 4)) & 0xF;
@@ -123,4 +166,29 @@ static inline traits_t objectTransition(traits_t traits,
     }
   }
   return traits;
+}
+
+static inline void worldMakeSummary(world_t *world, string_t *summary) {
+  location_t *current_location = world->current_location;
+  state_t current_location_state = objectGetState(current_location->traits);
+
+  strFmt(summary, "LOCATION: %s (%s) [%s]\n", current_location->name,
+         current_location->description,
+         current_location->states[current_location_state]);
+
+  strFmtAppend(summary, "ITEMS:\n");
+  for (size_t i = 0; i < current_location->items->used; i++) {
+    item_t *object = bufAt(current_location->items, i);
+    state_t object_state = objectGetState(object->traits);
+    strFmtAppend(summary, "  - %s (%s) [%s]\n", object->name,
+                 object->description, object->states[object_state]);
+  }
+
+  strFmtOffset(summary, summary->used, "EXITS:\n");
+  for (size_t i = 0; i < current_location->exits->used; i++) {
+    location_t *exit = (location_t *)bufAt(current_location->exits, i);
+    state_t object_state = objectGetState(exit->traits);
+    strFmtAppend(summary, "  - %s (%s) [%s]\n", exit->name, exit->description,
+                 exit->states[object_state]);
+  }
 }

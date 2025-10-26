@@ -39,11 +39,44 @@ void stringClear(void) {
   strDestroy(&subject);
 }
 
+void stringTrim(void) {
+  string_t *subject = strFrom("     hello");
+  size_t length = subject->length;
+  strTrim(subject);
+  expectEqls(subject->data, "hello", length, "trims left");
+
+  subject = strFrom("hello     ");
+  strTrim(subject);
+  expectEqls(subject->data, "hello", length, "trims right");
+  strDestroy(&subject);
+
+  subject = strFrom("        hello     ");
+  strTrim(subject);
+  expectEqls(subject->data, "hello", length, "trims both");
+  strDestroy(&subject);
+
+  subject = strFrom("hello");
+  strTrim(subject);
+  expectEqls(subject->data, "hello", length, "trims nothing");
+  strDestroy(&subject);
+
+  subject = strFrom("he llo");
+  strTrim(subject);
+  expectEqls(subject->data, "he llo", length, "trims nothing (whitespaces)");
+  strDestroy(&subject);
+
+  subject = strFrom("    ");
+  strTrim(subject);
+  expectEqls(subject->data, "", length, "trims everything");
+  strDestroy(&subject);
+}
+
 int main(void) {
   suite(stringCreate);
   suite(stringFrom);
   suite(stringFormat);
   suite(stringClear);
+  suite(stringTrim);
 
   return report();
 }

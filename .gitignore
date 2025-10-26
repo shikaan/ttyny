@@ -1,6 +1,7 @@
 compile_commands.json
 .todo
 .DS_Store
+.zed
 
 # build artifacts
 build

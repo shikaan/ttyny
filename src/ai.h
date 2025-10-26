@@ -23,12 +23,15 @@ void aiResultFormat(ai_result_t, string_t *);
 typedef enum {
   PROMPT_TYPE_USR = 0,
   PROMPT_TYPE_SYS,
+  PROMPT_TYPE_RES,
 
   PROMPT_TYPES,
 } prompt_type_t;
 
 typedef struct {
-  const string_t *prompts[PROMPT_TYPES];
+  const char* path;
+  const string_t *prompt_templates[PROMPT_TYPES];
+  const string_t *grammar;
   float min_p;
   float temp;
   float repetition_penalty;
@@ -44,35 +47,9 @@ typedef struct {
   config_t *configuration;
 } ai_t;
 
-[[nodiscard]] ai_t *aiCreate(const char *, config_t *);
+[[nodiscard]] ai_t *aiCreate(config_t *);
 void aiDestory(ai_t **);
 
-void aiUserPrompt(ai_t *, const string_t *, string_t *);
-void aiSystemPrompt(ai_t *, const string_t *, const string_t *, string_t *);
-
-/// MODEL CONFIGURATIONS
-
-static string_t LFM2_USR_PROMPT = {
-    64,
-    64,
-    {"<|im_end|>\n<|im_start|>user\n%s<|im_end|>\n<|im_start|>assistant\n"},
-};
-
-static string_t LFM2_SYS_PROMPT = {
-    48,
-    48,
-    {"<|startoftext|><|im_start|>system\n%s"},
-};
-
-static config_t LFM2_PROMPT = {
-    .min_p = 0.05F,
-    .temp = 0.3F,
-    .context_size = 2048,
-    .top_k = 50,
-    .repetition_penalty = 1.2F,
-    .prompts =
-        {
-            &LFM2_USR_PROMPT,
-            &LFM2_SYS_PROMPT,
-        },
-};
+void aiGenerate(ai_t *, const string_t *, string_t *);
+void aiSetGrammar(ai_t *self, string_t *grammar);
+void aiReset(ai_t *self);

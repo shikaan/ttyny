@@ -28,9 +28,16 @@ zork: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
 	-framework Foundation -framework Metal -framework MetalKit
 zork: src/ai.o $(LLAMA_STATIC_LIBS)
 
+tests/parser.test: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
+	-Ivendor/llama.cpp/ggml/include
+tests/parser.test: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
+	-framework Foundation -framework Metal -framework MetalKit
+tests/parser.test: src/ai.o $(LLAMA_STATIC_LIBS)
+
 .PHONY: test
-test: tests/buffers.test
+test: tests/buffers.test tests/parser.test
 	tests/buffers.test
+	tests/parser.test
 
 .PHONY: clean
 clean:

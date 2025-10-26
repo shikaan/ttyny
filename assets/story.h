@@ -121,8 +121,6 @@ static items_t inventory = {
 };
 
 world_t troll_bridge_world = {
-    .context = "autumn,dusk,misty,cold,muddy,silent,distant crows,"
-               "woodsmoke,mossy,rickety,sluggish,peasant",
     .state = {.turns = 0, .health = 20, .damage = 2, .inventory = &inventory},
     .locations = &all_locations,
     .digest = bridge_troll_digest,
