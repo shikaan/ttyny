@@ -30,6 +30,8 @@ int main(void) {
   puts(response->data);
 
   while (1) {
+    world->state.turns++;
+
     printf("> ");
     strReadFrom(input, stdin);
 
@@ -100,6 +102,18 @@ int main(void) {
       puts("Not sure how to do that...");
       break;
     }
+
+    switch (world->digest(&world->state)) {
+    case GAME_STATE_VICTORY:
+      puts("You won!");
+      return EXIT_SUCCESS;
+    case GAME_STATE_DEAD:
+      puts("You're dead!");
+      return EXIT_FAILURE;
+    case GAME_STATE_CONTINUE:
+    default:
+      break;
+    };
   }
 
   return 0;

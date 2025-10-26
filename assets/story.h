@@ -100,8 +100,6 @@ static items_t all_objects = {
 
 // --- Digest function ---
 static game_state_t bridge_troll_digest(world_state_t *state) {
-  if (!state->inventory)
-    return GAME_STATE_CONTINUE;
   for (size_t i = 0; i < state->inventory->used; ++i) {
     item_t *object = bufAt(state->inventory, i);
     if (object->object.name == sword.object.name) {
