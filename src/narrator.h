@@ -42,7 +42,6 @@ static inline void narratorDescribeWorld(narrator_t *self, world_t *world,
                                          string_t *description) {
   const config_t *config = self->ai->configuration;
   const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
-  // const string_t *usr_prompt_tpl = config->prompt_templates[PROMPT_TYPE_USR];
   const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];
 
   strFmt(self->prompt, sys_prompt_tpl->data, NARRATOR_SYS_PROMPT.data);
@@ -52,6 +51,33 @@ static inline void narratorDescribeWorld(narrator_t *self, world_t *world,
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
   strClear(description);
+
+  // TODO: maybe this can keep _some_ memory?
+  aiReset(self->ai);
+  aiGenerate(self->ai, self->prompt, description);
+  // TODO: validate output
+}
+
+static inline void narratorDescribeObject(narrator_t *self, object_t *object,
+                                          string_t *description) {
+  const config_t *config = self->ai->configuration;
+  const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
+  const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];
+
+  strFmt(self->prompt, sys_prompt_tpl->data,
+         "You are the narrator of a dark fantasy game. You describe ITEM in "
+         "one sentence. Be witty.");
+
+  state_t item_state = objectGetState(object->traits);
+  strFmtAppend(self->prompt, "ITEM:\n name: %s\n description: %s\n state: %s\n",
+               object->name, object->description, object->states[item_state]);
+
+  strFmtAppend(self->prompt, res_prompt_tpl->data, "");
+
+  strClear(description);
+
+  // TODO: maybe this can keep _some_ memory?
+  aiReset(self->ai);
   aiGenerate(self->ai, self->prompt, description);
   // TODO: validate output
 }

@@ -2,42 +2,33 @@
 
 // --- Objects ---
 static item_t sword = {
-    .name = "Old Sword",
-    .description = "rusty,heavy,old",
-    .states =
-        {
-            "on the ground",
-            "held",
-            "chipped",
-            "broken",
-        },
-    .traits = 0b00000011, // collectible + change damage
+    .object = {.name = "Old Sword",
+             .type = OBJ_TYPE_ITEM,
+             .description = "rusty,heavy,old",
+             .states = {"on the ground", "held", "chipped", "broken"},
+             .traits = 0b00000011, // collectible + change damage
+             .transitions = 0b0001101101101010},
     .value = 5,
-    .transitions = 0b0001101101101010,
 };
 
 static item_t apple = {
-    .name = "Apple",
-    .description = "shiny,red",
-    .states = {"on a tree", "held", "bitten", "eaten"},
-    .traits = 0b00000101, // collectible + change health
+    .object = {.name = "Apple",
+             .type = OBJ_TYPE_ITEM,
+             .description = "shiny,red",
+             .states = {"on a tree", "held", "bitten", "eaten"},
+             .traits = 0b00000101, // collectible + change health
+             .transitions = 0b0001101101101010},
     .value = 10,
-    .transitions = 0b0001101101101010,
 };
 
 static item_t troll = {
-    .name = "Bridge Troll",
-    .description = "grumpy,smelly,huge,violent",
-    .states =
-        {
-            "standing",
-            "aggressive",
-            "wounded",
-            "fled",
-        },
-    .traits = 0b00001000, // ephemeral
+    .object = {.type = OBJ_TYPE_ITEM,
+             .name = "Bridge Troll",
+             .description = "grumpy,smelly,huge,violent",
+             .states = {"standing", "aggressive", "wounded", "fled"},
+             .traits = 0b00001000, // ephemeral
+             .transitions = 0b0001101000110010},
     .value = -10,
-    .transitions = 0b0001101000110010,
 };
 
 // --- Object buffers ---
@@ -64,29 +55,38 @@ static locations_t bridge_exits = {
     .length = 1, .used = 1, .data = {(struct location_t *)&forest}};
 
 // --- Locations ---
-static location_t clearing = {.name = "Clearing",
-                              .description = "sunny,grassy,peaceful",
-                              .states = {"sunny"},
-                              .items = &clearing_objects,
-                              .exits = &clearing_exits,
-                              .traits = 0,
-                              .transitions = 0};
+static location_t clearing = {
+    .object = {.type = OBJ_TYPE_LOCATION,
+             .name = "Clearing",
+             .description = "sunny,grassy,peaceful",
+             .states = {"sunny"},
+             .traits = 0,
+             .transitions = 0},
+    .items = &clearing_objects,
+    .exits = &clearing_exits,
+};
 
-static location_t forest = {.name = "Forest",
-                            .description = "dark,cool,ominous",
-                            .states = {"dark"},
-                            .items = &forest_objects,
-                            .exits = &forest_exits,
-                            .traits = 0,
-                            .transitions = 0};
+static location_t forest = {
+    .object = {.type = OBJ_TYPE_LOCATION,
+             .name = "Forest",
+             .description = "dark,cool,ominous",
+             .states = {"dark"},
+             .traits = 0,
+             .transitions = 0},
+    .exits = &forest_exits,
+    .items = &forest_objects,
+};
 
-static location_t bridge = {.name = "Bridge",
-                            .description = "rickety,over chasm,windy",
-                            .states = {"safe", "swaying"},
-                            .items = &bridge_objects,
-                            .exits = &bridge_exits,
-                            .traits = 0,
-                            .transitions = 0b0001101000110010};
+static location_t bridge = {
+    .object = {.type = OBJ_TYPE_LOCATION,
+             .name = "Bridge",
+             .description = "rickety,over chasm,windy",
+             .states = {"safe", "swaying"},
+             .traits = 0,
+             .transitions = 0b0001101000110010},
+    .items = &bridge_objects,
+    .exits = &bridge_exits,
+};
 
 // --- All locations and objects buffers ---
 static locations_t all_locations = {.length = 3,
@@ -104,7 +104,7 @@ static game_state_t bridge_troll_digest(world_state_t *state) {
     return GAME_STATE_CONTINUE;
   for (size_t i = 0; i < state->inventory->used; ++i) {
     item_t *object = bufAt(state->inventory, i);
-    if (object->name == sword.name) {
+    if (object->object.name == sword.object.name) {
       return GAME_STATE_VICTORY;
     }
   }

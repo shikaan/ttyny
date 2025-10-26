@@ -61,43 +61,57 @@ void targets(void) {
   string_t *cmd __attribute__((cleanup(strDestroy))) = strCreate(128);
   panicif(!cmd, "cannot initialize command buffer");
 
-  string_t *target __attribute__((cleanup(strDestroy))) = strCreate(128);
-  panicif(!target, "cannot initialize command buffer");
-
   items_t *items __attribute__((cleanup(itemsDestroy))) = itemsCreate(3);
   panicif(!items, "cannot initialize allowed buffer");
-  item_t key = {.name = "key"};
+  item_t key = {.object.name = "key"};
   bufPush(items, &key);
-  item_t coin = {.name = "coin"};
+  item_t coin = {.object.name = "coin"};
   bufPush(items, &coin);
-  item_t sword = {.name = "sword"};
+  item_t sword = {.object.name = "sword"};
   bufPush(items, &sword);
 
   locations_t *locations __attribute__((cleanup(locationsDestroy))) = locationsCreate(3);
   panicif(!locations, "cannot initialize allowed buffer");
-  location_t hall = {.name = "hall"};
+  location_t hall = {.object.name = "hall"};
   bufPush(locations, (struct location_t *)&hall);
-  location_t kitchen = {.name = "kitchen"};
+  location_t kitchen = {.object.name = "kitchen"};
   bufPush(locations, (struct location_t *)&kitchen);
-  location_t forest = {.name = "forest"};
+  location_t forest = {.object.name = "forest"};
   bufPush(locations, (struct location_t *)&forest);
+
+  // Just for testing, this room can exit to itself
+  forest.exits = locations;
+  forest.items = items;
+
+  world_t world = {
+    .current_location = &forest,
+    .locations = locations,
+    .items = items,
+  };
+
+  object_t* result;
 
 #define test(Command, Target)                                                  \
   strFmt(cmd, "%s", Command);                                                  \
-  parserExtractTarget(parser, cmd, locations, items, target);                  \
-  expectEqls(Target, target->data, sizeof(Target), Command);
+  result = parserExtractTarget(parser, cmd, &world);                           \
+  expectEqls(Target, result->name, sizeof(Target), Command);
+
+#define testNull(Command)                                                      \
+  strFmt(cmd, "%s", Command);                                                  \
+  result = parserExtractTarget(parser, cmd, &world);                           \
+  expectNull(result, Command);
 
   case("location");
   test("go to the hall", "hall");
   test("walk to kitchen", "kitchen");
   test("enter the forest", "forest");
-  test("move to the village", "unknown");
   test("let's go out in the woods", "forest");
   test("travel to the kitchen", "kitchen");
   test("I want to go to the hall", "hall");
-  test("go to the castle", "unknown");
   test("can we please walk together to the kitchen now", "kitchen");
   test("I think we should enter the forest before sunset", "forest");
+  testNull("move to the village");
+  testNull("go to the castle");
 
   case("item");
   test("grab the key from the table", "key");
@@ -108,9 +122,9 @@ void targets(void) {
   test("examine key closely", "key");
   test("check out the coin", "coin");
   test("observe coin", "coin");
-  test("employ the lantern", "unknown");
   test("utilize the sword", "sword");
-  test("discard the chair", "unknown");
+  testNull("employ the lantern");
+  testNull("discard the chair");
 #undef test
 }
 

@@ -61,21 +61,26 @@ typedef uint8_t state_t;
 // 0010 1011 1101 0100 means 0 -> 2, 2 -> 3, 3 -> 1, 1 -> 0
 typedef uint16_t transitions_t;
 
-// TODO: ADD NPC
-
 typedef struct {
   // Name of the object
   obj_id_t name;
-  // Description of the objects
+  // Type of the object
+  obj_type_t type;
+  // Description of the object
   const char *description;
   // Human-readable state descriptions
   const char *states[4];
   // Object traits as per above
   traits_t traits;
-  // In case the object changes damage or health, see by how much
-  int8_t value;
   // Transitions from one state to the next
   transitions_t transitions;
+} object_t;
+
+typedef struct {
+  // The base object MUST be the first member
+  object_t object;
+  // In case the object changes damage or health, see by how much
+  int8_t value;
 } item_t;
 
 typedef Buffer(item_t *) items_t;
@@ -92,20 +97,12 @@ struct location_t; // Forward declaration
 typedef Buffer(struct location_t *) locations_t;
 
 typedef struct {
-  // Name of the locations
-  obj_id_t name;
-  // Description of the locations
-  const char *description;
-  // Descriptions of the location. One description per state (see traits).
-  const char *states[4];
+  // The base object MUST be the first member
+  object_t object;
   // Objects to be found in this location
   items_t *items;
   // Exits from this location into other locations
   locations_t *exits;
-  // Location traits
-  traits_t traits;
-  // Transitions from one state to the next
-  transitions_t transitions;
 } location_t;
 
 static inline locations_t *locationsCreate(size_t length) {
@@ -170,25 +167,27 @@ static inline traits_t objectTransition(traits_t traits,
 
 static inline void worldMakeSummary(world_t *world, string_t *summary) {
   location_t *current_location = world->current_location;
-  state_t current_location_state = objectGetState(current_location->traits);
+  state_t current_location_state =
+      objectGetState(current_location->object.traits);
 
-  strFmt(summary, "LOCATION: %s (%s) [%s]\n", current_location->name,
-         current_location->description,
-         current_location->states[current_location_state]);
+  strFmt(summary, "LOCATION: %s (%s) [%s]\n", current_location->object.name,
+         current_location->object.description,
+         current_location->object.states[current_location_state]);
 
   strFmtAppend(summary, "ITEMS:\n");
   for (size_t i = 0; i < current_location->items->used; i++) {
     item_t *object = bufAt(current_location->items, i);
-    state_t object_state = objectGetState(object->traits);
-    strFmtAppend(summary, "  - %s (%s) [%s]\n", object->name,
-                 object->description, object->states[object_state]);
+    state_t object_state = objectGetState(object->object.traits);
+    strFmtAppend(summary, "  - %s (%s) [%s]\n", object->object.name,
+                 object->object.description,
+                 object->object.states[object_state]);
   }
 
   strFmtOffset(summary, summary->used, "EXITS:\n");
   for (size_t i = 0; i < current_location->exits->used; i++) {
     location_t *exit = (location_t *)bufAt(current_location->exits, i);
-    state_t object_state = objectGetState(exit->traits);
-    strFmtAppend(summary, "  - %s (%s) [%s]\n", exit->name, exit->description,
-                 exit->states[object_state]);
+    state_t object_state = objectGetState(exit->object.traits);
+    strFmtAppend(summary, "  - %s (%s) [%s]\n", exit->object.name,
+                 exit->object.description, exit->object.states[object_state]);
   }
 }

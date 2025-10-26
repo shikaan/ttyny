@@ -1,5 +1,4 @@
 #include "assets/story.h"
-#include "src/ai.h"
 #include "src/buffers.h"
 #include "src/narrator.h"
 #include "src/panic.h"
@@ -13,16 +12,17 @@
 #include <string.h>
 
 int main(void) {
-  string_t *input = strCreate(512);
-  string_t *response = strCreate(4096);
-  string_t *target = strCreate(128);
+  string_t *input __attribute((cleanup(strDestroy))) = strCreate(512);
+  string_t *response __attribute((cleanup(strDestroy))) = strCreate(4096);
+  string_t *target __attribute((cleanup(strDestroy))) = strCreate(128);
   world_t *world = &troll_bridge_world;
 
-  narrator_t *narrator = narratorCreate();
-  panicif(!narrator, "cannot instantiate narrator");
+  narrator_t *narrator __attribute((cleanup(narratorDestroy))) =
+      narratorCreate();
+  panicif(!narrator, "cannot create narrator");
 
-  parser_t *parser = parserCreate();
-  panicif(!parser, "cannot instantiate narrator");
+  parser_t *parser __attribute((cleanup(parserDestroy))) = parserCreate();
+  panicif(!parser, "cannot create narrator");
 
   ui_handle_t loading = loadingStart();
   narratorDescribeWorld(narrator, world, response);
@@ -37,13 +37,69 @@ int main(void) {
     loading = loadingStart();
 
     action_t action = parserExtractAction(parser, input);
-    parserExtractTarget(parser, input, world->locations, world->items, target);
 
-    printf("action: %d, target: %s\n", action, target->data);
+    object_t *obj = parserExtractTarget(parser, input, world);
+    item_t *item = NULL;
+    location_t *location = NULL;
 
-    narratorDescribeWorld(narrator, &troll_bridge_world, response);
-    loadingWait(loading);
-    puts(response->data);
+    if (obj) {
+      switch (obj->type) {
+      case OBJ_TYPE_ITEM:
+        item = (item_t *)obj;
+        break;
+      case OBJ_TYPE_LOCATION:
+        location = (location_t *)obj;
+        break;
+      case OBJ_TYPE_UNKNOWN:
+      case OBJ_TYPES:
+      default:
+        break;
+      }
+    }
+
+    switch (action) {
+    case ACTION_MOVE: {
+      if (!location) {
+        loadingWait(loading);
+        puts("Cannot go there.");
+        continue;
+      }
+
+      world->current_location = location;
+      narratorDescribeWorld(narrator, &troll_bridge_world, response);
+      loadingWait(loading);
+      puts(response->data);
+      break;
+    }
+    case ACTION_EXAMINE: {
+      if (item) {
+        narratorDescribeObject(narrator, &item->object, response);
+        loadingWait(loading);
+        puts(response->data);
+        break;
+      }
+
+      if (location) {
+        narratorDescribeObject(narrator, &location->object, response);
+        loadingWait(loading);
+        puts(response->data);
+        break;
+      }
+
+      loadingWait(loading);
+      puts("Not sure what to make of that...");
+      break;
+    }
+    case ACTION_TAKE:
+    case ACTION_DROP:
+    case ACTION_USE:
+    case ACTIONS:
+    case ACTION_UNKNOWN:
+    default:
+      loadingWait(loading);
+      puts("Not sure how to do that...");
+      break;
+    }
   }
 
   return 0;

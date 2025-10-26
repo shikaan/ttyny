@@ -14,9 +14,9 @@ static const string_t PARSER_TARGET_SYS_PROMPT = strConst(
     "intent. When there is no match, respond with 'unknown'.");
 
 static const string_t NARRATOR_SYS_PROMPT =
-    strConst("You write 2 sentences about LOCATION. "
-             "You emphasize EXITS and ITEMS. Describe position where EXITS and "
-             "ITEMS are.\n");
+    strConst("You are the narrator of a dark fantasy game. In two sentences, "
+             "describe the LOCATION. You must mention all EXITS and ITEMS, "
+             "and say where they are.");
 
 static string_t RES_PROMPT = strConst("<|im_end|>\n<|im_start|>assistant\n%s");
 static string_t USR_PROMPT = strConst("<|im_end|>\n<|im_start|>user\n%s");
