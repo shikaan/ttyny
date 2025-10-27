@@ -3,40 +3,44 @@
 // --- Objects ---
 static item_t sword = {
     .object = {.name = "Old Sword",
-             .type = OBJ_TYPE_ITEM,
-             .description = "rusty,heavy,old",
-             .states = {"on the ground", "held", "chipped", "broken"},
-             .traits = 0b00000011, // collectible + change damage
-             .transitions = 0b0001101101101010},
+               .type = OBJ_TYPE_ITEM,
+               .description = "rusty,heavy,old",
+               .states = {"on the ground", "held", "chipped", "broken"},
+               .traits = 0b00000011, // collectible + change damage
+               .transitions = 0b0001101101101010},
     .value = 5,
 };
 
 static item_t apple = {
     .object = {.name = "Apple",
-             .type = OBJ_TYPE_ITEM,
-             .description = "shiny,red",
-             .states = {"on a tree", "held", "bitten", "eaten"},
-             .traits = 0b00000101, // collectible + change health
-             .transitions = 0b0001101101101010},
+               .type = OBJ_TYPE_ITEM,
+               .description = "shiny,red",
+               .states = {"on a tree", "held", "bitten", "eaten"},
+               .traits = 0b00000101, // collectible + change health
+               .transitions = 0b0001101101101010},
     .value = 10,
 };
 
 static item_t troll = {
     .object = {.type = OBJ_TYPE_ITEM,
-             .name = "Bridge Troll",
-             .description = "grumpy,smelly,huge,violent",
-             .states = {"standing", "aggressive", "wounded", "fled"},
-             .traits = 0b00001000, // ephemeral
-             .transitions = 0b0001101000110010},
+               .name = "Bridge Troll",
+               .description = "grumpy,smelly,huge,violent",
+               .states = {"standing", "aggressive", "wounded", "fled"},
+               .traits = 0b00001000, // ephemeral
+               .transitions = 0b0001101000110010},
     .value = -10,
 };
 
 // --- Object buffers ---
-static items_t clearing_objects = {.length = 1, .used = 1, .data = {&sword}};
+// The item list for every room needs to be as long as all objects
+static items_t clearing_objects = {
+    .length = 3, .used = 1, .data = {&sword, NULL, NULL}};
 
-static items_t forest_objects = {.length = 1, .used = 1, .data = {&apple}};
+static items_t forest_objects = {
+    .length = 3, .used = 1, .data = {&apple, NULL, NULL}};
 
-static items_t bridge_objects = {.length = 1, .used = 1, .data = {&troll}};
+static items_t bridge_objects = {
+    .length = 3, .used = 1, .data = {&troll, NULL, NULL}};
 
 // --- Forward declarations for locations ---
 static locations_t clearing_exits, forest_exits, bridge_exits;
@@ -57,33 +61,33 @@ static locations_t bridge_exits = {
 // --- Locations ---
 static location_t clearing = {
     .object = {.type = OBJ_TYPE_LOCATION,
-             .name = "Clearing",
-             .description = "sunny,grassy,peaceful",
-             .states = {"sunny"},
-             .traits = 0,
-             .transitions = 0},
+               .name = "Clearing",
+               .description = "sunny,grassy,peaceful",
+               .states = {"sunny"},
+               .traits = 0,
+               .transitions = 0},
     .items = &clearing_objects,
     .exits = &clearing_exits,
 };
 
 static location_t forest = {
     .object = {.type = OBJ_TYPE_LOCATION,
-             .name = "Forest",
-             .description = "dark,cool,ominous",
-             .states = {"dark"},
-             .traits = 0,
-             .transitions = 0},
+               .name = "Forest",
+               .description = "dark,cool,ominous",
+               .states = {"dark"},
+               .traits = 0,
+               .transitions = 0},
     .exits = &forest_exits,
     .items = &forest_objects,
 };
 
 static location_t bridge = {
     .object = {.type = OBJ_TYPE_LOCATION,
-             .name = "Bridge",
-             .description = "rickety,over chasm,windy",
-             .states = {"safe", "swaying"},
-             .traits = 0,
-             .transitions = 0b0001101000110010},
+               .name = "Bridge",
+               .description = "rickety,over chasm,windy",
+               .states = {"safe", "swaying"},
+               .traits = 0,
+               .transitions = 0b0001101000110010},
     .items = &bridge_objects,
     .exits = &bridge_exits,
 };
@@ -113,9 +117,9 @@ static game_state_t bridge_troll_digest(world_state_t *state) {
 
 // --- Setting and world ---
 static items_t inventory = {
-    .length = 5,
+    .length = 3,
     .used = 0,
-    .data = {NULL, NULL, NULL, NULL, NULL},
+    .data = {NULL, NULL, NULL},
 };
 
 world_t troll_bridge_world = {

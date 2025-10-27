@@ -16,42 +16,42 @@ void actions(void) {
   action = parserExtractAction(parser, cmd);                                   \
   expectEqli(action, Action, Command);
 
-case("move");
-test("go to the hall", ACTION_MOVE);
-test("walk to hall", ACTION_MOVE);
-test("enter the hall", ACTION_MOVE);
-test("move to hall", ACTION_MOVE);
-test("travel to hall", ACTION_MOVE);
-test("I want to go to the hall", ACTION_MOVE);
+  case("move");
+  test("go to the hall", ACTION_MOVE);
+  test("walk to hall", ACTION_MOVE);
+  test("enter the hall", ACTION_MOVE);
+  test("move to hall", ACTION_MOVE);
+  test("travel to hall", ACTION_MOVE);
+  test("I want to go to the hall", ACTION_MOVE);
 
-case("take");
-test("grab the key from the table", ACTION_TAKE);
-test("fetch the object", ACTION_TAKE);
-test("pick up the key", ACTION_TAKE);
-test("get the key please", ACTION_TAKE);
-test("take the key", ACTION_TAKE);
-test("I want to take the key", ACTION_TAKE);
-test("retrieve the key", ACTION_TAKE);
+  case("take");
+  test("grab the key from the table", ACTION_TAKE);
+  test("fetch the object", ACTION_TAKE);
+  test("pick up the key", ACTION_TAKE);
+  test("get the key please", ACTION_TAKE);
+  test("take the key", ACTION_TAKE);
+  test("I want to take the key", ACTION_TAKE);
+  test("retrieve the key", ACTION_TAKE);
 
-case("examine");
-test("look at the key", ACTION_EXAMINE);
-test("inspect the coin", ACTION_EXAMINE);
-test("examine key closely", ACTION_EXAMINE);
-test("check out the coin", ACTION_EXAMINE);
-test("study the key", ACTION_EXAMINE);
-test("observe coin", ACTION_EXAMINE);
+  case("examine");
+  test("look at the key", ACTION_EXAMINE);
+  test("inspect the coin", ACTION_EXAMINE);
+  test("examine key closely", ACTION_EXAMINE);
+  test("check out the coin", ACTION_EXAMINE);
+  test("study the key", ACTION_EXAMINE);
+  test("observe coin", ACTION_EXAMINE);
 
-case("use");
-test("use the key", ACTION_USE);
-test("activate key", ACTION_USE);
-test("apply the coin", ACTION_USE);
-test("employ the lantern", ACTION_USE);
-test("utilize the sword", ACTION_USE);
+  case("use");
+  test("use the key", ACTION_USE);
+  test("activate key", ACTION_USE);
+  test("apply the coin", ACTION_USE);
+  test("employ the lantern", ACTION_USE);
+  test("utilize the sword", ACTION_USE);
 
-case("drop");
-test("drop the key on the ground", ACTION_DROP);
-test("put down the coin", ACTION_DROP);
-test("discard the lantern", ACTION_DROP);
+  case("drop");
+  test("drop the key on the ground", ACTION_DROP);
+  test("put down the coin", ACTION_DROP);
+  test("discard the lantern", ACTION_DROP);
 #undef test
 }
 
@@ -84,49 +84,57 @@ void targets(void) {
   forest.exits = locations;
   forest.items = items;
 
-  world_t world = {
-    .current_location = &forest,
-    .locations = locations,
-    .items = items,
-  };
+  item_t* item = NULL;
+  location_t* location = NULL;
 
-  object_t* result;
+#define testl(Command, Location)                                             \
+    item = NULL;                                                               \
+    location = NULL;                                                           \
+    strFmt(cmd, "%s", Command);                                                \
+    parserExtractTarget(parser, cmd, locations, items, &location, &item);      \
+    expectTrue(&Location == location, Command);
 
-#define test(Command, Target)                                                  \
-  strFmt(cmd, "%s", Command);                                                  \
-  result = parserExtractTarget(parser, cmd, &world);                           \
-  expectEqls(Target, result->name, sizeof(Target), Command);
+#define testi(Command, Item)                                                 \
+    item = NULL;                                                               \
+    location = NULL;                                                           \
+    strFmt(cmd, "%s", Command);                                                \
+    parserExtractTarget(parser, cmd, locations, items, &location, &item);      \
+    expectTrue(&Item == item, Command);
 
-#define testNull(Command)                                                      \
-  strFmt(cmd, "%s", Command);                                                  \
-  result = parserExtractTarget(parser, cmd, &world);                           \
-  expectNull(result, Command);
+#define testn(Command)                                                       \
+    item = NULL;                                                               \
+    location = NULL;                                                           \
+    strFmt(cmd, "%s", Command);                                                \
+    parserExtractTarget(parser, cmd, locations, items, &location, &item);      \
+    expectTrue(!location && !item, Command);
 
   case("location");
-  test("go to the hall", "hall");
-  test("walk to kitchen", "kitchen");
-  test("enter the forest", "forest");
-  test("let's go out in the woods", "forest");
-  test("travel to the kitchen", "kitchen");
-  test("I want to go to the hall", "hall");
-  test("can we please walk together to the kitchen now", "kitchen");
-  test("I think we should enter the forest before sunset", "forest");
-  testNull("move to the village");
-  testNull("go to the castle");
+  testl("go to the hall", hall);
+  testl("walk to kitchen", kitchen);
+  testl("enter the forest", forest);
+  testl("let's go out in the woods", forest);
+  testl("travel to the kitchen", kitchen);
+  testl("I want to go to the hall", hall);
+  testl("can we please walk together to the kitchen now", kitchen);
+  testl("I think we should enter the forest before sunset", forest);
+  testn("move to the village");
+  testn("go to the castle");
 
   case("item");
-  test("grab the key from the table", "key");
-  test("fetch the money", "coin");
-  test("pick up the key", "key");
-  test("get the key please", "key");
-  test("take the key", "key");
-  test("examine key closely", "key");
-  test("check out the coin", "coin");
-  test("observe coin", "coin");
-  test("utilize the sword", "sword");
-  testNull("employ the lantern");
-  testNull("discard the chair");
-#undef test
+  testi("grab the key from the table", key);
+  testi("fetch the money", coin);
+  testi("pick up the key", key);
+  testi("get the key please", key);
+  testi("take the key", key);
+  testi("examine key closely", key);
+  testi("check out the coin", coin);
+  testi("observe coin", coin);
+  testi("utilize the sword", sword);
+  testn("employ the lantern");
+  testn("discard the chair");
+#undef testl
+#undef testi
+#undef testn
 }
 
 int main(void) {

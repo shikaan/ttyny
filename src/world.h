@@ -45,30 +45,31 @@ static inline int objectIdEq(obj_id_t self, obj_id_t other) {
   return strcmp(self, other) == 0;
 }
 
-typedef Buffer(obj_id_t) objects_t;
-
 typedef enum {
-  FAILURE_EXAMINE_INVALID_TARGET,
-  FAILURE_MOVE_INVALID_LOCATION,
+  FAILURE_INVALID_TARGET,
+  FAILURE_INVALID_LOCATION,
+  FAILURE_INVALID_ITEM,
 
   FAILURES,
 } failures_t;
 
-static string_t FAILURE_EXAMINE_INVALID_TARGET_NAME =
+static string_t FAILURE_INVALID_TARGET_NAME =
     strConst("missing or invalid target");
-static string_t FAILURE_MOVE_INVALID_LOCATION_NAME =
+static string_t FAILURE_INVALID_LOCATION_NAME =
     strConst("missing or invalid location");
+static string_t FAILURE_INVALID_ITEM_NAME = strConst("missing or invalid item");
 
 static string_t *failure_names[FAILURES] = {
-    &FAILURE_EXAMINE_INVALID_TARGET_NAME,
-    &FAILURE_MOVE_INVALID_LOCATION_NAME,
+    &FAILURE_INVALID_TARGET_NAME,
+    &FAILURE_INVALID_LOCATION_NAME,
+    &FAILURE_INVALID_ITEM_NAME,
 };
 
 // Boolean map of traits for objects and location.
 // The traits are fixed. Interactions in the game change the state (last 2 bits)
 // according to the transactions
 //
-// OBJECT (76543210)
+// ITEM  (76543210)
 // 0     = collectible
 // 1     = change damage
 // 2     = change health
@@ -117,16 +118,36 @@ typedef struct {
 
 typedef Buffer(item_t *) items_t;
 
+static const items_t NO_ITEMS = {0, 0, {}};
+
 static inline items_t *itemsCreate(size_t length) {
   items_t *items = NULL;
   makeBufCreate(items_t, item_t, items, length);
   return items;
 }
 
+static inline void itemsAdd(items_t *self, item_t *item) {
+  bufPush(self, item);
+  // TODO: make items_t extensible
+}
+
+static inline void itemsRemove(items_t *self, item_t *item) {
+  for (size_t i = 0; i < self->used; i++) {
+    if (bufAt(self, i) == item) {
+      item_t *last = bufAt(self, self->used - 1);
+      bufSet(self, i, last);
+      bufSet(self, self->used - 1, NULL);
+      self->used--;
+      break;
+    }
+  }
+}
+
 static inline void itemsDestroy(items_t **self) { deallocate(self); }
 
 struct location_t; // Forward declaration
 typedef Buffer(struct location_t *) locations_t;
+static const locations_t NO_LOCATIONS = {0, 0, {}};
 
 typedef struct {
   // The base object MUST be the first member

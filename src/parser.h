@@ -94,9 +94,15 @@ static inline action_t parserExtractAction(parser_t *self,
   return ACTION_UNKNOWN;
 }
 
-static inline object_t *parserExtractTarget(parser_t *self,
-                                            const string_t *input,
-                                            const world_t *world) {
+static inline void parserExtractTarget(parser_t *self, const string_t *input,
+                                       const locations_t *locations,
+                                       const items_t *items,
+                                       location_t **result_location,
+                                       item_t **result_item) {
+  panicif(!locations, "missing locations");
+  panicif(!items, "missing items");
+  panicif(!input, "missing input");
+
   const config_t *config = self->ai->configuration;
   const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
   const string_t *usr_prompt_tpl = config->prompt_templates[PROMPT_TYPE_USR];
@@ -106,13 +112,11 @@ static inline object_t *parserExtractTarget(parser_t *self,
 
   strFmt(self->target_grammar, "root ::= \"unknown\"");
 
-  const locations_t *exits = world->current_location->exits;
-  for (size_t i = 0; i < exits->used; i++) {
-    location_t *exit = (location_t *)bufAt(exits, i);
+  for (size_t i = 0; i < locations->used; i++) {
+    location_t *exit = (location_t *)bufAt(locations, i);
     strFmtAppend(self->target_grammar, " | \"%s\"", exit->object.name);
   }
 
-  const items_t *items = world->current_location->items;
   for (size_t i = 0; i < items->used; i++) {
     item_t *item = bufAt(items, i);
     strFmtAppend(self->target_grammar, " | \"%s\"", item->object.name);
@@ -120,22 +124,26 @@ static inline object_t *parserExtractTarget(parser_t *self,
 
   // Populate few-shots examples
   char shot_buffer[256] = {};
-  for (size_t i = 0; i < arrLen(location_shots_tpls); i++) {
-    const char *shot_tpl = location_shots_tpls[i];
-    const size_t j = i % items->used;
-    location_t *exit = (location_t *)bufAt(exits, j);
-    snprintf(shot_buffer, sizeof(shot_buffer), shot_tpl, exit->object.name);
-    strFmtAppend(self->prompt, usr_prompt_tpl->data, shot_buffer);
-    strFmtAppend(self->prompt, res_prompt_tpl->data, exit->object.name);
+  if (locations->used) {
+    for (size_t i = 0; i < arrLen(location_shots_tpls); i++) {
+      const char *shot_tpl = location_shots_tpls[i];
+      const size_t j = i % locations->used;
+      location_t *exit = (location_t *)bufAt(locations, j);
+      snprintf(shot_buffer, sizeof(shot_buffer), shot_tpl, exit->object.name);
+      strFmtAppend(self->prompt, usr_prompt_tpl->data, shot_buffer);
+      strFmtAppend(self->prompt, res_prompt_tpl->data, exit->object.name);
+    }
   }
 
-  for (size_t i = 0; i < arrLen(item_shots_tpls); i++) {
-    const char *shot_tpl = item_shots_tpls[i];
-    const size_t j = i % items->used;
-    const item_t *item = bufAt(items, j);
-    snprintf(shot_buffer, sizeof(shot_buffer), shot_tpl, item->object.name);
-    strFmtAppend(self->prompt, usr_prompt_tpl->data, shot_buffer);
-    strFmtAppend(self->prompt, res_prompt_tpl->data, item->object.name);
+  if (items->used) {
+    for (size_t i = 0; i < arrLen(item_shots_tpls); i++) {
+      const char *shot_tpl = item_shots_tpls[i];
+      const size_t j = i % items->used;
+      const item_t *item = bufAt(items, j);
+      snprintf(shot_buffer, sizeof(shot_buffer), shot_tpl, item->object.name);
+      strFmtAppend(self->prompt, usr_prompt_tpl->data, shot_buffer);
+      strFmtAppend(self->prompt, res_prompt_tpl->data, item->object.name);
+    }
   }
 
   strFmtAppend(self->prompt, usr_prompt_tpl->data, input->data);
@@ -146,21 +154,26 @@ static inline object_t *parserExtractTarget(parser_t *self,
   aiGenerate(self->ai, self->prompt, self->response);
   strTrim(self->response);
 
-  for (size_t i = 0; i < exits->used; i++) {
-    location_t *exit = (location_t *)bufAt(exits, i);
-    if (objectIdEq(self->response->data, exit->object.name)) {
-      return (object_t *)exit;
+  for (size_t i = 0; i < locations->used; i++) {
+    location_t *location = (location_t *)bufAt(locations, i);
+    if (objectIdEq(self->response->data, location->object.name)) {
+      *result_item = NULL;
+      *result_location = location;
+      return;
     }
   }
 
   for (size_t i = 0; i < items->used; i++) {
     item_t *item = bufAt(items, i);
     if (objectIdEq(self->response->data, item->object.name)) {
-      return (object_t *)item;
+      *result_item = item;
+      *result_location = NULL;
+      return;
     }
   }
 
-  return NULL;
+  *result_item = NULL;
+  *result_location = NULL;
 }
 
 static inline void parserDestroy(parser_t **self) {

@@ -40,38 +40,35 @@ int main(void) {
 
     action_t action = parserExtractAction(parser, input);
 
-    object_t *obj = parserExtractTarget(parser, input, world);
     item_t *item = NULL;
     location_t *location = NULL;
 
-    if (obj) {
-      switch (obj->type) {
-      case OBJ_TYPE_ITEM:
-        item = (item_t *)obj;
-        break;
-      case OBJ_TYPE_LOCATION:
-        location = (location_t *)obj;
-        break;
-      case OBJ_TYPE_UNKNOWN:
-      case OBJ_TYPES:
-      default:
-        break;
-      }
-    }
+    const locations_t *locations = NULL;
+    const items_t *items = NULL;
 
     switch (action) {
     case ACTION_MOVE: {
+      items = &NO_ITEMS;
+      locations = world->current_location->exits;
+      parserExtractTarget(parser, input, locations, items, &location, &item);
+
       if (!location) {
-        narratorCommentFailure(narrator, FAILURE_EXAMINE_INVALID_TARGET, input,
+        narratorCommentFailure(narrator, FAILURE_INVALID_TARGET, input,
                                response);
         goto print;
       }
 
       world->current_location = location;
       narratorDescribeWorld(narrator, &troll_bridge_world, response);
+      strFmtAppend(response, "\n~> Location: %s.", location->object.name);
       goto print;
     }
     case ACTION_EXAMINE: {
+      // TODO: how to examine the inventory?
+      items = world->current_location->items;
+      locations = world->current_location->exits;
+      parserExtractTarget(parser, input, locations, items, &location, &item);
+
       if (item) {
         narratorDescribeObject(narrator, &item->object, response);
         goto print;
@@ -82,19 +79,47 @@ int main(void) {
         goto print;
       }
 
-      narratorCommentFailure(narrator, FAILURE_EXAMINE_INVALID_TARGET, input,
-                             response);
+      narratorCommentFailure(narrator, FAILURE_INVALID_TARGET, input, response);
       goto print;
     }
-    case ACTION_TAKE:
-    case ACTION_DROP:
+    case ACTION_TAKE: {
+      items = world->current_location->items;
+      locations = &NO_LOCATIONS;
+      parserExtractTarget(parser, input, locations, items, &location, &item);
+
+      if (!item) {
+        narratorCommentFailure(narrator, FAILURE_INVALID_ITEM, input, response);
+        goto print;
+      }
+
+      itemsAdd(world->state.inventory, item);
+      itemsRemove(world->current_location->items, item);
+      narratorCommentSuccess(narrator, world, input, response);
+      strFmtAppend(response, "\n~> %s taken.", item->object.name);
+      goto print;
+    }
+    case ACTION_DROP: {
+      items = world->state.inventory;
+      locations = &NO_LOCATIONS;
+      parserExtractTarget(parser, input, locations, items, &location, &item);
+
+      if (!item) {
+        narratorCommentFailure(narrator, FAILURE_INVALID_ITEM, input, response);
+        goto print;
+      }
+
+      itemsAdd(world->current_location->items, item);
+      itemsRemove(world->state.inventory, item);
+      narratorCommentSuccess(narrator, world, input, response);
+      strFmtAppend(response, "\n~> %s dropped.", item->object.name);
+      goto print;
+    }
     case ACTION_USE:
     case ACTIONS:
     case ACTION_UNKNOWN:
     default:
-      loadingWait(loading);
-      puts("Not sure how to do that...");
-      break;
+      strFmt(response, "Not sure how to do that...");
+      goto print;
     }
 
   print:
