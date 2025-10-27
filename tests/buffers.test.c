@@ -1,8 +1,9 @@
 #include "../src/buffers.h"
+#include "../src/utils.h"
 #include "test.h"
 
 void stringCreate(void) {
-  string_t *subject = strCreate(3);
+  string_t *subject cleanup(strDestroy) = strCreate(3);
   expectEqls(subject->data, "", 3, "has correct content");
   expectEqllu(subject->length, 3, "has correct length");
   expectEqllu(subject->used, 0, "has correct used");
@@ -10,7 +11,7 @@ void stringCreate(void) {
 }
 
 void stringFrom(void) {
-  string_t *subject = strFrom("lol");
+  string_t *subject cleanup(strDestroy) = strFrom("lol");
   expectEqls(subject->data, "lol", 3, "has correct content");
   expectEqllu(subject->length, 3, "has correct length");
   expectEqllu(subject->used, 3, "has correct used");
@@ -18,7 +19,7 @@ void stringFrom(void) {
 }
 
 void stringFormat(void) {
-  string_t *subject = strCreate(4);
+  string_t *subject cleanup(strDestroy) = strCreate(4);
   strFmt(subject, "%s", "longer");
   expectEqls(subject->data, "long", 4, "truncates content");
   expectEqllu(subject->used, 4, "has correct used");
@@ -30,7 +31,7 @@ void stringFormat(void) {
 }
 
 void stringClear(void) {
-  string_t *subject = strFrom("hello");
+  string_t *subject cleanup(strDestroy) = strFrom("hello");
   size_t length = subject->length;
   strClear(subject);
   expectEqls(subject->data, "", length, "truncates content");
@@ -40,35 +41,32 @@ void stringClear(void) {
 }
 
 void stringTrim(void) {
-  string_t *subject = strFrom("     hello");
+  string_t *subject cleanup(strDestroy) = strCreate(128);
+
+  strFmt(subject, "%s", "         hello");
   size_t length = subject->length;
   strTrim(subject);
   expectEqls(subject->data, "hello", length, "trims left");
 
-  subject = strFrom("hello     ");
+  strFmt(subject, "%s", "hello     ");
   strTrim(subject);
   expectEqls(subject->data, "hello", length, "trims right");
-  strDestroy(&subject);
 
-  subject = strFrom("        hello     ");
+  strFmt(subject, "%s", "        hello     ");
   strTrim(subject);
   expectEqls(subject->data, "hello", length, "trims both");
-  strDestroy(&subject);
 
-  subject = strFrom("hello");
+  strFmt(subject, "%s", "hello");
   strTrim(subject);
   expectEqls(subject->data, "hello", length, "trims nothing");
-  strDestroy(&subject);
 
-  subject = strFrom("he llo");
+  strFmt(subject, "%s", "he llo");
   strTrim(subject);
   expectEqls(subject->data, "he llo", length, "trims nothing (whitespaces)");
-  strDestroy(&subject);
 
-  subject = strFrom("    ");
+  strFmt(subject, "%s", "    ");
   strTrim(subject);
   expectEqls(subject->data, "", length, "trims everything");
-  strDestroy(&subject);
 }
 
 int main(void) {

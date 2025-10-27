@@ -12,16 +12,15 @@
 #include <string.h>
 
 int main(void) {
-  string_t *input __attribute((cleanup(strDestroy))) = strCreate(512);
-  string_t *response __attribute((cleanup(strDestroy))) = strCreate(4096);
-  string_t *target __attribute((cleanup(strDestroy))) = strCreate(128);
+  string_t *input cleanup(strDestroy) = strCreate(512);
+  string_t *response cleanup(strDestroy) = strCreate(4096);
+  string_t *target cleanup(strDestroy) = strCreate(128);
   world_t *world = &troll_bridge_world;
 
-  narrator_t *narrator __attribute((cleanup(narratorDestroy))) =
-      narratorCreate();
+  narrator_t *narrator cleanup(narratorDestroy) = narratorCreate();
   panicif(!narrator, "cannot create narrator");
 
-  parser_t *parser __attribute((cleanup(parserDestroy))) = parserCreate();
+  parser_t *parser cleanup(parserDestroy) = parserCreate();
   panicif(!parser, "cannot create narrator");
 
   ui_handle_t loading = loadingStart();

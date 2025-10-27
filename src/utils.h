@@ -15,3 +15,5 @@ static inline void debug(const char *fmt, ...) {
   (void)fmt;
 }
 #endif
+
+#define cleanup(Callback) __attribute__((cleanup(Callback)))

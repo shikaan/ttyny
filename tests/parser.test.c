@@ -2,10 +2,10 @@
 #include "test.h"
 
 void actions(void) {
-  parser_t *parser __attribute__((cleanup(parserDestroy))) = parserCreate();
+  parser_t *parser cleanup(parserDestroy) = parserCreate();
   panicif(!parser, "cannot initialize parser");
 
-  string_t *cmd __attribute__((cleanup(strDestroy))) = strCreate(128);
+  string_t *cmd cleanup(strDestroy) = strCreate(128);
   panicif(!cmd, "cannot initialize command buffer");
 
   action_t action;
@@ -55,13 +55,13 @@ test("discard the lantern", ACTION_DROP);
 }
 
 void targets(void) {
-  parser_t *parser __attribute__((cleanup(parserDestroy))) = parserCreate();
+  parser_t *parser cleanup(parserDestroy) = parserCreate();
   panicif(!parser, "cannot initialize parser");
 
-  string_t *cmd __attribute__((cleanup(strDestroy))) = strCreate(128);
+  string_t *cmd cleanup(strDestroy) = strCreate(128);
   panicif(!cmd, "cannot initialize command buffer");
 
-  items_t *items __attribute__((cleanup(itemsDestroy))) = itemsCreate(3);
+  items_t *items cleanup(itemsDestroy) = itemsCreate(3);
   panicif(!items, "cannot initialize allowed buffer");
   item_t key = {.object.name = "key"};
   bufPush(items, &key);
@@ -70,7 +70,7 @@ void targets(void) {
   item_t sword = {.object.name = "sword"};
   bufPush(items, &sword);
 
-  locations_t *locations __attribute__((cleanup(locationsDestroy))) = locationsCreate(3);
+  locations_t *locations cleanup(locationsDestroy) = locationsCreate(3);
   panicif(!locations, "cannot initialize allowed buffer");
   location_t hall = {.object.name = "hall"};
   bufPush(locations, (struct location_t *)&hall);
