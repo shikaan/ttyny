@@ -32,16 +32,16 @@ static string_t *action_names[ACTIONS] = {
 };
 
 typedef enum {
-  OBJ_TYPE_UNKNOWN = -1,
-  OBJ_TYPE_ITEM = 0,
-  OBJ_TYPE_LOCATION,
+  OBJECT_TYPE_UNKNOWN = -1,
+  OBJECT_TYPE_ITEM = 0,
+  OBJECT_TYPE_LOCATION,
 
   OBJ_TYPES,
-} obj_type_t;
+} object_type_t;
 
-typedef const char *obj_id_t;
+typedef const char *object_name_t;
 
-static inline int objectIdEq(obj_id_t self, obj_id_t other) {
+static inline int objectIdEq(object_name_t self, object_name_t other) {
   return strcmp(self, other) == 0;
 }
 
@@ -49,6 +49,7 @@ typedef enum {
   FAILURE_INVALID_TARGET,
   FAILURE_INVALID_LOCATION,
   FAILURE_INVALID_ITEM,
+  FAILURE_CANNOT_COLLECT_ITEM,
 
   FAILURES,
 } failures_t;
@@ -58,11 +59,14 @@ static string_t FAILURE_INVALID_TARGET_NAME =
 static string_t FAILURE_INVALID_LOCATION_NAME =
     strConst("missing or invalid location");
 static string_t FAILURE_INVALID_ITEM_NAME = strConst("missing or invalid item");
+static string_t FAILURE_CANNOT_COLLECT_ITEM_NAME =
+    strConst("cannot collect item");
 
 static string_t *failure_names[FAILURES] = {
     &FAILURE_INVALID_TARGET_NAME,
     &FAILURE_INVALID_LOCATION_NAME,
     &FAILURE_INVALID_ITEM_NAME,
+    &FAILURE_CANNOT_COLLECT_ITEM_NAME,
 };
 
 // Boolean map of traits for objects and location.
@@ -71,12 +75,13 @@ static string_t *failure_names[FAILURES] = {
 //
 // ITEM  (76543210)
 // 0     = collectible
-// 1     = change damage
-// 2     = change health
-// 3     = ephemeral
+// 1     = ...
+// 2     = ...
+// 3     = ...
 // 4     = ...
 // 5     = ...
-// (6-7) = 4 possible states
+// 6     = ...
+// 7     = ...
 //
 // LOCATION (76543210)
 // 0     = ...
@@ -88,32 +93,52 @@ static string_t *failure_names[FAILURES] = {
 // (6-7) = 4 possible states
 typedef uint8_t traits_t;
 
-typedef uint8_t state_t;
+typedef uint8_t object_state_t;
 
-// 4 Transitions from one state to the next.
-// 0010 1011 1101 0100 means 0 -> 2, 2 -> 3, 3 -> 1, 1 -> 0
-typedef uint16_t transitions_t;
+typedef Buffer(const char *) state_descriptions_t;
+
+typedef struct {
+  action_t trigger;
+  object_state_t from;
+  object_state_t to;
+} transition_t;
+
+typedef Buffer(transition_t) transitions_t;
 
 typedef struct {
   // Name of the object
-  obj_id_t name;
+  object_name_t name;
   // Type of the object
-  obj_type_t type;
+  object_type_t type;
+  // Current state of the object
+  object_state_t current_state;
   // Description of the object
   const char *description;
   // Human-readable state descriptions
-  const char *states[4];
+  state_descriptions_t *state_descriptions;
   // Object traits as per above
   traits_t traits;
   // Transitions from one state to the next
-  transitions_t transitions;
+  transitions_t *transitions;
 } object_t;
 
+static inline void objectTransition(object_t *self, action_t action) {
+  for (size_t i = 0; i < self->transitions->used; i++) {
+    transition_t transition = bufAt(self->transitions, i);
+    if (transition.trigger == action &&
+        self->current_state == transition.from) {
+      self->current_state = transition.to;
+      return;
+    }
+  }
+}
+
+static inline int objectIsCollectible(object_t *self) {
+  return (self->traits & 0b00000001) == 1;
+}
+
 typedef struct {
-  // The base object MUST be the first member
   object_t object;
-  // In case the object changes damage or health, see by how much
-  int8_t value;
 } item_t;
 
 typedef Buffer(item_t *) items_t;
@@ -199,48 +224,42 @@ typedef struct {
   digest_t digest;
 } world_t;
 
-static inline state_t objectGetState(traits_t traits) {
-  return (traits & 0b11000000) >> 6;
-}
-
-// Executes a state transition
-static inline traits_t objectTransition(traits_t traits,
-                                        transitions_t transitions) {
-  state_t current_state = objectGetState(traits);
-  for (uint8_t i = 0; i < 4; i++) {
-    uint8_t entry = (transitions >> (i * 4)) & 0xF;
-    uint8_t from = (entry >> 2) & 0x3;
-    if (from == current_state) {
-      uint8_t to = (uint8_t)((entry & 0x3) << 6);
-      return (traits & 0b00111111) | to;
-    }
-  }
-  return traits;
-}
-
 static inline void worldMakeSummary(world_t *world, string_t *summary) {
   location_t *current_location = world->current_location;
-  state_t current_location_state =
-      objectGetState(current_location->object.traits);
 
   strFmt(summary, "LOCATION: %s (%s) [%s]\n", current_location->object.name,
          current_location->object.description,
-         current_location->object.states[current_location_state]);
+         bufAt(current_location->object.state_descriptions,
+               current_location->object.current_state));
 
-  strFmtAppend(summary, "ITEMS:\n");
-  for (size_t i = 0; i < current_location->items->used; i++) {
-    item_t *object = bufAt(current_location->items, i);
-    state_t object_state = objectGetState(object->object.traits);
-    strFmtAppend(summary, "  - %s (%s) [%s]\n", object->object.name,
-                 object->object.description,
-                 object->object.states[object_state]);
+  if (world->state.inventory->used) {
+    strFmtAppend(summary, "INVENTORY:\n");
+    for (size_t i = 0; i < world->state.inventory->used; i++) {
+      item_t *item = bufAt(world->state.inventory, i);
+      strFmtAppend(
+          summary, "  - %s (%s) [%s]\n", item->object.name,
+          item->object.description,
+          bufAt(item->object.state_descriptions, item->object.current_state));
+    }
+  }
+
+  if (current_location->items->used) {
+    strFmtAppend(summary, "ITEMS:\n");
+    for (size_t i = 0; i < current_location->items->used; i++) {
+      item_t *item = bufAt(current_location->items, i);
+      strFmtAppend(
+          summary, "  - %s (%s) [%s]\n", item->object.name,
+          item->object.description,
+          bufAt(item->object.state_descriptions, item->object.current_state));
+    }
   }
 
   strFmtOffset(summary, summary->used, "EXITS:\n");
   for (size_t i = 0; i < current_location->exits->used; i++) {
     location_t *exit = (location_t *)bufAt(current_location->exits, i);
-    state_t object_state = objectGetState(exit->object.traits);
-    strFmtAppend(summary, "  - %s (%s) [%s]\n", exit->object.name,
-                 exit->object.description, exit->object.states[object_state]);
+    strFmtAppend(
+        summary, "  - %s (%s) [%s]\n", exit->object.name,
+        exit->object.description,
+        bufAt(exit->object.state_descriptions, exit->object.current_state));
   }
 }

@@ -17,6 +17,15 @@
     Type data[];                                                               \
   }
 
+#define bufInit(Length, Used, ...)                                             \
+  {                                                                            \
+      (Length),                                                                \
+      (Used),                                                                  \
+      {__VA_ARGS__},                                                           \
+  }
+
+#define bufConst(Length, ...) bufInit(Length, Length, __VA_ARGS__)
+
 #define bufAt(BufferPtr, Index)                                                \
   (panicif((Index) > (BufferPtr)->length || Index < 0, "index out of bounds"), \
    BufferPtr->data[(Index)])

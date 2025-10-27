@@ -48,6 +48,7 @@ int main(void) {
 
     switch (action) {
     case ACTION_MOVE: {
+      debug("action: move");
       items = &NO_ITEMS;
       locations = world->current_location->exits;
       parserExtractTarget(parser, input, locations, items, &location, &item);
@@ -59,22 +60,26 @@ int main(void) {
       }
 
       world->current_location = location;
+      objectTransition(&location->object, action);
       narratorDescribeWorld(narrator, &troll_bridge_world, response);
       strFmtAppend(response, "\n~> Location: %s", location->object.name);
       goto print;
     }
     case ACTION_EXAMINE: {
+      debug("action: examine\n");
       // TODO: how to examine the inventory?
       items = world->current_location->items;
       locations = world->current_location->exits;
       parserExtractTarget(parser, input, locations, items, &location, &item);
 
       if (item) {
+        objectTransition(&item->object, action);
         narratorDescribeObject(narrator, &item->object, response);
         goto print;
       }
 
       if (location) {
+        objectTransition(&location->object, action);
         narratorDescribeObject(narrator, &location->object, response);
         goto print;
       }
@@ -83,6 +88,7 @@ int main(void) {
       goto print;
     }
     case ACTION_TAKE: {
+      debug("action: take\n");
       items = world->current_location->items;
       locations = &NO_LOCATIONS;
       parserExtractTarget(parser, input, locations, items, &location, &item);
@@ -92,13 +98,21 @@ int main(void) {
         goto print;
       }
 
+      if (!objectIsCollectible(&item->object)) {
+        narratorCommentFailure(narrator, FAILURE_CANNOT_COLLECT_ITEM, input,
+                               response);
+        goto print;
+      }
+
       itemsAdd(world->state.inventory, item);
       itemsRemove(world->current_location->items, item);
       narratorCommentSuccess(narrator, world, input, response);
       strFmtAppend(response, "\n~> %s taken", item->object.name);
+      objectTransition(&item->object, action);
       goto print;
     }
     case ACTION_DROP: {
+      debug("action: drop\n");
       items = world->state.inventory;
       locations = &NO_LOCATIONS;
       parserExtractTarget(parser, input, locations, items, &location, &item);
@@ -112,9 +126,24 @@ int main(void) {
       itemsRemove(world->state.inventory, item);
       narratorCommentSuccess(narrator, world, input, response);
       strFmtAppend(response, "\n~> %s dropped", item->object.name);
+      objectTransition(&item->object, action);
       goto print;
     }
-    case ACTION_USE:
+    case ACTION_USE: {
+      debug("action: use\n");
+      items = world->state.inventory;
+      locations = &NO_LOCATIONS;
+      parserExtractTarget(parser, input, locations, items, &location, &item);
+
+      if (!item) {
+        narratorCommentFailure(narrator, FAILURE_INVALID_ITEM, input, response);
+        goto print;
+      }
+
+      narratorCommentSuccess(narrator, world, input, response);
+      objectTransition(&item->object, action);
+      goto print;
+    }
     case ACTIONS:
     case ACTION_UNKNOWN:
     default:

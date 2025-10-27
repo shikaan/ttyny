@@ -93,10 +93,10 @@ static inline void narratorDescribeObject(narrator_t *self, object_t *object,
   strFmt(self->prompt, sys_prompt_tpl->data,
          NARRATOR_OBJECT_DESC_SYS_PROMPT.data);
 
-  state_t item_state = objectGetState(object->traits);
   strFmtAppend(self->prompt,
                "\nITEM:\n name: %s\n description: %s\n state: %s\n",
-               object->name, object->description, object->states[item_state]);
+               object->name, object->description,
+               bufAt(object->state_descriptions, object->current_state));
 
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
