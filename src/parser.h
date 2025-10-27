@@ -29,6 +29,7 @@ static action_shot_t action_shots[] = {
     {"grab the sword", &ACTION_TAKE_NAME},
     {"walk to kitchen", &ACTION_MOVE_NAME},
     {"use crowbar on chest", &ACTION_USE_NAME},
+    {"eat bread", &ACTION_USE_NAME},
     {"check behind painting", &ACTION_EXAMINE_NAME},
     {"pick up coin", &ACTION_TAKE_NAME},
     {"head north", &ACTION_MOVE_NAME},

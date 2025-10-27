@@ -60,7 +60,7 @@ int main(void) {
 
       world->current_location = location;
       narratorDescribeWorld(narrator, &troll_bridge_world, response);
-      strFmtAppend(response, "\n~> Location: %s.", location->object.name);
+      strFmtAppend(response, "\n~> Location: %s", location->object.name);
       goto print;
     }
     case ACTION_EXAMINE: {
@@ -95,7 +95,7 @@ int main(void) {
       itemsAdd(world->state.inventory, item);
       itemsRemove(world->current_location->items, item);
       narratorCommentSuccess(narrator, world, input, response);
-      strFmtAppend(response, "\n~> %s taken.", item->object.name);
+      strFmtAppend(response, "\n~> %s taken", item->object.name);
       goto print;
     }
     case ACTION_DROP: {
@@ -111,7 +111,7 @@ int main(void) {
       itemsAdd(world->current_location->items, item);
       itemsRemove(world->state.inventory, item);
       narratorCommentSuccess(narrator, world, input, response);
-      strFmtAppend(response, "\n~> %s dropped.", item->object.name);
+      strFmtAppend(response, "\n~> %s dropped", item->object.name);
       goto print;
     }
     case ACTION_USE:
