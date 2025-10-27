@@ -5,12 +5,37 @@
 #include "world.h"
 
 #include "configs/qwen.h"
+#include <stdio.h>
 
 typedef struct {
   ai_t *ai;
   string_t *prompt;
   string_t *summary;
 } narrator_t;
+
+typedef struct {
+  const char *action;
+  const failures_t failure;
+  const char *response;
+} failure_shot_t;
+
+static failure_shot_t failure_shots[] = {
+    {"look at the key", FAILURE_EXAMINE_INVALID_TARGET,
+     "You can't see any such thing."},
+    {"inspect banana", FAILURE_EXAMINE_INVALID_TARGET,
+     "A banana? The area is distinctly banana-free."},
+    {"examine tree", FAILURE_EXAMINE_INVALID_TARGET,
+     "It is difficult to examine a tree that isn't here."},
+    {"examine spaceship", FAILURE_EXAMINE_INVALID_TARGET,
+     "The notion of a spaceship here is, frankly, ludicrous."},
+    {"go north", FAILURE_MOVE_INVALID_LOCATION, "You can't go that way."},
+    {"enter the closet", FAILURE_MOVE_INVALID_LOCATION,
+     "The closet, pleasant as it may be, is not an exit."},
+    {"enter the bottle", FAILURE_MOVE_INVALID_LOCATION,
+     "You'd have to be considerably smaller to fit in there."},
+    {"go to the kitchen", FAILURE_MOVE_INVALID_LOCATION,
+     "You can't get there from here."},
+};
 
 static inline narrator_t *narratorCreate(void) {
   narrator_t *narrator = allocate(sizeof(narrator_t));
@@ -44,10 +69,11 @@ static inline void narratorDescribeWorld(narrator_t *self, world_t *world,
   const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
   const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];
 
-  strFmt(self->prompt, sys_prompt_tpl->data, NARRATOR_SYS_PROMPT.data);
+  strFmt(self->prompt, sys_prompt_tpl->data,
+         NARRATOR_WORLD_DESC_SYS_PROMPT.data);
 
   worldMakeSummary(world, self->summary);
-  strFmtAppend(self->prompt, "%s", self->summary->data);
+  strFmtAppend(self->prompt, "\n%s", self->summary->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
   strClear(description);
@@ -65,11 +91,11 @@ static inline void narratorDescribeObject(narrator_t *self, object_t *object,
   const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];
 
   strFmt(self->prompt, sys_prompt_tpl->data,
-         "You are the narrator of a dark fantasy game. You describe ITEM in "
-         "one sentence. Be witty.");
+         NARRATOR_OBJECT_DESC_SYS_PROMPT.data);
 
   state_t item_state = objectGetState(object->traits);
-  strFmtAppend(self->prompt, "ITEM:\n name: %s\n description: %s\n state: %s\n",
+  strFmtAppend(self->prompt,
+               "\nITEM:\n name: %s\n description: %s\n state: %s\n",
                object->name, object->description, object->states[item_state]);
 
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
@@ -80,4 +106,35 @@ static inline void narratorDescribeObject(narrator_t *self, object_t *object,
   aiReset(self->ai);
   aiGenerate(self->ai, self->prompt, description);
   // TODO: validate output
+}
+
+static inline void narratorCommentFailure(narrator_t *self, failures_t failure,
+                                          string_t *input, string_t *comment) {
+  const config_t *config = self->ai->configuration;
+  const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
+  const string_t *usr_prompt_tpl = config->prompt_templates[PROMPT_TYPE_USR];
+  const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];
+
+  strFmt(self->prompt, sys_prompt_tpl->data, NARRATOR_FAILURES_SYS_PROMPT.data);
+
+  const char *tpl = "ACTION: %s\n"
+                    "FAILURE: %s";
+
+  char shot_buffer[256] = {};
+  for (size_t i = 0; i < arrLen(failure_shots); i++) {
+    const failure_shot_t shot = failure_shots[i];
+    snprintf(shot_buffer, sizeof(shot_buffer), tpl, shot.action,
+             failure_names[shot.failure]->data);
+    strFmtAppend(self->prompt, usr_prompt_tpl->data, shot_buffer);
+    strFmtAppend(self->prompt, res_prompt_tpl->data, shot.response);
+  }
+
+  strFmt(self->summary, tpl, input->data, failure_names[failure]->data);
+  strFmtAppend(self->prompt, usr_prompt_tpl->data, self->summary->data);
+  strFmtAppend(self->prompt, res_prompt_tpl->data, "");
+
+  strClear(comment);
+
+  aiReset(self->ai);
+  aiGenerate(self->ai, self->prompt, comment);
 }

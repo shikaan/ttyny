@@ -151,4 +151,6 @@ static inline void strTrim(string_t *self) {
   }
 }
 
+static inline string_t *strDup(string_t *self) { return strFrom(self->data); }
+
 static inline void strClear(string_t *self) { bufClear(self, 0); }

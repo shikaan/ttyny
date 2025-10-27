@@ -15,21 +15,7 @@ typedef struct {
   string_t *target_grammar;
 } parser_t;
 
-const string_t UNKNOWN_TOKEN = strConst("unknown");
-
-static string_t ACTION_MOVE_NAME = strConst("move");
-static string_t ACTION_USE_NAME = strConst("use");
-static string_t ACTION_TAKE_NAME = strConst("take");
-static string_t ACTION_DROP_NAME = strConst("drop");
-static string_t ACTION_EXAMINE_NAME = strConst("examine");
-static action_t actions_types[ACTIONS] = {
-    ACTION_MOVE, ACTION_TAKE, ACTION_DROP, ACTION_USE, ACTION_EXAMINE,
-};
-static string_t *action_names[ACTIONS] = {
-    &ACTION_MOVE_NAME, &ACTION_TAKE_NAME,    &ACTION_DROP_NAME,
-    &ACTION_USE_NAME,  &ACTION_EXAMINE_NAME,
-};
-
+// TODO: should this have an "unknown" too?
 static string_t ACTION_GRAMMAR = strConst(
     "root ::= \"move\" | \"use\" | \"take\" | \"drop\" | \"examine\"\n");
 
@@ -118,7 +104,8 @@ static inline object_t *parserExtractTarget(parser_t *self,
 
   strFmt(self->prompt, sys_prompt_tpl->data, PARSER_TARGET_SYS_PROMPT.data);
 
-  strFmt(self->target_grammar, "root ::= \"%s\"", UNKNOWN_TOKEN.data);
+  strFmt(self->target_grammar, "root ::= \"unknown\"");
+
   const locations_t *exits = world->current_location->exits;
   for (size_t i = 0; i < exits->used; i++) {
     location_t *exit = (location_t *)bufAt(exits, i);

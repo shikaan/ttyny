@@ -4,6 +4,7 @@
 #include "src/panic.h"
 #include "src/parser.h"
 #include "src/ui.h"
+#include "src/utils.h"
 #include "src/world.h"
 #include <ggml.h>
 #include <stddef.h>
@@ -61,35 +62,29 @@ int main(void) {
     switch (action) {
     case ACTION_MOVE: {
       if (!location) {
-        loadingWait(loading);
-        puts("Cannot go there.");
-        continue;
+        narratorCommentFailure(narrator, FAILURE_EXAMINE_INVALID_TARGET, input,
+                               response);
+        goto print;
       }
 
       world->current_location = location;
       narratorDescribeWorld(narrator, &troll_bridge_world, response);
-      loadingWait(loading);
-      puts(response->data);
-      break;
+      goto print;
     }
     case ACTION_EXAMINE: {
       if (item) {
         narratorDescribeObject(narrator, &item->object, response);
-        loadingWait(loading);
-        puts(response->data);
-        break;
+        goto print;
       }
 
       if (location) {
         narratorDescribeObject(narrator, &location->object, response);
-        loadingWait(loading);
-        puts(response->data);
-        break;
+        goto print;
       }
 
-      loadingWait(loading);
-      puts("Not sure what to make of that...");
-      break;
+      narratorCommentFailure(narrator, FAILURE_EXAMINE_INVALID_TARGET, input,
+                             response);
+      goto print;
     }
     case ACTION_TAKE:
     case ACTION_DROP:
@@ -101,6 +96,10 @@ int main(void) {
       puts("Not sure how to do that...");
       break;
     }
+
+  print:
+    loadingWait(loading);
+    puts(response->data);
 
     switch (world->digest(&world->state)) {
     case GAME_STATE_VICTORY:

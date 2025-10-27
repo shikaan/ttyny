@@ -15,7 +15,6 @@ void stringFrom(void) {
   expectEqls(subject->data, "lol", 3, "has correct content");
   expectEqllu(subject->length, 3, "has correct length");
   expectEqllu(subject->used, 3, "has correct used");
-  strDestroy(&subject);
 }
 
 void stringFormat(void) {
@@ -27,7 +26,6 @@ void stringFormat(void) {
   strFmt(subject, "%s", "rr");
   expectEqls(subject->data, "rr", subject->length, "overwrites content");
   expectEqllu(subject->used, 2, "has correct used");
-  strDestroy(&subject);
 }
 
 void stringClear(void) {
@@ -37,7 +35,6 @@ void stringClear(void) {
   expectEqls(subject->data, "", length, "truncates content");
   expectEqllu(subject->length, length, "preserves length");
   expectEqllu(subject->used, 0, "updates used");
-  strDestroy(&subject);
 }
 
 void stringTrim(void) {

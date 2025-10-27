@@ -13,10 +13,19 @@ static const string_t PARSER_TARGET_SYS_PROMPT = strConst(
     "Choose the single best option that matches the users's "
     "intent. When there is no match, respond with 'unknown'.");
 
-static const string_t NARRATOR_SYS_PROMPT =
-    strConst("You are the narrator of a dark fantasy game. In two sentences, "
-             "describe the LOCATION. You must mention all EXITS and ITEMS, "
-             "and say where they are.");
+static const string_t NARRATOR_WORLD_DESC_SYS_PROMPT =
+    strConst("You are the witty, sarcastic narrator of a text adventure. "
+             "You MUST mention all EXITS and ITEMS. "
+             "In 2 sentences, describe the LOCATION.");
+
+static const string_t NARRATOR_OBJECT_DESC_SYS_PROMPT = strConst(
+    "You are the narrator of a dark fantasy game. You describe ITEM in "
+    "one sentence.");
+
+static const string_t NARRATOR_FAILURES_SYS_PROMPT =
+    strConst("You are the witty, sarcastic narrator of a classic text "
+             "adventure. In one sentence, describe the player's failure with a "
+             "dry, deadpan sense of humor.");
 
 static string_t RES_PROMPT = strConst("<|im_end|>\n<|im_start|>assistant\n%s");
 static string_t USR_PROMPT = strConst("<|im_end|>\n<|im_start|>user\n%s");

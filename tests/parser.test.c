@@ -1,4 +1,5 @@
 #include "../src/parser.h"
+#include "../src/utils.h"
 #include "test.h"
 
 void actions(void) {
