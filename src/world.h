@@ -123,6 +123,8 @@ typedef struct {
 } object_t;
 
 static inline void objectTransition(object_t *self, action_t action) {
+  if (!self->transitions) return;
+
   for (size_t i = 0; i < self->transitions->used; i++) {
     transition_t transition = bufAt(self->transitions, i);
     if (transition.trigger == action &&

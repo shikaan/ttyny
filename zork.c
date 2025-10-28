@@ -1,4 +1,4 @@
-#include "assets/story.h"
+#include "assets/ancient_portal.h"
 #include "src/buffers.h"
 #include "src/narrator.h"
 #include "src/panic.h"
@@ -16,7 +16,7 @@ int main(void) {
   string_t *input cleanup(strDestroy) = strCreate(512);
   string_t *response cleanup(strDestroy) = strCreate(4096);
   string_t *target cleanup(strDestroy) = strCreate(128);
-  world_t *world = &troll_bridge_world;
+  world_t *world = &ancient_portal_world;
 
   narrator_t *narrator cleanup(narratorDestroy) = narratorCreate();
   panicif(!narrator, "cannot create narrator");
@@ -27,6 +27,8 @@ int main(void) {
   ui_handle_t loading = loadingStart();
   narratorDescribeWorld(narrator, world, response);
   loadingWait(loading);
+  strFmtAppend(response, "\n~> Location: %s",
+               world->current_location->object.name);
   puts(response->data);
 
   while (1) {
@@ -61,7 +63,7 @@ int main(void) {
 
       world->current_location = location;
       objectTransition(&location->object, action);
-      narratorDescribeWorld(narrator, &troll_bridge_world, response);
+      narratorDescribeWorld(narrator, world, response);
       strFmtAppend(response, "\n~> Location: %s", location->object.name);
       goto print;
     }
