@@ -4,6 +4,7 @@
 #include "buffers.h"
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 typedef enum {
   ACTION_UNKNOWN = -1,
@@ -41,9 +42,17 @@ typedef enum {
 
 typedef const char *object_name_t;
 
+static inline object_name_t objectIdDup(object_name_t self) {
+  return strdup(self);
+}
+
+static inline size_t objectIdLength(object_name_t self) { return strlen(self); }
+
 static inline int objectIdEq(object_name_t self, object_name_t other) {
   return strcmp(self, other) == 0;
 }
+
+static inline void objectIdDestroy(object_name_t **self) { deallocate(self); }
 
 typedef enum {
   FAILURE_INVALID_TARGET,
@@ -123,7 +132,8 @@ typedef struct {
 } object_t;
 
 static inline void objectTransition(object_t *self, action_t action) {
-  if (!self->transitions) return;
+  if (!self->transitions)
+    return;
 
   for (size_t i = 0; i < self->transitions->used; i++) {
     transition_t transition = bufAt(self->transitions, i);

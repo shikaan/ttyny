@@ -15,7 +15,7 @@ static inline void __panicif(int condition, const char msg[], const char file[],
   }
 }
 
-#define panic(Condition, Msg) __panic(Condition, Msg, __FILE__, __LINE__)
+#define panic(Msg) __panic(Msg, __FILE__, __LINE__)
 #define panicif(Condition, Msg) __panicif(Condition, Msg, __FILE__, __LINE__)
 
 #if defined(DEBUG) || !defined(NDEBUG)

@@ -35,8 +35,9 @@ tests/parser.test: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerat
 tests/parser.test: src/ai.o $(LLAMA_STATIC_LIBS)
 
 .PHONY: test
-test: tests/buffers.test tests/parser.test
+test: tests/buffers.test tests/parser.test tests/map.test
 	tests/buffers.test
+	tests/map.test
 	tests/parser.test
 
 .PHONY: clean
