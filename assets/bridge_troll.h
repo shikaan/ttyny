@@ -125,15 +125,13 @@ static locations_t all_locations = {
 static items_t all_objects = {3, 3, {&sword, &apple, &troll}};
 
 // --- Digest function ---
-static game_state_t bridge_troll_digest(world_state_t *state) {
+static game_state_t bridge_troll_digest(state_t *state) {
   for (size_t i = 0; i < state->inventory->used; ++i) {
     item_t *object = bufAt(state->inventory, i);
     if (object->object.name == sword.object.name) {
       return GAME_STATE_VICTORY;
     }
   }
-  if (state->health == 0)
-    return GAME_STATE_DEAD;
   return GAME_STATE_CONTINUE;
 }
 
@@ -144,9 +142,8 @@ static items_t inventory = {
     .data = {NULL, NULL, NULL},
 };
 
-world_t troll_bridge_world = {
-    .state = {.turns = 0, .health = 20, .damage = 2, .inventory = &inventory},
-    .locations = &all_locations,
-    .digest = bridge_troll_digest,
-    .current_location = &forest,
-    .items = &all_objects};
+world_t troll_bridge_world = {.state = {.turns = 0, .inventory = &inventory},
+                              .locations = &all_locations,
+                              .digest = bridge_troll_digest,
+                              .current_location = &forest,
+                              .items = &all_objects};

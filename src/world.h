@@ -14,6 +14,10 @@ typedef enum {
   ACTION_USE,
   ACTION_EXAMINE,
 
+  ACTION_HELP,
+  ACTION_STATUS,
+  ACTION_QUIT,
+
   ACTIONS,
 } action_t;
 
@@ -22,15 +26,18 @@ static string_t ACTION_USE_NAME = strConst("use");
 static string_t ACTION_TAKE_NAME = strConst("take");
 static string_t ACTION_DROP_NAME = strConst("drop");
 static string_t ACTION_EXAMINE_NAME = strConst("examine");
+static string_t ACTION_HELP_NAME = strConst("/help");
+static string_t ACTION_STATUS_NAME = strConst("/status");
+static string_t ACTION_QUIT_NAME = strConst("/quit");
 
 static action_t actions_types[ACTIONS] = {
-    ACTION_MOVE, ACTION_TAKE, ACTION_DROP, ACTION_USE, ACTION_EXAMINE,
-};
+    ACTION_MOVE,    ACTION_TAKE, ACTION_DROP,   ACTION_USE,
+    ACTION_EXAMINE, ACTION_HELP, ACTION_STATUS, ACTION_QUIT};
 
 static string_t *action_names[ACTIONS] = {
-    &ACTION_MOVE_NAME, &ACTION_TAKE_NAME,    &ACTION_DROP_NAME,
-    &ACTION_USE_NAME,  &ACTION_EXAMINE_NAME,
-};
+    &ACTION_MOVE_NAME,   &ACTION_TAKE_NAME,    &ACTION_DROP_NAME,
+    &ACTION_USE_NAME,    &ACTION_EXAMINE_NAME, &ACTION_HELP_NAME,
+    &ACTION_STATUS_NAME, &ACTION_QUIT_NAME};
 
 typedef enum {
   OBJECT_TYPE_UNKNOWN = -1,
@@ -206,13 +213,9 @@ static inline void locationsDestroy(locations_t **self) { deallocate(self); }
 typedef struct {
   // How many turns since the game has started
   uint16_t turns;
-  // Health of our character
-  uint8_t health;
-  // How much damage does the character deal
-  uint8_t damage;
   // Objects carried by the character
   items_t *inventory;
-} world_state_t;
+} state_t;
 
 typedef enum {
   GAME_STATE_CONTINUE = 0,
@@ -221,11 +224,11 @@ typedef enum {
 } game_state_t;
 
 // Returns game state based on current world state
-typedef game_state_t (*digest_t)(world_state_t *);
+typedef game_state_t (*digest_t)(state_t *);
 
 typedef struct {
   // State of the world
-  world_state_t state;
+  state_t state;
   // Locations of the world
   locations_t *locations;
   // Objects in the world
@@ -235,43 +238,3 @@ typedef struct {
   // Callback to call on each round to see if the game is over
   digest_t digest;
 } world_t;
-
-static inline void worldMakeSummary(world_t *world, string_t *summary) {
-  location_t *current_location = world->current_location;
-
-  strFmt(summary, "LOCATION: %s (%s) [%s]\n", current_location->object.name,
-         current_location->object.description,
-         bufAt(current_location->object.state_descriptions,
-               current_location->object.current_state));
-
-  if (world->state.inventory->used) {
-    strFmtAppend(summary, "INVENTORY:\n");
-    for (size_t i = 0; i < world->state.inventory->used; i++) {
-      item_t *item = bufAt(world->state.inventory, i);
-      strFmtAppend(
-          summary, "  - %s (%s) [%s]\n", item->object.name,
-          item->object.description,
-          bufAt(item->object.state_descriptions, item->object.current_state));
-    }
-  }
-
-  if (current_location->items->used) {
-    strFmtAppend(summary, "ITEMS:\n");
-    for (size_t i = 0; i < current_location->items->used; i++) {
-      item_t *item = bufAt(current_location->items, i);
-      strFmtAppend(
-          summary, "  - %s (%s) [%s]\n", item->object.name,
-          item->object.description,
-          bufAt(item->object.state_descriptions, item->object.current_state));
-    }
-  }
-
-  strFmtOffset(summary, summary->used, "EXITS:\n");
-  for (size_t i = 0; i < current_location->exits->used; i++) {
-    location_t *exit = (location_t *)bufAt(current_location->exits, i);
-    strFmtAppend(
-        summary, "  - %s (%s) [%s]\n", exit->object.name,
-        exit->object.description,
-        bufAt(exit->object.state_descriptions, exit->object.current_state));
-  }
-}

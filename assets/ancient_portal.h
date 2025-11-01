@@ -263,7 +263,7 @@ static items_t all_objects = {
            &portal_rune, &stone_golem}};
 
 // --- Digest function ---
-static game_state_t ancient_portal_digest(world_state_t *state) {
+static game_state_t ancient_portal_digest(state_t *state) {
   int hasActivatedRune = 0;
   int hasGlowingShard = 0;
   int hasUsedKey = 0;
@@ -282,9 +282,6 @@ static game_state_t ancient_portal_digest(world_state_t *state) {
     }
   }
 
-  if (state->health == 0)
-    return GAME_STATE_DEAD;
-
   if (hasActivatedRune && hasGlowingShard && hasUsedKey)
     return GAME_STATE_VICTORY;
 
@@ -292,14 +289,14 @@ static game_state_t ancient_portal_digest(world_state_t *state) {
 }
 
 // --- Setting and world ---
-static items_t inventory = {
+static items_t ancient_portal_inventory = {
     .length = 7,
     .used = 0,
     .data = {NULL, NULL, NULL, NULL, NULL, NULL, NULL},
 };
 
 world_t ancient_portal_world = {
-    .state = {.turns = 0, .health = 25, .damage = 3, .inventory = &inventory},
+    .state = {.turns = 0, .inventory = &ancient_portal_inventory},
     .locations = &all_locations,
     .digest = ancient_portal_digest,
     .current_location = &ancient_grove,
