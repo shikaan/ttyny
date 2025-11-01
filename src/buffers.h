@@ -27,12 +27,13 @@
 #define bufConst(Length, ...) bufInit(Length, Length, __VA_ARGS__)
 
 #define bufAt(BufferPtr, Index)                                                \
-  (panicif((Index) > (BufferPtr)->length || Index < 0, "index out of bounds"), \
+  (panicif((Index) >= (BufferPtr)->length || Index < 0,                        \
+           "index out of bounds"),                                             \
    (BufferPtr)->data[(Index)])
 
 #define bufSet(BufferPtr, Index, Value)                                        \
   {                                                                            \
-    panicif((Index) > (BufferPtr)->length || Index < 0,                        \
+    panicif((Index) >= (BufferPtr)->length || Index < 0,                       \
             "index out of bounds");                                            \
     (BufferPtr)->data[(Index)] = (Value);                                      \
   }
