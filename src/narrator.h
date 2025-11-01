@@ -98,7 +98,8 @@ static inline narrator_t *narratorCreate(void) {
   narrator_t *narrator = allocate(sizeof(narrator_t));
   panicif(!narrator, "cannot allocate narrator");
 
-  narrator->ai = aiCreate(&NARRATOR_CONFIG);
+  ai_result_t result;
+  narrator->ai = aiCreate(&NARRATOR_CONFIG, &result);
   panicif(!narrator->ai, "cannot allocate AI for narrator");
 
   narrator->prompt = strCreate(4096);
@@ -162,10 +163,13 @@ static inline void generateAndValidate(ai_t *ai, const string_t *prompt,
                                        string_t *response,
                                        words_t *must_haves) {
   int valid = 0;
+  ai_result_t result;
   while (!valid) {
     strClear(response);
-    aiReset(ai);
-    aiGenerate(ai, prompt, response);
+    aiReset(ai, &result);
+    panicif(result != AI_RESULT_OK, "cannot reset model state");
+    aiGenerate(ai, &result, prompt, response);
+    panicif(result != AI_RESULT_OK, "cannot generate response");
     valid = !hasStopWords(response) && hasAllMustHaves(response, must_haves);
   }
 }
@@ -221,7 +225,8 @@ static inline void narratorDescribeObject(narrator_t *self, object_t *object,
   generateAndValidate(self->ai, self->prompt, description, NULL);
 }
 
-static inline void narratorCommentFailure(narrator_t *self, failure_type_t failure,
+static inline void narratorCommentFailure(narrator_t *self,
+                                          failure_type_t failure,
                                           string_t *input, string_t *comment) {
   const config_t *config = self->ai->configuration;
   const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];

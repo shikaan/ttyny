@@ -13,12 +13,9 @@
 
 #define GPU_LAYERS 99
 
-static ai_result_t result = AI_RESULT_ERROR;
 #define throw(Error)                                                           \
-  result = Error;                                                              \
+  *result = Error;                                                              \
   goto error;
-
-ai_result_t aiResultGetLast(void) { return result; }
 
 void aiResultFormat(ai_result_t res, string_t *response) {
   switch (res) {
@@ -101,7 +98,7 @@ static void aiInitSampler(ai_t *ai, ai_result_t *res, config_t *configuration) {
   *res = AI_RESULT_OK;
 }
 
-ai_t *aiCreate(config_t *configuration) {
+ai_t *aiCreate(config_t *configuration, ai_result_t *result) {
   llama_log_set(filterLogs, NULL);
 
   ai_t *ai = allocate(sizeof(ai_t));
@@ -127,10 +124,10 @@ ai_t *aiCreate(config_t *configuration) {
     throw(AI_RESULT_ERROR_CREATE_CONTEXT_FAILED);
   }
 
-  aiInitSampler(ai, &result, configuration);
+  aiInitSampler(ai, result, configuration);
 
   ai->configuration = configuration;
-  result = AI_RESULT_OK;
+  *result = AI_RESULT_OK;
   return ai;
 
 error:
@@ -138,7 +135,7 @@ error:
   return NULL;
 }
 
-void aiGenerate(ai_t *ai, const string_t *prompt, string_t *response) {
+void aiGenerate(ai_t *ai, ai_result_t *result, const string_t *prompt, string_t *response) {
   debug(prompt->data);
   const bool is_first =
       llama_memory_seq_pos_max(llama_get_memory(ai->context), 0) == -1;
@@ -194,20 +191,20 @@ void aiGenerate(ai_t *ai, const string_t *prompt, string_t *response) {
     batch = llama_batch_get_one(&token_id, 1);
   }
 
-  result = AI_RESULT_OK;
+  *result = AI_RESULT_OK;
 error:
   deallocate(&tokens);
 }
 
-void aiSetGrammar(ai_t *self, string_t *grammar) {
+void aiSetGrammar(ai_t *self, ai_result_t *result, string_t *grammar) {
   self->configuration->grammar = grammar;
   llama_memory_clear(llama_get_memory(self->context), true);
-  aiInitSampler(self, &result, self->configuration);
+  aiInitSampler(self, result, self->configuration);
 }
 
-void aiReset(ai_t *self) {
+void aiReset(ai_t *self, ai_result_t *result) {
   llama_memory_clear(llama_get_memory(self->context), true);
-  aiInitSampler(self, &result, self->configuration);
+  aiInitSampler(self, result, self->configuration);
 }
 
 void aiDestroy(ai_t **self) {
@@ -228,3 +225,5 @@ void aiDestroy(ai_t **self) {
   llama_backend_free();
   deallocate(self);
 }
+
+#undef throw

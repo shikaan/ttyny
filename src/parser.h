@@ -48,7 +48,8 @@ static inline parser_t *parserCreate(void) {
   parser_t *parser = allocate(sizeof(parser_t));
   panicif(!parser, "cannot allocate parser");
 
-  parser->ai = aiCreate(&PARSER_CONFIG);
+  ai_result_t result;
+  parser->ai = aiCreate(&NARRATOR_CONFIG, &result);
   panicif(!parser->ai, "cannot allocate AI for parser");
 
   parser->prompt = strCreate(4096);
@@ -64,7 +65,7 @@ static inline parser_t *parserCreate(void) {
 }
 
 static inline action_type_t parserExtractAction(parser_t *self,
-                                           const string_t *input) {
+                                                const string_t *input) {
   const int is_command = bufAt(input, 0) == '/';
 
   if (is_command) {
@@ -98,9 +99,12 @@ static inline action_type_t parserExtractAction(parser_t *self,
   strFmtAppend(self->prompt, usr_prompt_tpl->data, input->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
-  aiSetGrammar(self->ai, &ACTION_GRAMMAR);
+  ai_result_t result;
+  aiSetGrammar(self->ai, &result, &ACTION_GRAMMAR);
+  panicif(result != AI_RESULT_OK, "cannot set grammar");
   strClear(self->response);
-  aiGenerate(self->ai, self->prompt, self->response);
+  aiGenerate(self->ai, &result, self->prompt, self->response);
+  panicif(result != AI_RESULT_OK, "cannot generate response");
 
   for (size_t i = 0; i < ACTION_TYPES; i++) {
     if (strEq(self->response, action_names[i])) {
@@ -166,9 +170,12 @@ static inline void parserExtractTarget(parser_t *self, const string_t *input,
   strFmtAppend(self->prompt, usr_prompt_tpl->data, input->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
-  aiSetGrammar(self->ai, self->target_grammar);
+  ai_result_t result;
+  aiSetGrammar(self->ai, &result, self->target_grammar);
+  panicif(result != AI_RESULT_OK, "cannot set grammar");
   strClear(self->response);
-  aiGenerate(self->ai, self->prompt, self->response);
+  aiGenerate(self->ai, &result, self->prompt, self->response);
+  panicif(result != AI_RESULT_OK, "cannot generate response");
   strTrim(self->response);
 
   for (size_t i = 0; i < locations->used; i++) {

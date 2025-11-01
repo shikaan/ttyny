@@ -29,7 +29,7 @@ typedef enum {
 } prompt_type_t;
 
 typedef struct {
-  const char* path;
+  const char *path;
   const string_t *prompt_templates[PROMPT_TYPES];
   const string_t *grammar;
   float min_p;
@@ -48,9 +48,9 @@ typedef struct {
   config_t *configuration;
 } ai_t;
 
-[[nodiscard]] ai_t *aiCreate(config_t *);
+[[nodiscard]] ai_t *aiCreate(config_t *, ai_result_t *);
 void aiDestroy(ai_t **);
 
-void aiGenerate(ai_t *, const string_t *, string_t *);
-void aiSetGrammar(ai_t *self, string_t *grammar);
-void aiReset(ai_t *self);
+void aiGenerate(ai_t *, ai_result_t *, const string_t *, string_t *);
+void aiSetGrammar(ai_t *, ai_result_t *, string_t *);
+void aiReset(ai_t *, ai_result_t *);
