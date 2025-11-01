@@ -13,11 +13,13 @@ static void sleep_ms(unsigned ms) {
 
 static void *loading(void *args) {
   ui_handle_t *state = (ui_handle_t *)args;
-  const char *text = "Thinking";
+  const char *text_variants[] = {"Thinking", "Almost there", "Still working",
+                                 "Taking longer than expected", "Nearly ready"};
   const char *dot_variants[] = {".  ", ".. ", "..."};
   for (size_t i = 0; !state->stop; i++) {
     sleep_ms(200);
     const char *dots = dot_variants[i % 3];
+    const char *text = text_variants[(i / 18) % 5];
     printf("\033[2K\r%s%s", text, dots);
     fflush(stdout);
   }
