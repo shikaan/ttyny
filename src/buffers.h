@@ -133,7 +133,11 @@ static inline void strCat(string_t *self, const string_t *other) {
 }
 
 static inline void strReadFrom(string_t *self, FILE *file) {
-  self->used = strlen(fgets(self->data, (int)self->length, file)) - 1;
+  const char *read_string = fgets(self->data, (int)self->length, file);
+  if (read_string == NULL)
+    return;
+
+  self->used = strlen(read_string) - 1;
   self->data[self->used] = 0;
 }
 
@@ -163,6 +167,8 @@ static inline void strTrim(string_t *self) {
   for (size_t i = end - begin + 1; i < self->used; i++) {
     bufSet(self, i, '\0');
   }
+
+  self->used = end - begin + 1;
 }
 
 static inline string_t *strDup(const string_t *self) {
