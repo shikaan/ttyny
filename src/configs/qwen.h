@@ -17,7 +17,7 @@ static const string_t PARSER_TARGET_SYS_PROMPT = strConst(
 static const string_t NARRATOR_WORLD_DESC_SYS_PROMPT =
     strConst("You are the narrator of an adventure game. In exactly 2 "
              "sentences, describe the LOCATION to the player. Say what ITEMS "
-             "are here and where the EXITS lead. Be concise.");
+             "are here and where the EXITS lead. Ignore INVENTORY. Be concise.");
 
 static const string_t NARRATOR_OBJECT_DESC_SYS_PROMPT =
     strConst("You are the narrator of a fantasy game. "

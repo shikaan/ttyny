@@ -1,4 +1,4 @@
-#include "assets/ancient_portal.h"
+#include "assets/urban_escape.h"
 #include "src/buffers.h"
 #include "src/narrator.h"
 #include "src/panic.h"
@@ -20,7 +20,7 @@ int main(void) {
   string_t *response cleanup(strDestroy) = strCreate(4096);
   string_t *target cleanup(strDestroy) = strCreate(128);
   string_t *suggestion cleanup(strDestroy) = strCreate(512);
-  world_t *world = &ancient_portal_world;
+  world_t *world = &urban_escape_world;
 
   narrator_t *narrator cleanup(narratorDestroy) = narratorCreate();
   panicif(!narrator, "cannot create narrator");
@@ -56,6 +56,10 @@ int main(void) {
   loadingStop(&loading);
   printResponse(response);
 
+  locations_t *locations cleanup(locationsDestroy) =
+      locationsCreate(world->locations->length);
+  items_t *items cleanup(itemsDestroy) = itemsCreate(world->items->length);
+
   while (1) {
     printf("> ");
     strReadFrom(input, stdin);
@@ -73,15 +77,16 @@ int main(void) {
     item_t *item = NULL;
     location_t *location = NULL;
 
-    const locations_t *locations = NULL;
-    const items_t *items = NULL;
+    itemsClear(items);
+    locationsClear(locations);
+
+    transition_result_t transition;
 
     switch (action) {
     case ACTION_TYPE_MOVE: {
       debug("action: move");
-      items = &NO_ITEMS;
-      locations = world->current_location->exits;
-      parserExtractTarget(parser, input, locations, items, &location, &item);
+      parserExtractTarget(parser, input, world->current_location->exits, items,
+                          &location, &item);
 
       if (!location) {
         narratorCommentFailure(narrator, FAILURE_TYPE_INVALID_TARGET, input,
@@ -90,7 +95,8 @@ int main(void) {
       }
 
       world->current_location = location;
-      objectTransition(&location->object, action);
+      // ignoring error: transition are expected to always succeed only for USE
+      objectTransition(&location->object, &transition, action);
       narratorDescribeWorld(narrator, world, response);
       strFmtAppend(response, "%s Location: %s.", STATE_UPDATE,
                    world->current_location->object.name);
@@ -98,82 +104,99 @@ int main(void) {
     }
     case ACTION_TYPE_EXAMINE: {
       debug("action: examine\n");
-      // TODO: how to examine the inventory?
-      items = world->current_location->items;
-      locations = world->current_location->exits;
-      parserExtractTarget(parser, input, locations, items, &location, &item);
+      parserExtractTarget(parser, input, world->current_location->exits,
+                          world->current_location->items, &location, &item);
 
       if (item) {
-        objectTransition(&item->object, action);
+        // ignoring error: transitions always succeed only for USE
+        objectTransition(&item->object, &transition, action);
         narratorDescribeObject(narrator, &item->object, response);
         goto print;
       }
 
       if (location) {
-        objectTransition(&location->object, action);
+        // ignoring error: transitions always succeed only for USE
+        objectTransition(&location->object, &transition, action);
         narratorDescribeObject(narrator, &location->object, response);
         goto print;
       }
 
-      narratorCommentFailure(narrator, FAILURE_TYPE_INVALID_TARGET, input, response);
+      narratorCommentFailure(narrator, FAILURE_TYPE_INVALID_TARGET, input,
+                             response);
       goto print;
     }
     case ACTION_TYPE_TAKE: {
       debug("action: take\n");
-      items = world->current_location->items;
-      locations = &NO_LOCATIONS;
-      parserExtractTarget(parser, input, locations, items, &location, &item);
+      parserExtractTarget(parser, input, locations,
+                          world->current_location->items, &location, &item);
 
       if (!item) {
-        narratorCommentFailure(narrator, FAILURE_TYPE_INVALID_ITEM, input, response);
+        narratorCommentFailure(narrator, FAILURE_TYPE_INVALID_ITEM, input,
+                               response);
         goto print;
       }
 
       if (!objectIsCollectible(&item->object)) {
-        narratorCommentFailure(narrator, FAILURE_TYPE_CANNOT_COLLECT_ITEM, input,
-                               response);
+        narratorCommentFailure(narrator, FAILURE_TYPE_CANNOT_COLLECT_ITEM,
+                               input, response);
         goto print;
       }
 
       itemsAdd(world->state.inventory, item);
       itemsRemove(world->current_location->items, item);
       narratorCommentSuccess(narrator, world, input, response);
-      strFmtAppend(response, "%s %s added to inventory.", STATE_UPDATE, item->object.name);
-      objectTransition(&item->object, action);
+      strFmtAppend(response, "%s %s added to inventory.", STATE_UPDATE,
+                   item->object.name);
+
+      // ignoring error: transition are expected to always succeed only for USE
+      objectTransition(&item->object, &transition, action);
       goto print;
     }
     case ACTION_TYPE_DROP: {
       debug("action: drop\n");
-      items = world->state.inventory;
-      locations = &NO_LOCATIONS;
-      parserExtractTarget(parser, input, locations, items, &location, &item);
+      parserExtractTarget(parser, input, locations, world->state.inventory,
+                          &location, &item);
 
       if (!item) {
-        narratorCommentFailure(narrator, FAILURE_TYPE_INVALID_ITEM, input, response);
+        narratorCommentFailure(narrator, FAILURE_TYPE_INVALID_ITEM, input,
+                               response);
         goto print;
       }
 
       itemsAdd(world->current_location->items, item);
       itemsRemove(world->state.inventory, item);
       narratorCommentSuccess(narrator, world, input, response);
-      strFmtAppend(response, "%s %s removed from inventory.", STATE_UPDATE, item->object.name);
-      objectTransition(&item->object, action);
+      strFmtAppend(response, "%s %s removed from inventory.", STATE_UPDATE,
+                   item->object.name);
+      // ignoring error: transitions always succeed only for USE
+      objectTransition(&item->object, &transition, action);
       goto print;
     }
     case ACTION_TYPE_USE: {
       debug("action: use\n");
-      items = world->state.inventory;
-      locations = &NO_LOCATIONS;
+      itemsCat(items, world->state.inventory);
+      itemsCat(items, world->current_location->items);
       parserExtractTarget(parser, input, locations, items, &location, &item);
 
       if (!item) {
-        narratorCommentFailure(narrator, FAILURE_TYPE_INVALID_ITEM, input, response);
+        narratorCommentFailure(narrator, FAILURE_TYPE_INVALID_ITEM, input,
+                               response);
         goto print;
       }
 
-      narratorCommentSuccess(narrator, world, input, response);
-      strFmtAppend(response, "%s %s used.", STATE_UPDATE, item->object.name);
-      objectTransition(&item->object, action);
+      objectTransition(&item->object, &transition, action);
+
+      if (transition == TRANSITION_RESULT_OK) {
+        narratorCommentSuccess(narrator, world, input, response);
+        strFmtAppend(
+            response, "%s %s used (state: %s).", STATE_UPDATE,
+            item->object.name,
+            bufAt(item->object.state_descriptions, item->object.current_state));
+      } else {
+        narratorCommentFailure(narrator, FAILURE_TYPE_CANNOT_BE_USED, input,
+                               response);
+      }
+
       goto print;
     }
     case ACTION_TYPE_HELP:
@@ -227,8 +250,10 @@ int main(void) {
         strFmtAppend(response, " empty.");
       } else {
         for (size_t i = 0; i < inventory->used; i++) {
-          strFmtAppend(response, "\n ~     • %s",
-                       bufAt(inventory, i)->object.name);
+          item_t *inv_item = bufAt(inventory, i);
+          strFmtAppend(response, "\n ~     • %s [%s]", inv_item->object.name,
+                       bufAt(inv_item->object.state_descriptions,
+                             inv_item->object.current_state));
         }
       }
 

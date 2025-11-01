@@ -41,20 +41,25 @@ static failure_shot_t failure_shots[] = {
      "You can't see any such thing."},
     {"inspect banana", FAILURE_TYPE_INVALID_TARGET,
      "A banana? The area is distinctly banana-free."},
-    {"examine tree", FAILURE_TYPE_INVALID_TARGET,
-     "It is difficult to examine a tree that isn't here."},
-    {"examine spaceship", FAILURE_TYPE_INVALID_TARGET,
-     "The notion of a spaceship here is, frankly, ludicrous."},
-    {"go north", FAILURE_TYPE_INVALID_LOCATION, "You can't go that way."},
     {"enter the closet", FAILURE_TYPE_INVALID_LOCATION,
      "The closet, pleasant as it may be, is not an exit."},
     {"enter the bottle", FAILURE_TYPE_INVALID_LOCATION,
      "You'd have to be considerably smaller to fit in there."},
-    {"go to the kitchen", FAILURE_TYPE_INVALID_LOCATION,
-     "You can't get there from here."},
+    {"take mountain", FAILURE_TYPE_CANNOT_COLLECT_ITEM,
+     "You try to take it, but it won't budge."},
+    {"take horizon", FAILURE_TYPE_CANNOT_COLLECT_ITEM,
+     "It politely remains where it is."},
+    {"use phantom wrench", FAILURE_TYPE_INVALID_ITEM,
+     "You lack such a thing."},
+    {"drop imaginary gem", FAILURE_TYPE_INVALID_ITEM,
+     "Hard to drop what you don't possess."},
+    {"use plain wall", FAILURE_TYPE_CANNOT_BE_USED,
+     "The wall is unimpressed by your efforts."},
+    {"use decorative plant", FAILURE_TYPE_CANNOT_BE_USED,
+     "It offers ambiance, not functionality."},
 };
 
-static inline void worldMakeSummary(world_t *world, string_t *summary) {
+static inline void makeWorldSummary(world_t *world, string_t *summary) {
   location_t *current_location = world->current_location;
 
   strFmt(summary, "LOCATION: %s (%s) [%s]\n", current_location->object.name,
@@ -183,7 +188,7 @@ static inline void narratorDescribeWorld(narrator_t *self, world_t *world,
   strFmt(self->prompt, sys_prompt_tpl->data,
          NARRATOR_WORLD_DESC_SYS_PROMPT.data);
 
-  worldMakeSummary(world, self->summary);
+  makeWorldSummary(world, self->summary);
   strFmtAppend(self->prompt, "\n%s", self->summary->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
@@ -263,7 +268,7 @@ static inline void narratorCommentSuccess(narrator_t *self, world_t *world,
   const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];
 
   strFmt(self->prompt, sys_prompt_tpl->data, NARRATOR_SUCCESS_SYS_PROMPT.data);
-  worldMakeSummary(world, self->summary);
+  makeWorldSummary(world, self->summary);
   strFmtAppend(self->prompt, "\n%s", self->summary->data);
   strFmtAppend(self->prompt, usr_prompt_tpl->data, input->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");

@@ -58,6 +58,7 @@ typedef enum {
   FAILURE_TYPE_INVALID_LOCATION,
   FAILURE_TYPE_INVALID_ITEM,
   FAILURE_TYPE_CANNOT_COLLECT_ITEM,
+  FAILURE_TYPE_CANNOT_BE_USED,
 
   FAILURES,
 } failure_type_t;
@@ -67,12 +68,14 @@ static string_t FAILURE_INVALID_LOCATION =
     strConst("missing or invalid location");
 static string_t FAILURE_INVALID_ITEM = strConst("missing or invalid item");
 static string_t FAILURE_CANNOT_COLLECT_ITEM = strConst("cannot collect item");
+static string_t FAILURE_CANNOT_BE_USED = strConst("item cannot be used");
 
 static string_t *failure_names[FAILURES] = {
     &FAILURE_INVALID_TARGET,
     &FAILURE_INVALID_LOCATION,
     &FAILURE_INVALID_ITEM,
     &FAILURE_CANNOT_COLLECT_ITEM,
+    &FAILURE_CANNOT_BE_USED,
 };
 
 // Boolean map of traits for objects and location.
@@ -128,18 +131,29 @@ typedef struct {
   transitions_t *transitions;
 } object_t;
 
-static inline void objectTransition(object_t *self, action_type_t action) {
-  if (!self->transitions)
+typedef enum {
+  TRANSITION_RESULT_OK,
+  TRANSITION_RESULT_NO_TRANSITIONS,
+} transition_result_t;
+
+static inline void objectTransition(object_t *self, transition_result_t *result,
+                                    action_type_t action) {
+  if (!self->transitions) {
+    *result = TRANSITION_RESULT_OK;
     return;
+  }
 
   for (size_t i = 0; i < self->transitions->used; i++) {
     transition_t transition = bufAt(self->transitions, i);
     if (transition.trigger == action &&
         self->current_state == transition.from) {
       self->current_state = transition.to;
+      *result = TRANSITION_RESULT_OK;
       return;
     }
   }
+
+  *result = TRANSITION_RESULT_NO_TRANSITIONS;
 }
 
 static inline int objectIsCollectible(object_t *self) {
@@ -165,6 +179,12 @@ static inline void itemsAdd(items_t *self, item_t *item) {
   // TODO: make items_t extensible
 }
 
+static inline void itemsCat(items_t* self, items_t* other) {
+  for (size_t i = 0; i < other->used; i++) {
+    itemsAdd(self, bufAt(other, i));
+  }
+}
+
 static inline void itemsRemove(items_t *self, item_t *item) {
   for (size_t i = 0; i < self->used; i++) {
     if (bufAt(self, i) == item) {
@@ -177,11 +197,14 @@ static inline void itemsRemove(items_t *self, item_t *item) {
   }
 }
 
+static inline void itemsClear(items_t* self) {
+  bufClear(self, NULL);
+}
+
 static inline void itemsDestroy(items_t **self) { deallocate(self); }
 
 struct location_t; // Forward declaration
 typedef Buffer(struct location_t *) locations_t;
-static const locations_t NO_LOCATIONS = {0, 0, {}};
 
 typedef struct {
   // The base object MUST be the first member
@@ -196,6 +219,16 @@ static inline locations_t *locationsCreate(size_t length) {
   locations_t *locations = NULL;
   makeBufCreate(locations_t, location_t *, locations, length);
   return locations;
+}
+
+static inline void locationsClear(locations_t* self) {
+  bufClear(self, NULL);
+}
+
+static inline void locationsCat(locations_t* self, locations_t* other) {
+  for (size_t i = 0; i < other->used; i++) {
+    bufPush(self, bufAt(other, i));
+  }
 }
 
 static inline void locationsDestroy(locations_t **self) { deallocate(self); }
