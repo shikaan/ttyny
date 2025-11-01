@@ -49,7 +49,7 @@ static inline parser_t *parserCreate(void) {
   panicif(!parser, "cannot allocate parser");
 
   ai_result_t result;
-  parser->ai = aiCreate(&NARRATOR_CONFIG, &result);
+  parser->ai = aiCreate(&PARSER_CONFIG, &result);
   panicif(!parser->ai, "cannot allocate AI for parser");
 
   parser->prompt = strCreate(4096);
