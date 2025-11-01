@@ -183,8 +183,13 @@ int main(void) {
       strFmt(suggestion, "'Go to %s'", first_exit->object.name);
 
       if (world->current_location->items->used > 0) {
-        strFmtAppend(suggestion, " or 'Take %s'",
-                     bufAt(world->current_location->items, 0)->object.name);
+        for (size_t i = 0; i < world->current_location->items->used; i++) {
+          object_t room_item = bufAt(world->current_location->items, i)->object;
+          if (objectIsCollectible(&room_item)) {
+            strFmtAppend(suggestion, " or 'Take %s'", room_item.name);
+            break;
+          }
+        }
       }
 
       strFmt(response,
@@ -211,8 +216,12 @@ int main(void) {
       debug("action: /status\n");
       items_t *inventory = world->state.inventory;
 
-      strFmt(response, " ~   Location:  %s\n ~   Turns:     %d\n ~   Inventory:",
+      strFmt(response,
+             " ~   Location:  %s\n"
+             " ~   Turns:     %d\n"
+             " ~   Inventory:",
              world->current_location->object.name, world->state.turns);
+
       if (inventory->used == 0) {
         strFmtAppend(response, " empty.");
       } else {
@@ -225,6 +234,7 @@ int main(void) {
       goto print;
     }
     case ACTION_QUIT:
+      debug("action: quit\n");
       return 0;
     case ACTIONS:
     case ACTION_UNKNOWN:
