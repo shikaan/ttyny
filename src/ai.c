@@ -134,7 +134,7 @@ ai_t *aiCreate(config_t *configuration) {
   return ai;
 
 error:
-  aiDestory(&ai);
+  aiDestroy(&ai);
   return NULL;
 }
 
@@ -210,7 +210,7 @@ void aiReset(ai_t *self) {
   aiInitSampler(self, &result, self->configuration);
 }
 
-void aiDestory(ai_t **self) {
+void aiDestroy(ai_t **self) {
   if (!self || !*self)
     return;
   // TODO: ggml stuff is leaking, but I cannot understand how to free it

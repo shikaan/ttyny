@@ -49,7 +49,7 @@ typedef struct {
 } ai_t;
 
 [[nodiscard]] ai_t *aiCreate(config_t *);
-void aiDestory(ai_t **);
+void aiDestroy(ai_t **);
 
 void aiGenerate(ai_t *, const string_t *, string_t *);
 void aiSetGrammar(ai_t *self, string_t *grammar);

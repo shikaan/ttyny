@@ -114,7 +114,7 @@ static inline void narratorDestroy(narrator_t **self) {
   if (!self || !*self)
     return;
 
-  aiDestory(&(*self)->ai);
+  aiDestroy(&(*self)->ai);
   strDestroy(&(*self)->prompt);
   strDestroy(&(*self)->summary);
   deallocate(self);
