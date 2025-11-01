@@ -28,6 +28,8 @@ static void *loading(void *args) {
 
 ui_handle_t *loadingStart(void) {
   ui_handle_t *handle = allocate(sizeof(ui_handle_t));
+  panicif(!handle, "cannot allocate loader");
+
   handle->stop = 0;
   pthread_t tid;
   pthread_create(&tid, NULL, loading, handle);
