@@ -9,5 +9,5 @@ typedef struct {
 } ui_handle_t;
 
 ui_handle_t* loadingStart(void);
-void loadingStop(ui_handle_t **handle);
-void printResponse(string_t *repsonse);
+void loadingStop(ui_handle_t **);
+void printResponse(string_t *);
