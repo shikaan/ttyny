@@ -6,8 +6,10 @@
 #include <ggml.h>
 #include <llama.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #define GPU_LAYERS 99
 
@@ -84,18 +86,19 @@ static void aiInitSampler(ai_t *ai, ai_result_t *res, config_t *configuration) {
   }
 
   llama_sampler_chain_add(ai->sampler,
-                          llama_sampler_init_min_p(configuration->min_p, 1));
+                          llama_sampler_init_penalties(
+                              -1, configuration->repetition_penalty, 0, 0));
   llama_sampler_chain_add(ai->sampler,
                           llama_sampler_init_temp(configuration->temp));
   llama_sampler_chain_add(ai->sampler,
                           llama_sampler_init_top_k(configuration->top_k));
   llama_sampler_chain_add(ai->sampler,
-                          llama_sampler_init_penalties(
-                              -1, configuration->repetition_penalty, 0, 0));
-  llama_sampler_chain_add(ai->sampler,
-                          llama_sampler_init_dist(LLAMA_DEFAULT_SEED));
+                          llama_sampler_init_min_p(configuration->min_p, 1));
+
+  uint32_t seed =
+      configuration->seed == 0 ? (uint32_t)time(NULL) : configuration->seed;
+  llama_sampler_chain_add(ai->sampler, llama_sampler_init_dist(seed));
   *res = AI_RESULT_OK;
-  return;
 }
 
 ai_t *aiCreate(config_t *configuration) {
@@ -176,8 +179,8 @@ void aiGenerate(ai_t *ai, const string_t *prompt, string_t *response) {
     }
 
     char parsed_token[256] = {};
-    ssize_t offset = llama_token_to_piece(ai->vocabulary, token_id,
-                                          parsed_token, 256, 0, false);
+    ssize_t offset = llama_token_to_piece(
+        ai->vocabulary, token_id, parsed_token, sizeof(parsed_token), 0, false);
 
     if (offset < 0) {
       throw(AI_RESULT_ERROR_TOKEN_PARSING_FAILED);
@@ -187,7 +190,7 @@ void aiGenerate(ai_t *ai, const string_t *prompt, string_t *response) {
       throw(AI_RESULT_ERROR_RESPONSE_LENGTH_EXCEEDED);
     }
 
-    strFmt(response, "%s%s", response->data, parsed_token);
+    strFmtAppend(response, "%s", parsed_token);
     batch = llama_batch_get_one(&token_id, 1);
   }
 

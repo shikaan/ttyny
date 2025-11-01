@@ -2,7 +2,7 @@
 
 // --- State descriptions for objects ---
 static state_descriptions_t torch_states =
-    bufConst(3, "on the ground", "held", "lit");
+    bufConst(3, "off", "held", "lit");
 
 static state_descriptions_t shard_states =
     bufConst(3, "embedded", "held", "glowing");

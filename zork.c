@@ -138,7 +138,7 @@ int main(void) {
       itemsAdd(world->state.inventory, item);
       itemsRemove(world->current_location->items, item);
       narratorCommentSuccess(narrator, world, input, response);
-      strFmtAppend(response, "%s %s taken.", STATE_UPDATE, item->object.name);
+      strFmtAppend(response, "%s %s added to inventory.", STATE_UPDATE, item->object.name);
       objectTransition(&item->object, action);
       goto print;
     }
@@ -156,7 +156,7 @@ int main(void) {
       itemsAdd(world->current_location->items, item);
       itemsRemove(world->state.inventory, item);
       narratorCommentSuccess(narrator, world, input, response);
-      strFmtAppend(response, "%s %s dropped.", STATE_UPDATE, item->object.name);
+      strFmtAppend(response, "%s %s removed from inventory.", STATE_UPDATE, item->object.name);
       objectTransition(&item->object, action);
       goto print;
     }
@@ -172,6 +172,7 @@ int main(void) {
       }
 
       narratorCommentSuccess(narrator, world, input, response);
+      strFmtAppend(response, "%s %s used.", STATE_UPDATE, item->object.name);
       objectTransition(&item->object, action);
       goto print;
     }

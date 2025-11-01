@@ -37,6 +37,7 @@ typedef struct {
   float repetition_penalty;
   uint32_t context_size;
   int32_t top_k;
+  uint32_t seed;
 } config_t;
 
 typedef struct {

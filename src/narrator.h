@@ -1,10 +1,13 @@
 #pragma once
 
 #include "ai.h"
+#include "alloc.h"
 #include "buffers.h"
+#include "utils.h"
 #include "world.h"
 
 #include "configs/qwen.h"
+#include <stddef.h>
 #include <stdio.h>
 
 typedef struct {
@@ -18,6 +21,8 @@ typedef struct {
   const failures_t failure;
   const char *response;
 } failure_shot_t;
+
+const char *STOP_WORDS[] = {"items", "inventory", "player", "location"};
 
 static failure_shot_t failure_shots[] = {
     {"look at the key", FAILURE_INVALID_TARGET,
@@ -103,6 +108,39 @@ static inline void narratorDestroy(narrator_t **self) {
   deallocate(self);
 }
 
+static inline int hasStopWords(string_t *description) {
+  panicif(!description, "missing description");
+
+  string_t *input cleanup(strDestroy) = strDup(description);
+  if (!input)
+    return 0;
+
+  char *saveptr = NULL;
+  char *token = strtok_r(input->data, " \t\r\n", &saveptr);
+  while (token) {
+    for (size_t i = 0; i < arrLen(STOP_WORDS); i++) {
+      if (strcasecmp(token, STOP_WORDS[i]) == 0) {
+        return 1;
+      }
+    }
+
+    token = strtok_r(NULL, " \t\r\n", &saveptr);
+  }
+
+  return 0;
+}
+
+static inline void generateAndValidate(ai_t *ai, const string_t *prompt,
+                                       string_t *response) {
+  int valid = 0;
+  while (!valid) {
+    strClear(response);
+    aiReset(ai);
+    aiGenerate(ai, prompt, response);
+    valid = !hasStopWords(response);
+  }
+}
+
 static inline void narratorDescribeWorld(narrator_t *self, world_t *world,
                                          string_t *description) {
   const config_t *config = self->ai->configuration;
@@ -116,12 +154,7 @@ static inline void narratorDescribeWorld(narrator_t *self, world_t *world,
   strFmtAppend(self->prompt, "\n%s", self->summary->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
-  strClear(description);
-
-  // TODO: maybe this can keep _some_ memory?
-  aiReset(self->ai);
-  aiGenerate(self->ai, self->prompt, description);
-  // TODO: validate output
+  generateAndValidate(self->ai, self->prompt, description);
 }
 
 static inline void narratorDescribeObject(narrator_t *self, object_t *object,
@@ -140,12 +173,7 @@ static inline void narratorDescribeObject(narrator_t *self, object_t *object,
 
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
-  strClear(description);
-
-  // TODO: maybe this can keep _some_ memory?
-  aiReset(self->ai);
-  aiGenerate(self->ai, self->prompt, description);
-  // TODO: validate output
+  generateAndValidate(self->ai, self->prompt, description);
 }
 
 static inline void narratorCommentFailure(narrator_t *self, failures_t failure,
@@ -173,10 +201,7 @@ static inline void narratorCommentFailure(narrator_t *self, failures_t failure,
   strFmtAppend(self->prompt, usr_prompt_tpl->data, self->summary->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
-  strClear(comment);
-
-  aiReset(self->ai);
-  aiGenerate(self->ai, self->prompt, comment);
+  generateAndValidate(self->ai, self->prompt, comment);
 }
 
 static inline void narratorCommentSuccess(narrator_t *self, world_t *world,
@@ -193,8 +218,5 @@ static inline void narratorCommentSuccess(narrator_t *self, world_t *world,
   strFmtAppend(self->prompt, usr_prompt_tpl->data, input->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
-  strClear(comment);
-
-  aiReset(self->ai);
-  aiGenerate(self->ai, self->prompt, comment);
+  generateAndValidate(self->ai, self->prompt, comment);
 }

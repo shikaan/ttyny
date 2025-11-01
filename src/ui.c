@@ -15,7 +15,7 @@ static void *loading(void *args) {
   ui_handle_t *state = (ui_handle_t *)args;
   const char *text = "Thinking";
   const char *dot_variants[] = {".  ", ".. ", "..."};
-  for (size_t i = 0; i < 6 && !state->stop; i++) {
+  for (size_t i = 0; !state->stop; i++) {
     sleep_ms(200);
     const char *dots = dot_variants[i % 3];
     printf("\033[2K\r%s%s", text, dots);
