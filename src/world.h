@@ -49,9 +49,6 @@ typedef enum {
 
 typedef const char *object_name_t;
 
-static inline object_name_t objectIdDup(object_name_t self) {
-  return strdup(self);
-}
 
 static inline size_t objectIdLength(object_name_t self) { return strlen(self); }
 
@@ -166,7 +163,7 @@ static const items_t NO_ITEMS = {0, 0, {}};
 
 static inline items_t *itemsCreate(size_t length) {
   items_t *items = NULL;
-  makeBufCreate(items_t, item_t, items, length);
+  makeBufCreate(items_t, item_t*, items, length);
   return items;
 }
 
@@ -204,7 +201,7 @@ typedef struct {
 
 static inline locations_t *locationsCreate(size_t length) {
   locations_t *locations = NULL;
-  makeBufCreate(locations_t, location_t, locations, length);
+  makeBufCreate(locations_t, location_t*, locations, length);
   return locations;
 }
 
