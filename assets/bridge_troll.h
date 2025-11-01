@@ -17,19 +17,19 @@ static state_descriptions_t forest_states = bufConst(1, "dark");
 
 // --- Transitions for objects ---
 static transitions_t apple_transitions =
-    bufConst(3, {.trigger = ACTION_TAKE, .from = 0, .to = 1},
-             {.trigger = ACTION_USE, .from = 1, .to = 2},
-             {.trigger = ACTION_DROP, .from = 1, .to = 3});
+    bufConst(3, {.trigger = ACTION_TYPE_TAKE, .from = 0, .to = 1},
+      {.trigger = ACTION_TYPE_USE, .from = 1, .to = 2},
+      {.trigger = ACTION_TYPE_DROP, .from = 1, .to = 3});
 
 static transitions_t sword_transitions =
-    bufConst(2, {.trigger = ACTION_TAKE, .from = 0, .to = 1},
-             {.trigger = ACTION_DROP, .from = 1, .to = 0});
+    bufConst(2, {.trigger = ACTION_TYPE_TAKE, .from = 0, .to = 1},
+      {.trigger = ACTION_TYPE_DROP, .from = 1, .to = 0});
 
 static transitions_t troll_transitions =
-    bufConst(2, {.trigger = ACTION_EXAMINE, .from = 0, .to = 1});
+    bufConst(2, {.trigger = ACTION_TYPE_EXAMINE, .from = 0, .to = 1});
 
 static transitions_t bridge_transitions =
-    bufConst(1, {.trigger = ACTION_MOVE, .from = 0, .to = 1});
+    bufConst(1, {.trigger = ACTION_TYPE_MOVE, .from = 0, .to = 1});
 
 // --- Objects ---
 static item_t sword = {.object = {.name = "Old Sword",
