@@ -33,7 +33,7 @@ static inline words_t *wordsCreate(size_t len) {
 static inline void wordsDestroy(words_t **self) { deallocate(self); }
 
 words_t STOP_WORDS =
-    bufConst(4, "items", "inventory", "player", "player's", "location");
+    bufConst(5, "items", "inventory", "player", "player's", "location");
 words_t ACTION_MUST_HAVES = bufConst(1, "you");
 
 static failure_shot_t failure_shots[] = {
