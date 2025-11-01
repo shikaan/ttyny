@@ -9,6 +9,7 @@
 #include "configs/qwen.h"
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 
 typedef struct {
   ai_t *ai;
@@ -34,6 +35,8 @@ static inline void wordsDestroy(words_t **self) { deallocate(self); }
 
 words_t STOP_WORDS =
     bufConst(5, "items", "inventory", "player", "player's", "location");
+words_t STOP_WORDS_CASE = bufConst(1, "EXITS");
+words_t STOP_CHARS = bufConst(2, "[", "(");
 words_t ACTION_MUST_HAVES = bufConst(1, "you");
 
 static failure_shot_t failure_shots[] = {
@@ -49,8 +52,7 @@ static failure_shot_t failure_shots[] = {
      "You try to take it, but it won't budge."},
     {"take horizon", FAILURE_TYPE_CANNOT_COLLECT_ITEM,
      "It politely remains where it is."},
-    {"use phantom wrench", FAILURE_TYPE_INVALID_ITEM,
-     "You lack such a thing."},
+    {"use phantom wrench", FAILURE_TYPE_INVALID_ITEM, "You lack such a thing."},
     {"drop imaginary gem", FAILURE_TYPE_INVALID_ITEM,
      "Hard to drop what you don't possess."},
     {"use plain wall", FAILURE_TYPE_CANNOT_BE_USED,
@@ -139,6 +141,20 @@ static inline int hasStopWords(string_t *response) {
     for (size_t i = 0; i < STOP_WORDS.used; i++) {
       const char *word = bufAt(&STOP_WORDS, i);
       if (strcasecmp(token, word) == 0) {
+        return 1;
+      }
+    }
+
+    for (size_t i = 0; i < STOP_WORDS_CASE.used; i++) {
+      const char *word = bufAt(&STOP_WORDS_CASE, i);
+      if (strcmp(token, word) == 0) {
+        return 1;
+      }
+    }
+
+    for (size_t i = 0; i < STOP_CHARS.used; i++) {
+      const char *word = bufAt(&STOP_CHARS, i);
+      if (strchr(token, word[0]) != NULL) {
         return 1;
       }
     }
