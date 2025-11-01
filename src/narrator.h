@@ -22,7 +22,19 @@ typedef struct {
   const char *response;
 } failure_shot_t;
 
-const char *STOP_WORDS[] = {"items", "inventory", "player", "location"};
+typedef Buffer(const char *) words_t;
+
+static inline words_t *wordsCreate(size_t len) {
+  words_t *result;
+  makeBufCreate(words_t, const char *, result, len);
+  return result;
+}
+
+static inline void wordsDestroy(words_t **self) { deallocate(self); }
+
+words_t STOP_WORDS =
+    bufConst(4, "items", "inventory", "player", "player's", "location");
+words_t ACTION_MUST_HAVES = bufConst(1, "you");
 
 static failure_shot_t failure_shots[] = {
     {"look at the key", FAILURE_INVALID_TARGET,
@@ -108,18 +120,19 @@ static inline void narratorDestroy(narrator_t **self) {
   deallocate(self);
 }
 
-static inline int hasStopWords(string_t *description) {
-  panicif(!description, "missing description");
+static inline int hasStopWords(string_t *response) {
+  panicif(!response, "missing response");
 
-  string_t *input cleanup(strDestroy) = strDup(description);
+  string_t *input cleanup(strDestroy) = strDup(response);
   if (!input)
     return 0;
 
   char *saveptr = NULL;
   char *token = strtok_r(input->data, " \t\r\n", &saveptr);
   while (token) {
-    for (size_t i = 0; i < arrLen(STOP_WORDS); i++) {
-      if (strcasecmp(token, STOP_WORDS[i]) == 0) {
+    for (size_t i = 0; i < STOP_WORDS.used; i++) {
+      const char *word = bufAt(&STOP_WORDS, i);
+      if (strcasecmp(token, word) == 0) {
         return 1;
       }
     }
@@ -130,14 +143,30 @@ static inline int hasStopWords(string_t *description) {
   return 0;
 }
 
+static inline int hasAllMustHaves(string_t *response, words_t *must_haves) {
+  panicif(!response, "missing response");
+  if (!must_haves)
+    return 1;
+
+  for (size_t i = 0; i < must_haves->used; i++) {
+    const char *word = bufAt(must_haves, i);
+    if (!strcasestr(response->data, word)) {
+      return 0;
+    }
+  }
+
+  return 1;
+}
+
 static inline void generateAndValidate(ai_t *ai, const string_t *prompt,
-                                       string_t *response) {
+                                       string_t *response,
+                                       words_t *must_haves) {
   int valid = 0;
   while (!valid) {
     strClear(response);
     aiReset(ai);
     aiGenerate(ai, prompt, response);
-    valid = !hasStopWords(response);
+    valid = !hasStopWords(response) && hasAllMustHaves(response, must_haves);
   }
 }
 
@@ -154,7 +183,23 @@ static inline void narratorDescribeWorld(narrator_t *self, world_t *world,
   strFmtAppend(self->prompt, "\n%s", self->summary->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
-  generateAndValidate(self->ai, self->prompt, description);
+  // TODO: this seems inefficient: this list can never be longer than all
+  // elements + all exits, it could be statically allocated
+  words_t *must_haves cleanup(wordsDestroy) =
+      wordsCreate(world->current_location->items->used +
+                  world->current_location->exits->used);
+
+  for (size_t i = 0; i < world->current_location->items->used; i++) {
+    item_t *item = bufAt(world->current_location->items, i);
+    bufPush(must_haves, item->object.name);
+  }
+
+  for (size_t i = 0; i < world->current_location->exits->used; i++) {
+    location_t *exit = (location_t *)bufAt(world->current_location->exits, i);
+    bufPush(must_haves, exit->object.name);
+  }
+
+  generateAndValidate(self->ai, self->prompt, description, must_haves);
 }
 
 static inline void narratorDescribeObject(narrator_t *self, object_t *object,
@@ -173,7 +218,7 @@ static inline void narratorDescribeObject(narrator_t *self, object_t *object,
 
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
-  generateAndValidate(self->ai, self->prompt, description);
+  generateAndValidate(self->ai, self->prompt, description, NULL);
 }
 
 static inline void narratorCommentFailure(narrator_t *self, failures_t failure,
@@ -201,7 +246,7 @@ static inline void narratorCommentFailure(narrator_t *self, failures_t failure,
   strFmtAppend(self->prompt, usr_prompt_tpl->data, self->summary->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
-  generateAndValidate(self->ai, self->prompt, comment);
+  generateAndValidate(self->ai, self->prompt, comment, &ACTION_MUST_HAVES);
 }
 
 static inline void narratorCommentSuccess(narrator_t *self, world_t *world,
@@ -218,5 +263,5 @@ static inline void narratorCommentSuccess(narrator_t *self, world_t *world,
   strFmtAppend(self->prompt, usr_prompt_tpl->data, input->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
-  generateAndValidate(self->ai, self->prompt, comment);
+  generateAndValidate(self->ai, self->prompt, comment, &ACTION_MUST_HAVES);
 }

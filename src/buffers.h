@@ -28,7 +28,7 @@
 
 #define bufAt(BufferPtr, Index)                                                \
   (panicif((Index) > (BufferPtr)->length || Index < 0, "index out of bounds"), \
-   BufferPtr->data[(Index)])
+   (BufferPtr)->data[(Index)])
 
 #define bufSet(BufferPtr, Index, Value)                                        \
   {                                                                            \
