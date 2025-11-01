@@ -26,7 +26,7 @@ zork: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
 	-Ivendor/llama.cpp/ggml/include
 zork: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
 	-framework Foundation -framework Metal -framework MetalKit
-zork: src/ai.o $(LLAMA_STATIC_LIBS)
+zork: src/ai.o src/ui.o $(LLAMA_STATIC_LIBS)
 
 tests/parser.test: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
 	-Ivendor/llama.cpp/ggml/include
