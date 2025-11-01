@@ -9,7 +9,7 @@ void actions(void) {
   string_t *cmd cleanup(strDestroy) = strCreate(128);
   panicif(!cmd, "cannot initialize command buffer");
 
-  action_t action;
+  action_type_t action;
 
 #define test(Command, Action)                                                  \
   strFmt(cmd, "%s", Command);                                                  \
@@ -17,41 +17,41 @@ void actions(void) {
   expectEqli(action, Action, Command);
 
   case("move");
-  test("go to the hall", ACTION_MOVE);
-  test("walk to hall", ACTION_MOVE);
-  test("enter the hall", ACTION_MOVE);
-  test("move to hall", ACTION_MOVE);
-  test("travel to hall", ACTION_MOVE);
-  test("I want to go to the hall", ACTION_MOVE);
+  test("go to the hall", ACTION_TYPE_MOVE);
+  test("walk to hall", ACTION_TYPE_MOVE);
+  test("enter the hall", ACTION_TYPE_MOVE);
+  test("move to hall", ACTION_TYPE_MOVE);
+  test("travel to hall", ACTION_TYPE_MOVE);
+  test("I want to go to the hall", ACTION_TYPE_MOVE);
 
   case("take");
-  test("grab the key from the table", ACTION_TAKE);
-  test("fetch the object", ACTION_TAKE);
-  test("pick up the key", ACTION_TAKE);
-  test("get the key please", ACTION_TAKE);
-  test("take the key", ACTION_TAKE);
-  test("I want to take the key", ACTION_TAKE);
-  test("retrieve the key", ACTION_TAKE);
+  test("grab the key from the table", ACTION_TYPE_TAKE);
+  test("fetch the object", ACTION_TYPE_TAKE);
+  test("pick up the key", ACTION_TYPE_TAKE);
+  test("get the key please", ACTION_TYPE_TAKE);
+  test("take the key", ACTION_TYPE_TAKE);
+  test("I want to take the key", ACTION_TYPE_TAKE);
+  test("retrieve the key", ACTION_TYPE_TAKE);
 
   case("examine");
-  test("look at the key", ACTION_EXAMINE);
-  test("inspect the coin", ACTION_EXAMINE);
-  test("examine key closely", ACTION_EXAMINE);
-  test("check out the coin", ACTION_EXAMINE);
-  test("study the key", ACTION_EXAMINE);
-  test("observe coin", ACTION_EXAMINE);
+  test("look at the key", ACTION_TYPE_EXAMINE);
+  test("inspect the coin", ACTION_TYPE_EXAMINE);
+  test("examine key closely", ACTION_TYPE_EXAMINE);
+  test("check out the coin", ACTION_TYPE_EXAMINE);
+  test("study the key", ACTION_TYPE_EXAMINE);
+  test("observe coin", ACTION_TYPE_EXAMINE);
 
   case("use");
-  test("use the key", ACTION_USE);
-  test("activate key", ACTION_USE);
-  test("apply the coin", ACTION_USE);
-  test("employ the lantern", ACTION_USE);
-  test("utilize the sword", ACTION_USE);
+  test("use the key", ACTION_TYPE_USE);
+  test("activate key", ACTION_TYPE_USE);
+  test("apply the coin", ACTION_TYPE_USE);
+  test("employ the lantern", ACTION_TYPE_USE);
+  test("utilize the sword", ACTION_TYPE_USE);
 
   case("drop");
-  test("drop the key on the ground", ACTION_DROP);
-  test("put down the coin", ACTION_DROP);
-  test("discard the lantern", ACTION_DROP);
+  test("drop the key on the ground", ACTION_TYPE_DROP);
+  test("put down the coin", ACTION_TYPE_DROP);
+  test("discard the lantern", ACTION_TYPE_DROP);
 #undef test
 }
 

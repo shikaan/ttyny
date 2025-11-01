@@ -68,7 +68,7 @@ int main(void) {
     strClear(response);
     loading = loadingStart();
 
-    action_t action = parserExtractAction(parser, input);
+    action_type_t action = parserExtractAction(parser, input);
 
     item_t *item = NULL;
     location_t *location = NULL;
@@ -77,14 +77,14 @@ int main(void) {
     const items_t *items = NULL;
 
     switch (action) {
-    case ACTION_MOVE: {
+    case ACTION_TYPE_MOVE: {
       debug("action: move");
       items = &NO_ITEMS;
       locations = world->current_location->exits;
       parserExtractTarget(parser, input, locations, items, &location, &item);
 
       if (!location) {
-        narratorCommentFailure(narrator, FAILURE_INVALID_TARGET, input,
+        narratorCommentFailure(narrator, FAILURE_TYPE_INVALID_TARGET, input,
                                response);
         goto print;
       }
@@ -96,7 +96,7 @@ int main(void) {
                    world->current_location->object.name);
       goto print;
     }
-    case ACTION_EXAMINE: {
+    case ACTION_TYPE_EXAMINE: {
       debug("action: examine\n");
       // TODO: how to examine the inventory?
       items = world->current_location->items;
@@ -115,22 +115,22 @@ int main(void) {
         goto print;
       }
 
-      narratorCommentFailure(narrator, FAILURE_INVALID_TARGET, input, response);
+      narratorCommentFailure(narrator, FAILURE_TYPE_INVALID_TARGET, input, response);
       goto print;
     }
-    case ACTION_TAKE: {
+    case ACTION_TYPE_TAKE: {
       debug("action: take\n");
       items = world->current_location->items;
       locations = &NO_LOCATIONS;
       parserExtractTarget(parser, input, locations, items, &location, &item);
 
       if (!item) {
-        narratorCommentFailure(narrator, FAILURE_INVALID_ITEM, input, response);
+        narratorCommentFailure(narrator, FAILURE_TYPE_INVALID_ITEM, input, response);
         goto print;
       }
 
       if (!objectIsCollectible(&item->object)) {
-        narratorCommentFailure(narrator, FAILURE_CANNOT_COLLECT_ITEM, input,
+        narratorCommentFailure(narrator, FAILURE_TYPE_CANNOT_COLLECT_ITEM, input,
                                response);
         goto print;
       }
@@ -142,14 +142,14 @@ int main(void) {
       objectTransition(&item->object, action);
       goto print;
     }
-    case ACTION_DROP: {
+    case ACTION_TYPE_DROP: {
       debug("action: drop\n");
       items = world->state.inventory;
       locations = &NO_LOCATIONS;
       parserExtractTarget(parser, input, locations, items, &location, &item);
 
       if (!item) {
-        narratorCommentFailure(narrator, FAILURE_INVALID_ITEM, input, response);
+        narratorCommentFailure(narrator, FAILURE_TYPE_INVALID_ITEM, input, response);
         goto print;
       }
 
@@ -160,14 +160,14 @@ int main(void) {
       objectTransition(&item->object, action);
       goto print;
     }
-    case ACTION_USE: {
+    case ACTION_TYPE_USE: {
       debug("action: use\n");
       items = world->state.inventory;
       locations = &NO_LOCATIONS;
       parserExtractTarget(parser, input, locations, items, &location, &item);
 
       if (!item) {
-        narratorCommentFailure(narrator, FAILURE_INVALID_ITEM, input, response);
+        narratorCommentFailure(narrator, FAILURE_TYPE_INVALID_ITEM, input, response);
         goto print;
       }
 
@@ -176,7 +176,7 @@ int main(void) {
       objectTransition(&item->object, action);
       goto print;
     }
-    case ACTION_HELP:
+    case ACTION_TYPE_HELP:
       debug("action: /help\n");
       location_t *first_exit =
           (location_t *)bufAt(world->current_location->exits, 0);
@@ -213,7 +213,7 @@ int main(void) {
              " ~  Based on your last input, you could try %s.",
              NAME, suggestion->data);
       goto print;
-    case ACTION_STATUS: {
+    case ACTION_TYPE_STATUS: {
       debug("action: /status\n");
       items_t *inventory = world->state.inventory;
 
@@ -234,11 +234,11 @@ int main(void) {
 
       goto print;
     }
-    case ACTION_QUIT:
+    case ACTION_TYPE_QUIT:
       debug("action: quit\n");
       return 0;
-    case ACTIONS:
-    case ACTION_UNKNOWN:
+    case ACTION_TYPES:
+    case ACTION_TYPE_UNKNOWN:
     default:
       debug("action: unknown\n");
       strFmt(response, "Not sure how to do that.");

@@ -33,45 +33,45 @@ static state_descriptions_t portal_chamber_states =
 // --- Transitions for objects ---
 static transitions_t torch_transitions =
     bufConst(4,
-             {.trigger = ACTION_TAKE, .from = 0, .to = 1},
-             {.trigger = ACTION_USE, .from = 1, .to = 2},
-             {.trigger = ACTION_DROP, .from = 1, .to = 0},
-             {.trigger = ACTION_DROP, .from = 2, .to = 0});
+             {.trigger = ACTION_TYPE_TAKE, .from = 0, .to = 1},
+             {.trigger = ACTION_TYPE_USE, .from = 1, .to = 2},
+             {.trigger = ACTION_TYPE_DROP, .from = 1, .to = 0},
+             {.trigger = ACTION_TYPE_DROP, .from = 2, .to = 0});
 
 static transitions_t shard_transitions =
     bufConst(2,
-             {.trigger = ACTION_TAKE, .from = 0, .to = 1},
-             {.trigger = ACTION_USE, .from = 1, .to = 2});
+             {.trigger = ACTION_TYPE_TAKE, .from = 0, .to = 1},
+             {.trigger = ACTION_TYPE_USE, .from = 1, .to = 2});
 
 static transitions_t coin_transitions =
     bufConst(2,
-             {.trigger = ACTION_TAKE, .from = 0, .to = 1},
-             {.trigger = ACTION_DROP, .from = 1, .to = 2});
+             {.trigger = ACTION_TYPE_TAKE, .from = 0, .to = 1},
+             {.trigger = ACTION_TYPE_DROP, .from = 1, .to = 2});
 
 static transitions_t herb_transitions =
     bufConst(3,
-             {.trigger = ACTION_TAKE, .from = 0, .to = 1},
-             {.trigger = ACTION_USE, .from = 1, .to = 2},
-             {.trigger = ACTION_DROP, .from = 1, .to = 0});
+             {.trigger = ACTION_TYPE_TAKE, .from = 0, .to = 1},
+             {.trigger = ACTION_TYPE_USE, .from = 1, .to = 2},
+             {.trigger = ACTION_TYPE_DROP, .from = 1, .to = 0});
 
 static transitions_t key_transitions =
     bufConst(2,
-             {.trigger = ACTION_TAKE, .from = 0, .to = 1},
-             {.trigger = ACTION_USE, .from = 1, .to = 2});
+             {.trigger = ACTION_TYPE_TAKE, .from = 0, .to = 1},
+             {.trigger = ACTION_TYPE_USE, .from = 1, .to = 2});
 
 static transitions_t rune_transitions =
     bufConst(2,
-             {.trigger = ACTION_TAKE, .from = 0, .to = 1},
-             {.trigger = ACTION_USE, .from = 1, .to = 2});
+             {.trigger = ACTION_TYPE_TAKE, .from = 0, .to = 1},
+             {.trigger = ACTION_TYPE_USE, .from = 1, .to = 2});
 
 static transitions_t golem_transitions =
     bufConst(2,
-             {.trigger = ACTION_EXAMINE, .from = 0, .to = 1},
-             {.trigger = ACTION_USE, .from = 1, .to = 2});
+             {.trigger = ACTION_TYPE_EXAMINE, .from = 0, .to = 1},
+             {.trigger = ACTION_TYPE_USE, .from = 1, .to = 2});
 
 // --- Transitions for locations ---
 static transitions_t portal_location_transitions =
-    bufConst(1, {.trigger = ACTION_USE, .from = 0, .to = 1});
+    bufConst(1, {.trigger = ACTION_TYPE_USE, .from = 0, .to = 1});
 
 // --- Objects ---
 static item_t torch = {

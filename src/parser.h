@@ -25,14 +25,14 @@ typedef struct {
 } action_shot_t;
 
 static action_shot_t action_shots[] = {
-    {"look at the key", &ACTION_EXAMINE_NAME},
-    {"grab the sword", &ACTION_TAKE_NAME},
-    {"walk to kitchen", &ACTION_MOVE_NAME},
-    {"use crowbar on chest", &ACTION_USE_NAME},
-    {"eat bread", &ACTION_USE_NAME},
-    {"check behind painting", &ACTION_EXAMINE_NAME},
-    {"pick up coin", &ACTION_TAKE_NAME},
-    {"head north", &ACTION_MOVE_NAME},
+    {"look at the key", &ACTION_EXAMINE},
+    {"grab the sword", &ACTION_TAKE},
+    {"walk to kitchen", &ACTION_MOVE},
+    {"use crowbar on chest", &ACTION_USE},
+    {"eat bread", &ACTION_USE},
+    {"check behind painting", &ACTION_EXAMINE},
+    {"pick up coin", &ACTION_TAKE},
+    {"head north", &ACTION_MOVE},
 };
 
 static const char *item_shots_tpls[] = {
@@ -63,22 +63,22 @@ static inline parser_t *parserCreate(void) {
   return parser;
 }
 
-static inline action_t parserExtractAction(parser_t *self,
+static inline action_type_t parserExtractAction(parser_t *self,
                                            const string_t *input) {
   const int is_command = bufAt(input, 0) == '/';
 
   if (is_command) {
     if (input->used > 1) {
-      if (strStartsWith(&ACTION_HELP_NAME, input)) {
-        return ACTION_HELP;
-      } else if (strStartsWith(&ACTION_STATUS_NAME, input)) {
-        return ACTION_STATUS;
-      } else if (strStartsWith(&ACTION_QUIT_NAME, input)) {
-        return ACTION_QUIT;
+      if (strStartsWith(&ACTION_HELP, input)) {
+        return ACTION_TYPE_HELP;
+      } else if (strStartsWith(&ACTION_STATUS, input)) {
+        return ACTION_TYPE_STATUS;
+      } else if (strStartsWith(&ACTION_QUIT, input)) {
+        return ACTION_TYPE_QUIT;
       }
     }
 
-    return ACTION_UNKNOWN;
+    return ACTION_TYPE_UNKNOWN;
   }
 
   const config_t *config = self->ai->configuration;
@@ -102,13 +102,13 @@ static inline action_t parserExtractAction(parser_t *self,
   strClear(self->response);
   aiGenerate(self->ai, self->prompt, self->response);
 
-  for (size_t i = 0; i < ACTIONS; i++) {
+  for (size_t i = 0; i < ACTION_TYPES; i++) {
     if (strEq(self->response, action_names[i])) {
       return actions_types[i];
     }
   }
 
-  return ACTION_UNKNOWN;
+  return ACTION_TYPE_UNKNOWN;
 }
 
 static inline void parserExtractTarget(parser_t *self, const string_t *input,
@@ -173,7 +173,7 @@ static inline void parserExtractTarget(parser_t *self, const string_t *input,
 
   for (size_t i = 0; i < locations->used; i++) {
     location_t *location = (location_t *)bufAt(locations, i);
-    if (objectIdEq(self->response->data, location->object.name)) {
+    if (objectNameEq(self->response->data, location->object.name)) {
       *result_item = NULL;
       *result_location = location;
       return;
@@ -182,7 +182,7 @@ static inline void parserExtractTarget(parser_t *self, const string_t *input,
 
   for (size_t i = 0; i < items->used; i++) {
     item_t *item = bufAt(items, i);
-    if (objectIdEq(self->response->data, item->object.name)) {
+    if (objectNameEq(self->response->data, item->object.name)) {
       *result_item = item;
       *result_location = NULL;
       return;

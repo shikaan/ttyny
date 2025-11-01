@@ -18,7 +18,7 @@ typedef struct {
 
 typedef struct {
   const char *action;
-  const failures_t failure;
+  const failure_type_t failure;
   const char *response;
 } failure_shot_t;
 
@@ -37,20 +37,20 @@ words_t STOP_WORDS =
 words_t ACTION_MUST_HAVES = bufConst(1, "you");
 
 static failure_shot_t failure_shots[] = {
-    {"look at the key", FAILURE_INVALID_TARGET,
+    {"look at the key", FAILURE_TYPE_INVALID_TARGET,
      "You can't see any such thing."},
-    {"inspect banana", FAILURE_INVALID_TARGET,
+    {"inspect banana", FAILURE_TYPE_INVALID_TARGET,
      "A banana? The area is distinctly banana-free."},
-    {"examine tree", FAILURE_INVALID_TARGET,
+    {"examine tree", FAILURE_TYPE_INVALID_TARGET,
      "It is difficult to examine a tree that isn't here."},
-    {"examine spaceship", FAILURE_INVALID_TARGET,
+    {"examine spaceship", FAILURE_TYPE_INVALID_TARGET,
      "The notion of a spaceship here is, frankly, ludicrous."},
-    {"go north", FAILURE_INVALID_LOCATION, "You can't go that way."},
-    {"enter the closet", FAILURE_INVALID_LOCATION,
+    {"go north", FAILURE_TYPE_INVALID_LOCATION, "You can't go that way."},
+    {"enter the closet", FAILURE_TYPE_INVALID_LOCATION,
      "The closet, pleasant as it may be, is not an exit."},
-    {"enter the bottle", FAILURE_INVALID_LOCATION,
+    {"enter the bottle", FAILURE_TYPE_INVALID_LOCATION,
      "You'd have to be considerably smaller to fit in there."},
-    {"go to the kitchen", FAILURE_INVALID_LOCATION,
+    {"go to the kitchen", FAILURE_TYPE_INVALID_LOCATION,
      "You can't get there from here."},
 };
 
@@ -221,7 +221,7 @@ static inline void narratorDescribeObject(narrator_t *self, object_t *object,
   generateAndValidate(self->ai, self->prompt, description, NULL);
 }
 
-static inline void narratorCommentFailure(narrator_t *self, failures_t failure,
+static inline void narratorCommentFailure(narrator_t *self, failure_type_t failure,
                                           string_t *input, string_t *comment) {
   const config_t *config = self->ai->configuration;
   const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];

@@ -7,79 +7,72 @@
 #include <string.h>
 
 typedef enum {
-  ACTION_UNKNOWN = -1,
-  ACTION_MOVE = 0,
-  ACTION_TAKE,
-  ACTION_DROP,
-  ACTION_USE,
-  ACTION_EXAMINE,
+  ACTION_TYPE_UNKNOWN = -1,
+  ACTION_TYPE_MOVE = 0,
+  ACTION_TYPE_TAKE,
+  ACTION_TYPE_DROP,
+  ACTION_TYPE_USE,
+  ACTION_TYPE_EXAMINE,
 
-  ACTION_HELP,
-  ACTION_STATUS,
-  ACTION_QUIT,
+  ACTION_TYPE_HELP,
+  ACTION_TYPE_STATUS,
+  ACTION_TYPE_QUIT,
 
-  ACTIONS,
-} action_t;
+  ACTION_TYPES,
+} action_type_t;
 
-static string_t ACTION_MOVE_NAME = strConst("move");
-static string_t ACTION_USE_NAME = strConst("use");
-static string_t ACTION_TAKE_NAME = strConst("take");
-static string_t ACTION_DROP_NAME = strConst("drop");
-static string_t ACTION_EXAMINE_NAME = strConst("examine");
-static string_t ACTION_HELP_NAME = strConst("/help");
-static string_t ACTION_STATUS_NAME = strConst("/status");
-static string_t ACTION_QUIT_NAME = strConst("/quit");
+static string_t ACTION_MOVE = strConst("move");
+static string_t ACTION_USE = strConst("use");
+static string_t ACTION_TAKE = strConst("take");
+static string_t ACTION_DROP = strConst("drop");
+static string_t ACTION_EXAMINE = strConst("examine");
+static string_t ACTION_HELP = strConst("/help");
+static string_t ACTION_STATUS = strConst("/status");
+static string_t ACTION_QUIT = strConst("/quit");
 
-static action_t actions_types[ACTIONS] = {
-    ACTION_MOVE,    ACTION_TAKE, ACTION_DROP,   ACTION_USE,
-    ACTION_EXAMINE, ACTION_HELP, ACTION_STATUS, ACTION_QUIT};
+static action_type_t actions_types[ACTION_TYPES] = {
+    ACTION_TYPE_MOVE,   ACTION_TYPE_TAKE,    ACTION_TYPE_DROP,
+    ACTION_TYPE_USE,    ACTION_TYPE_EXAMINE, ACTION_TYPE_HELP,
+    ACTION_TYPE_STATUS, ACTION_TYPE_QUIT};
 
-static string_t *action_names[ACTIONS] = {
-    &ACTION_MOVE_NAME,   &ACTION_TAKE_NAME,    &ACTION_DROP_NAME,
-    &ACTION_USE_NAME,    &ACTION_EXAMINE_NAME, &ACTION_HELP_NAME,
-    &ACTION_STATUS_NAME, &ACTION_QUIT_NAME};
+static string_t *action_names[ACTION_TYPES] = {
+    &ACTION_MOVE,    &ACTION_TAKE, &ACTION_DROP,   &ACTION_USE,
+    &ACTION_EXAMINE, &ACTION_HELP, &ACTION_STATUS, &ACTION_QUIT};
 
 typedef enum {
   OBJECT_TYPE_UNKNOWN = -1,
   OBJECT_TYPE_ITEM = 0,
   OBJECT_TYPE_LOCATION,
 
-  OBJ_TYPES,
+  OBJECT_TYPES,
 } object_type_t;
 
 typedef const char *object_name_t;
 
-
-static inline size_t objectIdLength(object_name_t self) { return strlen(self); }
-
-static inline int objectIdEq(object_name_t self, object_name_t other) {
+static inline int objectNameEq(object_name_t self, object_name_t other) {
   return strcmp(self, other) == 0;
 }
 
-static inline void objectIdDestroy(object_name_t **self) { deallocate(self); }
-
 typedef enum {
-  FAILURE_INVALID_TARGET,
-  FAILURE_INVALID_LOCATION,
-  FAILURE_INVALID_ITEM,
-  FAILURE_CANNOT_COLLECT_ITEM,
+  FAILURE_TYPE_INVALID_TARGET,
+  FAILURE_TYPE_INVALID_LOCATION,
+  FAILURE_TYPE_INVALID_ITEM,
+  FAILURE_TYPE_CANNOT_COLLECT_ITEM,
 
   FAILURES,
-} failures_t;
+} failure_type_t;
 
-static string_t FAILURE_INVALID_TARGET_NAME =
-    strConst("missing or invalid target");
-static string_t FAILURE_INVALID_LOCATION_NAME =
+static string_t FAILURE_INVALID_TARGET = strConst("missing or invalid target");
+static string_t FAILURE_INVALID_LOCATION =
     strConst("missing or invalid location");
-static string_t FAILURE_INVALID_ITEM_NAME = strConst("missing or invalid item");
-static string_t FAILURE_CANNOT_COLLECT_ITEM_NAME =
-    strConst("cannot collect item");
+static string_t FAILURE_INVALID_ITEM = strConst("missing or invalid item");
+static string_t FAILURE_CANNOT_COLLECT_ITEM = strConst("cannot collect item");
 
 static string_t *failure_names[FAILURES] = {
-    &FAILURE_INVALID_TARGET_NAME,
-    &FAILURE_INVALID_LOCATION_NAME,
-    &FAILURE_INVALID_ITEM_NAME,
-    &FAILURE_CANNOT_COLLECT_ITEM_NAME,
+    &FAILURE_INVALID_TARGET,
+    &FAILURE_INVALID_LOCATION,
+    &FAILURE_INVALID_ITEM,
+    &FAILURE_CANNOT_COLLECT_ITEM,
 };
 
 // Boolean map of traits for objects and location.
@@ -111,7 +104,7 @@ typedef uint8_t object_state_t;
 typedef Buffer(const char *) state_descriptions_t;
 
 typedef struct {
-  action_t trigger;
+  action_type_t trigger;
   object_state_t from;
   object_state_t to;
 } transition_t;
@@ -135,7 +128,7 @@ typedef struct {
   transitions_t *transitions;
 } object_t;
 
-static inline void objectTransition(object_t *self, action_t action) {
+static inline void objectTransition(object_t *self, action_type_t action) {
   if (!self->transitions)
     return;
 
@@ -163,7 +156,7 @@ static const items_t NO_ITEMS = {0, 0, {}};
 
 static inline items_t *itemsCreate(size_t length) {
   items_t *items = NULL;
-  makeBufCreate(items_t, item_t*, items, length);
+  makeBufCreate(items_t, item_t *, items, length);
   return items;
 }
 
@@ -201,7 +194,7 @@ typedef struct {
 
 static inline locations_t *locationsCreate(size_t length) {
   locations_t *locations = NULL;
-  makeBufCreate(locations_t, location_t*, locations, length);
+  makeBufCreate(locations_t, location_t *, locations, length);
   return locations;
 }
 
