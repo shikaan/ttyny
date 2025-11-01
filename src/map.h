@@ -3,6 +3,7 @@
 #include "alloc.h"
 #include "panic.h"
 #include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 
 typedef const char *key_t;
@@ -11,14 +12,13 @@ typedef uint8_t map_size_t;
 
 typedef enum { MAP_RESULT_OK = 0, MAP_ERROR_FULL } map_result_t;
 
-// Non-owning hashmap
 typedef struct {
-  uint8_t size;
+  map_size_t size;
   key_t *keys;
   value_t *values;
 } map_t;
 
-static inline uint8_t memoryMakeKey(const map_t *self, key_t key) {
+static inline map_size_t memoryMakeKey(const map_t *self, key_t key) {
   uint64_t hash = 14695981039346656037U;
   const uint64_t prime = 1099511628211U;
 
@@ -30,7 +30,7 @@ static inline uint8_t memoryMakeKey(const map_t *self, key_t key) {
   return hash % self->size;
 }
 
-static inline map_t *mapCreate(uint8_t size) {
+static inline map_t *mapCreate(map_size_t size) {
   panicif(size == 0, "size cannot be zero");
 
   map_t *self = allocate(sizeof(map_t));
