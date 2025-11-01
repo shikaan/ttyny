@@ -27,19 +27,6 @@
   return calloc(1, size);
 }
 
-/**
- * Reallocate memory and force caller to check on the result.
- * @name reallocate
- * @param {void**} ptr - Pointer to the pointer to be reallocated
- * @param {size_t} size - New size in bytes
- * @returns {void*} Reallocated memory pointer
- * @example
- *   void* result = allocate(100);
- *   result = reallocate(&result, 200);
- */
-[[nodiscard]] static inline void *reallocate(void **ptr, size_t size) {
-  return realloc(*ptr, size);
-}
 
 /**
  * Safely deallocate memory and set pointer to NULL.
