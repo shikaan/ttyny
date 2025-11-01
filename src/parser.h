@@ -65,6 +65,22 @@ static inline parser_t *parserCreate(void) {
 
 static inline action_t parserExtractAction(parser_t *self,
                                            const string_t *input) {
+  const int is_command = bufAt(input, 0) == '/';
+
+  if (is_command) {
+    if (input->used > 1) {
+      if (strStartsWith(&ACTION_HELP_NAME, input)) {
+        return ACTION_HELP;
+      } else if (strStartsWith(&ACTION_STATUS_NAME, input)) {
+        return ACTION_STATUS;
+      } else if (strStartsWith(&ACTION_QUIT_NAME, input)) {
+        return ACTION_QUIT;
+      }
+    }
+
+    return ACTION_UNKNOWN;
+  }
+
   const config_t *config = self->ai->configuration;
   const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
   const string_t *usr_prompt_tpl = config->prompt_templates[PROMPT_TYPE_USR];

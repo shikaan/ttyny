@@ -56,10 +56,9 @@ void aiResultFormat(ai_result_t res, string_t *response) {
 
 static void filterLogs(enum ggml_log_level level, const char *text,
                        void *data) {
+  (void)level;
+  (void)text;
   (void)data;
-  if (level >= GGML_LOG_LEVEL_ERROR) {
-    fprintf(stderr, "%s", text);
-  }
 }
 
 static void aiInitSampler(ai_t *ai, ai_result_t *res, config_t *configuration) {

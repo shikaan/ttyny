@@ -37,6 +37,46 @@ static failure_shot_t failure_shots[] = {
      "You can't get there from here."},
 };
 
+static inline void worldMakeSummary(world_t *world, string_t *summary) {
+  location_t *current_location = world->current_location;
+
+  strFmt(summary, "LOCATION: %s (%s) [%s]\n", current_location->object.name,
+         current_location->object.description,
+         bufAt(current_location->object.state_descriptions,
+               current_location->object.current_state));
+
+  if (world->state.inventory->used) {
+    strFmtAppend(summary, "INVENTORY:\n");
+    for (size_t i = 0; i < world->state.inventory->used; i++) {
+      item_t *item = bufAt(world->state.inventory, i);
+      strFmtAppend(
+          summary, "  - %s (%s) [%s]\n", item->object.name,
+          item->object.description,
+          bufAt(item->object.state_descriptions, item->object.current_state));
+    }
+  }
+
+  if (current_location->items->used) {
+    strFmtAppend(summary, "ITEMS:\n");
+    for (size_t i = 0; i < current_location->items->used; i++) {
+      item_t *item = bufAt(current_location->items, i);
+      strFmtAppend(
+          summary, "  - %s (%s) [%s]\n", item->object.name,
+          item->object.description,
+          bufAt(item->object.state_descriptions, item->object.current_state));
+    }
+  }
+
+  strFmtOffset(summary, summary->used, "EXITS:\n");
+  for (size_t i = 0; i < current_location->exits->used; i++) {
+    location_t *exit = (location_t *)bufAt(current_location->exits, i);
+    strFmtAppend(
+        summary, "  - %s (%s) [%s]\n", exit->object.name,
+        exit->object.description,
+        bufAt(exit->object.state_descriptions, exit->object.current_state));
+  }
+}
+
 static inline narrator_t *narratorCreate(void) {
   narrator_t *narrator = allocate(sizeof(narrator_t));
   panicif(!narrator, "cannot allocate narrator");

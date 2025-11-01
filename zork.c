@@ -12,10 +12,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+const char *STATE_UPDATE = "\n~>";
+const char *NAME = "Zork";
+
 int main(void) {
   string_t *input cleanup(strDestroy) = strCreate(512);
   string_t *response cleanup(strDestroy) = strCreate(4096);
   string_t *target cleanup(strDestroy) = strCreate(128);
+  string_t *suggestion cleanup(strDestroy) = strCreate(512);
   world_t *world = &ancient_portal_world;
 
   narrator_t *narrator cleanup(narratorDestroy) = narratorCreate();
@@ -24,18 +28,42 @@ int main(void) {
   parser_t *parser cleanup(parserDestroy) = parserCreate();
   panicif(!parser, "cannot create narrator");
 
-  ui_handle_t loading = loadingStart();
+  puts("\e[1;1H\e[2J");
+  strFmt(response,
+         " ~   Welcome to %s!\n"
+         " ~ \n"
+         " ~   You're about to explore a fantasy world through conversation.\n"
+         " ~   The game will describe where you are, and you respond in your "
+         "own words.\n"
+         " ~ \n"
+         " ~   Just type naturally, like:\n"
+         " ~     • 'I want to go in the kitchen'\n"
+         " ~     • 'Pick up the lamp'\n"
+         " ~     • 'Can I open this door?'\n"
+         " ~ \n"
+         " ~   Type '/help' anytime, if you're stuck.\n"
+         " ~ \n"
+         " ~   [Press ENTER to begin your adventure]",
+         NAME);
+  printResponse(response);
+  fgetc(stdin);
+  puts("\e[1;1H\e[2J");
+
+  ui_handle_t *loading = loadingStart();
   narratorDescribeWorld(narrator, world, response);
-  loadingWait(loading);
-  strFmtAppend(response, "\n~> Location: %s",
+  strFmtAppend(response, "%s Location: %s.", STATE_UPDATE,
                world->current_location->object.name);
-  puts(response->data);
+  loadingStop(&loading);
+  printResponse(response);
 
   while (1) {
-    world->state.turns++;
-
     printf("> ");
     strReadFrom(input, stdin);
+
+    if (input->used == 0)
+      continue;
+
+    world->state.turns++;
 
     strClear(response);
     loading = loadingStart();
@@ -64,7 +92,8 @@ int main(void) {
       world->current_location = location;
       objectTransition(&location->object, action);
       narratorDescribeWorld(narrator, world, response);
-      strFmtAppend(response, "\n~> Location: %s", location->object.name);
+      strFmtAppend(response, "%s Location: %s.", STATE_UPDATE,
+                   world->current_location->object.name);
       goto print;
     }
     case ACTION_EXAMINE: {
@@ -109,7 +138,7 @@ int main(void) {
       itemsAdd(world->state.inventory, item);
       itemsRemove(world->current_location->items, item);
       narratorCommentSuccess(narrator, world, input, response);
-      strFmtAppend(response, "\n~> %s taken", item->object.name);
+      strFmtAppend(response, "%s %s taken.", STATE_UPDATE, item->object.name);
       objectTransition(&item->object, action);
       goto print;
     }
@@ -127,7 +156,7 @@ int main(void) {
       itemsAdd(world->current_location->items, item);
       itemsRemove(world->state.inventory, item);
       narratorCommentSuccess(narrator, world, input, response);
-      strFmtAppend(response, "\n~> %s dropped", item->object.name);
+      strFmtAppend(response, "%s %s dropped.", STATE_UPDATE, item->object.name);
       objectTransition(&item->object, action);
       goto print;
     }
@@ -146,16 +175,68 @@ int main(void) {
       objectTransition(&item->object, action);
       goto print;
     }
+    case ACTION_HELP:
+      debug("action: /help\n");
+      location_t *first_exit =
+          (location_t *)bufAt(world->current_location->exits, 0);
+
+      strFmt(suggestion, "'Go to %s'", first_exit->object.name);
+
+      if (world->current_location->items->used > 0) {
+        strFmtAppend(suggestion, " or 'Take %s'",
+                     bufAt(world->current_location->items, 0)->object.name);
+      }
+
+      strFmt(response,
+             " ~  In %s you can explore the world in natural language.\n"
+             " ~  \n"
+             " ~  When items or locations are described, try interact:\n"
+             " ~     • 'Light the lamp'\n"
+             " ~     • 'Go to the garden'\n"
+             " ~  \n"
+             " ~  When an action triggers a change, you will see a message "
+             "prefixed with '~>'.\n"
+             " ~  \n"
+             " ~  Commands are prefixed with a '/' and their output is "
+             "prefixed with `~`.\n"
+             " ~  Available commands:\n"
+             " ~     • '/status' - shows the player status\n"
+             " ~     • '/help'   - displays this help\n"
+             " ~     • '/quit'   - ends the game\n"
+             " ~  \n"
+             " ~  Based on your last input, you could try %s.",
+             NAME, suggestion->data);
+      goto print;
+    case ACTION_STATUS: {
+      debug("action: /status\n");
+      items_t *inventory = world->state.inventory;
+
+      strFmt(response, " ~   Location:  %s\n ~   Turns:     %d\n ~   Inventory:",
+             world->current_location->object.name, world->state.turns);
+      if (inventory->used == 0) {
+        strFmtAppend(response, " empty.");
+      } else {
+        for (size_t i = 0; i < inventory->used; i++) {
+          strFmtAppend(response, "\n ~     • %s",
+                       bufAt(inventory, i)->object.name);
+        }
+      }
+
+      goto print;
+    }
+    case ACTION_QUIT:
+      return 0;
     case ACTIONS:
     case ACTION_UNKNOWN:
     default:
-      strFmt(response, "Not sure how to do that...");
+      debug("action: unknown\n");
+      strFmt(response, "Not sure how to do that.");
       goto print;
     }
 
   print:
-    loadingWait(loading);
-    puts(response->data);
+    loadingStop(&loading);
+    printResponse(response);
 
     switch (world->digest(&world->state)) {
     case GAME_STATE_VICTORY:

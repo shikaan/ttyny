@@ -134,12 +134,16 @@ static inline void strCat(string_t *self, const string_t *other) {
 static inline void strReadFrom(string_t *self, FILE *file) {
   self->used = strlen(fgets(self->data, (int)self->length, file)) - 1;
   self->data[self->used] = 0;
-  self->used--;
 }
 
 static inline int strEq(const string_t *self, const string_t *other) {
   return self->used == other->used &&
          (strncmp(self->data, other->data, self->used) == 0);
+}
+
+static inline int strStartsWith(const string_t *self, const string_t *other) {
+  return self->used >= other->used &&
+         (strncmp(self->data, other->data, other->used) == 0);
 }
 
 static inline void strTrim(string_t *self) {
