@@ -15,9 +15,9 @@ static const string_t PARSER_TARGET_SYS_PROMPT = strConst(
     "intent. When there is no match, respond with 'unknown'.");
 
 static const string_t NARRATOR_WORLD_DESC_SYS_PROMPT =
-    strConst("You are the narrator of an adventure game. In exactly 2 "
-             "sentences, describe LOCATION. Describe ITEMS and EXITS. "
-             "Be concise.");
+    strConst("You are the narrator of an adventure game. "
+             "In exactly 2 sentences, describe the LOCATION. "
+             "Say what ITEMS are here and where the EXITS lead. Be concise.");
 
 static const string_t NARRATOR_OBJECT_DESC_SYS_PROMPT =
     strConst("You are the narrator of a fantasy game. "
@@ -64,7 +64,7 @@ static config_t NARRATOR_CONFIG = {
     .temp = 0.8F,
     .context_size = 2048,
     .top_k = 50,
-    .repetition_penalty = 1.3F,
+    .repetition_penalty = 1.25F,
     .seed = 0,
     .grammar = NULL,
     .prompt_templates =

@@ -33,7 +33,7 @@ static inline void wordsDestroy(words_t **self) { deallocate(self); }
 
 static words_t STOP_WORDS =
     bufConst(6, "item", "items", "inventory", "player", "player's", "location");
-static words_t STOP_WORDS_CASE = bufConst(2, "EXITS", "EXIT");
+static words_t STOP_WORDS_CASE = bufConst(3, "EXITS", "EXIT", "ITEMS");
 static words_t STOP_CHARS = bufConst(3, "[", "(", "*");
 static words_t ACTION_MUST_HAVES = bufConst(1, "you");
 
@@ -66,17 +66,6 @@ static void summarize(const world_t *world, string_t *summary) {
          current_location->object.description,
          bufAt(current_location->object.state_descriptions,
                current_location->object.current_state));
-
-  if (world->state.inventory->used) {
-    strFmtAppend(summary, "INVENTORY:\n");
-    for (size_t i = 0; i < world->state.inventory->used; i++) {
-      item_t *item = bufAt(world->state.inventory, i);
-      strFmtAppend(
-          summary, "  - %s (%s) [%s]\n", item->object.name,
-          item->object.description,
-          bufAt(item->object.state_descriptions, item->object.current_state));
-    }
-  }
 
   if (current_location->items->used) {
     strFmtAppend(summary, "ITEMS:\n");
@@ -127,6 +116,7 @@ void dmDestroy(dm_t **self) {
 }
 
 static int hasStopWords(string_t *response) {
+  static const char *WORD_BREAK = " \t\r\n:-*'";
   panicif(!response, "missing response");
 
   string_t *input cleanup(strDestroy) = strDup(response);
@@ -134,7 +124,7 @@ static int hasStopWords(string_t *response) {
     return 0;
 
   char *saveptr = NULL;
-  char *token = strtok_r(input->data, " \t\r\n", &saveptr);
+  char *token = strtok_r(input->data, WORD_BREAK, &saveptr);
   while (token) {
     for (size_t i = 0; i < STOP_WORDS.used; i++) {
       const char *word = bufAt(&STOP_WORDS, i);
@@ -157,7 +147,7 @@ static int hasStopWords(string_t *response) {
       }
     }
 
-    token = strtok_r(NULL, " \t\r\n", &saveptr);
+    token = strtok_r(NULL, WORD_BREAK, &saveptr);
   }
 
   return 0;
