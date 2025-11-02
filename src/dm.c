@@ -1,5 +1,3 @@
-#pragma once
-
 #include "ai.h"
 #include "alloc.h"
 #include "buffers.h"
@@ -15,7 +13,7 @@ typedef struct {
   ai_t *ai;
   string_t *prompt;
   string_t *summary;
-} narrator_t;
+} dm_t;
 
 typedef struct {
   const char *action;
@@ -61,7 +59,7 @@ static failure_shot_t failure_shots[] = {
      "It offers ambiance, not functionality."},
 };
 
-static inline void makeWorldSummary(world_t *world, string_t *summary) {
+static void summarize(const world_t *world, string_t *summary) {
   location_t *current_location = world->current_location;
 
   strFmt(summary, "LOCATION: %s (%s) [%s]\n", current_location->object.name,
@@ -101,8 +99,8 @@ static inline void makeWorldSummary(world_t *world, string_t *summary) {
   }
 }
 
-static inline narrator_t *narratorCreate(void) {
-  narrator_t *narrator = allocate(sizeof(narrator_t));
+dm_t *dmCreate(void) {
+  dm_t *narrator = allocate(sizeof(dm_t));
   panicif(!narrator, "cannot allocate narrator");
 
   ai_result_t result;
@@ -118,7 +116,7 @@ static inline narrator_t *narratorCreate(void) {
   return narrator;
 }
 
-static inline void narratorDestroy(narrator_t **self) {
+void dmDestroy(dm_t **self) {
   if (!self || !*self)
     return;
 
@@ -128,7 +126,7 @@ static inline void narratorDestroy(narrator_t **self) {
   deallocate(self);
 }
 
-static inline int hasStopWords(string_t *response) {
+static int hasStopWords(string_t *response) {
   panicif(!response, "missing response");
 
   string_t *input cleanup(strDestroy) = strDup(response);
@@ -165,7 +163,7 @@ static inline int hasStopWords(string_t *response) {
   return 0;
 }
 
-static inline int hasAllMustHaves(string_t *response, words_t *must_haves) {
+static int hasAllMustHaves(string_t *response, words_t *must_haves) {
   panicif(!response, "missing response");
   if (!must_haves)
     return 1;
@@ -180,9 +178,8 @@ static inline int hasAllMustHaves(string_t *response, words_t *must_haves) {
   return 1;
 }
 
-static inline void generateAndValidate(ai_t *ai, const string_t *prompt,
-                                       string_t *response,
-                                       words_t *must_haves) {
+static void generateAndValidate(ai_t *ai, const string_t *prompt,
+                                string_t *response, words_t *must_haves) {
   int valid = 0;
   ai_result_t result;
   while (!valid) {
@@ -195,8 +192,7 @@ static inline void generateAndValidate(ai_t *ai, const string_t *prompt,
   }
 }
 
-static inline void narratorDescribeWorld(narrator_t *self, world_t *world,
-                                         string_t *description) {
+void dmDescribeWorld(dm_t *self, const world_t *world, string_t *description) {
   const config_t *config = self->ai->configuration;
   const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
   const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];
@@ -204,7 +200,7 @@ static inline void narratorDescribeWorld(narrator_t *self, world_t *world,
   strFmt(self->prompt, sys_prompt_tpl->data,
          NARRATOR_WORLD_DESC_SYS_PROMPT.data);
 
-  makeWorldSummary(world, self->summary);
+  summarize(world, self->summary);
   strFmtAppend(self->prompt, "\n%s", self->summary->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
@@ -227,8 +223,7 @@ static inline void narratorDescribeWorld(narrator_t *self, world_t *world,
   generateAndValidate(self->ai, self->prompt, description, must_haves);
 }
 
-static inline void narratorDescribeObject(narrator_t *self, object_t *object,
-                                          string_t *description) {
+void dmDescribeObject(dm_t *self, object_t *object, string_t *description) {
   const config_t *config = self->ai->configuration;
   const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
   const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];
@@ -246,9 +241,8 @@ static inline void narratorDescribeObject(narrator_t *self, object_t *object,
   generateAndValidate(self->ai, self->prompt, description, NULL);
 }
 
-static inline void narratorCommentFailure(narrator_t *self,
-                                          failure_type_t failure,
-                                          string_t *input, string_t *comment) {
+void dmDescribeFail(dm_t *self, failure_type_t failure, string_t *input,
+                    string_t *comment) {
   const config_t *config = self->ai->configuration;
   const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
   const string_t *usr_prompt_tpl = config->prompt_templates[PROMPT_TYPE_USR];
@@ -275,16 +269,15 @@ static inline void narratorCommentFailure(narrator_t *self,
   generateAndValidate(self->ai, self->prompt, comment, &ACTION_MUST_HAVES);
 }
 
-static inline void narratorCommentSuccess(narrator_t *self, world_t *world,
-                                          const string_t *input,
-                                          string_t *comment) {
+void dmDescribeSuccess(dm_t *self, world_t *world, const string_t *input,
+                       string_t *comment) {
   const config_t *config = self->ai->configuration;
   const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
   const string_t *usr_prompt_tpl = config->prompt_templates[PROMPT_TYPE_USR];
   const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];
 
   strFmt(self->prompt, sys_prompt_tpl->data, NARRATOR_SUCCESS_SYS_PROMPT.data);
-  makeWorldSummary(world, self->summary);
+  summarize(world, self->summary);
   strFmtAppend(self->prompt, "\n%s", self->summary->data);
   strFmtAppend(self->prompt, usr_prompt_tpl->data, input->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
@@ -292,9 +285,8 @@ static inline void narratorCommentSuccess(narrator_t *self, world_t *world,
   generateAndValidate(self->ai, self->prompt, comment, &ACTION_MUST_HAVES);
 }
 
-static inline void narratorDescribeEndGame(narrator_t *self, world_t *world,
-                                           game_state_t state,
-                                           string_t *description) {
+void dmNarrateEndGame(dm_t *self, world_t *world, game_state_t state,
+                      string_t *description) {
 
   if (state == GAME_STATE_CONTINUE) {
     strClear(description);

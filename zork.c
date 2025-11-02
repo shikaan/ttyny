@@ -1,6 +1,6 @@
 #include "assets/urban_escape.h"
 #include "src/buffers.h"
-#include "src/narrator.h"
+#include "src/dm.h"
 #include "src/panic.h"
 #include "src/parser.h"
 #include "src/screen.h"
@@ -22,11 +22,11 @@ int main(void) {
   string_t *suggestion cleanup(strDestroy) = strCreate(512);
   world_t *world = &urban_escape_world;
 
-  narrator_t *narrator cleanup(narratorDestroy) = narratorCreate();
-  panicif(!narrator, "cannot create narrator");
+  dm_t *dm cleanup(dmDestroy) = dmCreate();
+  panicif(!dm, "cannot create dm");
 
   parser_t *parser cleanup(parserDestroy) = parserCreate();
-  panicif(!parser, "cannot create narrator");
+  panicif(!parser, "cannot create dm");
 
   locations_t *locations cleanup(locationsDestroy) =
       locationsCreate(world->locations->length);
@@ -35,7 +35,7 @@ int main(void) {
   printWelcomeScreen(NAME, response);
 
   ui_handle_t *loading = loadingStart();
-  narratorDescribeWorld(narrator, world, response);
+  dmDescribeWorld(dm, world, response);
   loadingStop(&loading);
   printDescription(response);
   printLocationChange(response, world->current_location);
@@ -69,8 +69,7 @@ int main(void) {
                           &location, &item);
 
       if (!location) {
-        narratorCommentFailure(narrator, FAILURE_TYPE_INVALID_TARGET, input,
-                               response);
+        dmDescribeFail(dm, FAILURE_TYPE_INVALID_TARGET, input, response);
         loadingStop(&loading);
         printError(response);
         break;
@@ -79,7 +78,7 @@ int main(void) {
       world->current_location = location;
       // ignoring error: transition are expected to always succeed only for USE
       objectTransition(&location->object, &transition, action);
-      narratorDescribeWorld(narrator, world, response);
+      dmDescribeWorld(dm, world, response);
 
       loadingStop(&loading);
       printDescription(response);
@@ -96,7 +95,7 @@ int main(void) {
       if (item) {
         // ignoring error: transitions always succeed only for USE
         objectTransition(&item->object, &transition, action);
-        narratorDescribeObject(narrator, &item->object, response);
+        dmDescribeObject(dm, &item->object, response);
         loadingStop(&loading);
         printDescription(response);
         break;
@@ -105,15 +104,14 @@ int main(void) {
       if (location) {
         // ignoring error: transitions always succeed only for USE
         objectTransition(&location->object, &transition, action);
-        narratorDescribeObject(narrator, &location->object, response);
+        dmDescribeObject(dm, &location->object, response);
         loadingStop(&loading);
         printDescription(response);
         break;
       }
 
       loadingStop(&loading);
-      narratorCommentFailure(narrator, FAILURE_TYPE_INVALID_TARGET, input,
-                             response);
+      dmDescribeFail(dm, FAILURE_TYPE_INVALID_TARGET, input, response);
       printError(response);
     }
     case ACTION_TYPE_TAKE: {
@@ -122,16 +120,14 @@ int main(void) {
                           world->current_location->items, &location, &item);
 
       if (!item) {
-        narratorCommentFailure(narrator, FAILURE_TYPE_INVALID_ITEM, input,
-                               response);
+        dmDescribeFail(dm, FAILURE_TYPE_INVALID_ITEM, input, response);
         loadingStop(&loading);
         printError(response);
         break;
       }
 
       if (!objectIsCollectible(&item->object)) {
-        narratorCommentFailure(narrator, FAILURE_TYPE_CANNOT_COLLECT_ITEM,
-                               input, response);
+        dmDescribeFail(dm, FAILURE_TYPE_CANNOT_COLLECT_ITEM, input, response);
         loadingStop(&loading);
         printError(response);
         break;
@@ -140,7 +136,7 @@ int main(void) {
       itemsAdd(world->state.inventory, item);
       itemsRemove(world->current_location->items, item);
 
-      narratorCommentSuccess(narrator, world, input, response);
+      dmDescribeSuccess(dm, world, input, response);
 
       loadingStop(&loading);
       printDescription(response);
@@ -157,8 +153,7 @@ int main(void) {
                           &location, &item);
 
       if (!item) {
-        narratorCommentFailure(narrator, FAILURE_TYPE_INVALID_ITEM, input,
-                               response);
+        dmDescribeFail(dm, FAILURE_TYPE_INVALID_ITEM, input, response);
         loadingStop(&loading);
         printError(response);
         break;
@@ -167,7 +162,7 @@ int main(void) {
       itemsAdd(world->current_location->items, item);
       itemsRemove(world->state.inventory, item);
 
-      narratorCommentSuccess(narrator, world, input, response);
+      dmDescribeSuccess(dm, world, input, response);
       loadingStop(&loading);
 
       printDescription(response);
@@ -186,8 +181,7 @@ int main(void) {
       parserExtractTarget(parser, input, locations, items, &location, &item);
 
       if (!item) {
-        narratorCommentFailure(narrator, FAILURE_TYPE_INVALID_ITEM, input,
-                               response);
+        dmDescribeFail(dm, FAILURE_TYPE_INVALID_ITEM, input, response);
         loadingStop(&loading);
         printError(response);
         break;
@@ -196,15 +190,14 @@ int main(void) {
       objectTransition(&item->object, &transition, action);
 
       if (transition == TRANSITION_RESULT_OK) {
-        narratorCommentSuccess(narrator, world, input, response);
+        dmDescribeSuccess(dm, world, input, response);
         loadingStop(&loading);
 
         printDescription(response);
         strFmt(response, item("%s") " used.", item->object.name);
         printStateUpdate(response);
       } else {
-        narratorCommentFailure(narrator, FAILURE_TYPE_CANNOT_BE_USED, input,
-                               response);
+        dmDescribeFail(dm, FAILURE_TYPE_CANNOT_BE_USED, input, response);
         loadingStop(&loading);
         printError(response);
       }
@@ -325,7 +318,7 @@ int main(void) {
 
     game_state_t game_state = world->digest(&world->state);
     if (game_state != GAME_STATE_CONTINUE) {
-      narratorDescribeEndGame(narrator, world, game_state, response);
+      dmNarrateEndGame(dm, world, game_state, response);
       loadingStop(&loading);
       printDescription(response);
       return 0;
