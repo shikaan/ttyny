@@ -36,7 +36,7 @@ int main(void) {
          " ~   The game will describe where you are, and you respond in your "
          "own words.\n"
          " ~ \n"
-         " ~   Just type naturally, like:\n"
+         " ~   Just type one action at a time naturally, like:\n"
          " ~     • 'I want to go in the kitchen'\n"
          " ~     • 'Pick up the lamp'\n"
          " ~     • 'Can I open this door?'\n"
@@ -104,8 +104,10 @@ int main(void) {
     }
     case ACTION_TYPE_EXAMINE: {
       debug("action: examine\n");
+      itemsCat(items, world->current_location->items);
+      itemsCat(items, world->state.inventory);
       parserExtractTarget(parser, input, world->current_location->exits,
-                          world->current_location->items, &location, &item);
+                          items, &location, &item);
 
       if (item) {
         // ignoring error: transitions always succeed only for USE
