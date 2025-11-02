@@ -34,7 +34,7 @@ static inline void wordsDestroy(words_t **self) { deallocate(self); }
 static words_t STOP_WORDS =
     bufConst(6, "item", "items", "inventory", "player", "player's", "location");
 static words_t STOP_WORDS_CASE = bufConst(2, "EXITS", "EXIT");
-static words_t STOP_CHARS = bufConst(2, "[", "(");
+static words_t STOP_CHARS = bufConst(3, "[", "(", "*");
 static words_t ACTION_MUST_HAVES = bufConst(1, "you");
 
 static failure_shot_t failure_shots[] = {
@@ -182,7 +182,7 @@ static void generateAndValidate(ai_t *ai, const string_t *prompt,
                                 string_t *response, words_t *must_haves) {
   int valid = 0;
   ai_result_t result;
-  for (size_t i = 0; i < 10 && !valid; i++) {
+  for (size_t i = 0; i < 20 && !valid; i++) {
     strClear(response);
     aiReset(ai, &result);
     panicif(result != AI_RESULT_OK, "cannot reset model state");

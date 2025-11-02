@@ -2,6 +2,7 @@
 #include "alloc.h"
 #include "buffers.h"
 #include "tty.h"
+#include "utils.h"
 #include "world.h"
 #include <stddef.h>
 #include <stdio.h>
@@ -155,19 +156,19 @@ void formatUse(string_t *response, const item_t *i) {
 }
 
 void formatHelp(string_t *response, const world_t *world) {
-  static string_t SUGGESTION = bufInit(512, 0);
+  string_t *suggestion cleanup(strDestroy) = strCreate(512);
 
   location_t *first_exit =
       (location_t *)bufAt(world->current_location->exits, 0);
 
-  strFmt(&SUGGESTION, prompt("Go to %s"), first_exit->object.name);
+  strFmt(suggestion, prompt("Go to %s"), first_exit->object.name);
 
   if (world->current_location->items->used > 0) {
     object_t room_item = bufAt(world->current_location->items, 0)->object;
     if (objectIsCollectible(&room_item)) {
-      strFmtAppend(&SUGGESTION, " or " prompt("Take %s"), room_item.name);
+      strFmtAppend(suggestion, " or " prompt("Take %s"), room_item.name);
     } else {
-      strFmtAppend(&SUGGESTION, " or " prompt("Examine %s"), room_item.name);
+      strFmtAppend(suggestion, " or " prompt("Examine %s"), room_item.name);
     }
   }
 
@@ -178,10 +179,8 @@ void formatHelp(string_t *response, const world_t *world) {
          "   • %s\n"
          "   • %s\n"
          "\n"
-         "When an action triggers a change, you will see a message "
-         "prefixed with '~>'.\n"
-         "You can type commands too. They all start with '/' and their "
-         "output is prefixed with `~`.\n"
+         "Changes to the environment are prefixed with '~>'.\n"
+         "You can type commands too! Their output is prefixed with `~`.\n"
          "Available commands:\n"
          "   • %s - shows the player status\n"
          "   • %s   - displays this help\n"
@@ -191,7 +190,7 @@ void formatHelp(string_t *response, const world_t *world) {
          "Based on your last input, you could try %s.",
          NAME, prompt("Light the lamp"), prompt("Go to the garden"),
          command("/status"), command("/help"), command("/tldr"),
-         command("/quit"), SUGGESTION.data);
+         command("/quit"), suggestion->data);
 }
 
 void formatStatus(string_t *response, const world_t *world) {

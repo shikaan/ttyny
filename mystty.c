@@ -16,7 +16,6 @@ int main(void) {
   string_t *input cleanup(strDestroy) = strCreate(512);
   string_t *response cleanup(strDestroy) = strCreate(4096);
   string_t *target cleanup(strDestroy) = strCreate(128);
-  string_t *suggestion cleanup(strDestroy) = strCreate(512);
   world_t *world = &urban_escape_world;
 
   dm_t *dm cleanup(dmDestroy) = dmCreate();
