@@ -15,7 +15,6 @@ typedef struct {
   string_t *target_grammar;
 } parser_t;
 
-// TODO: should this have an "unknown" too?
 static string_t ACTION_GRAMMAR = strConst(
     "root ::= \"move\" | \"use\" | \"take\" | \"drop\" | \"examine\"\n");
 
@@ -29,10 +28,13 @@ static action_shot_t action_shots[] = {
     {"grab the sword", &ACTION_TAKE},
     {"walk to kitchen", &ACTION_MOVE},
     {"use crowbar on chest", &ACTION_USE},
-    {"eat bread", &ACTION_USE},
+    {"put down the cup", &ACTION_DROP},
+
     {"check behind painting", &ACTION_EXAMINE},
     {"pick up coin", &ACTION_TAKE},
     {"head north", &ACTION_MOVE},
+    {"eat bread", &ACTION_USE},
+    {"throw away rock", &ACTION_DROP},
 };
 
 static const char *item_shots_tpls[] = {
