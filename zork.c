@@ -106,8 +106,8 @@ int main(void) {
       debug("action: examine\n");
       itemsCat(items, world->current_location->items);
       itemsCat(items, world->state.inventory);
-      parserExtractTarget(parser, input, world->current_location->exits,
-                          items, &location, &item);
+      parserExtractTarget(parser, input, world->current_location->exits, items,
+                          &location, &item);
 
       if (item) {
         // ignoring error: transitions always succeed only for USE
@@ -214,6 +214,9 @@ int main(void) {
           if (objectIsCollectible(&room_item)) {
             strFmtAppend(suggestion, " or 'Take %s'", room_item.name);
             break;
+          } else {
+            strFmtAppend(suggestion, " or 'Examine %s'", room_item.name);
+            break;
           }
         }
       }
@@ -228,8 +231,8 @@ int main(void) {
              " ~  When an action triggers a change, you will see a message "
              "prefixed with '~>'.\n"
              " ~  \n"
-             " ~  Commands are prefixed with a '/' and their output is "
-             "prefixed with `~`.\n"
+             " ~  You can type commands too. They all start with '/' and "
+             "their output is prefixed with `~`.\n"
              " ~  Available commands:\n"
              " ~     • '/status' - shows the player status\n"
              " ~     • '/help'   - displays this help\n"

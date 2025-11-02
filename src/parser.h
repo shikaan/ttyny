@@ -24,6 +24,12 @@ typedef struct {
 } action_shot_t;
 
 static action_shot_t action_shots[] = {
+    {"examine book", &ACTION_EXAMINE},
+    {"take apple", &ACTION_TAKE},
+    {"move to garden", &ACTION_MOVE},
+    {"use knife", &ACTION_USE},
+    {"drop the ball", &ACTION_DROP},
+
     {"look at the key", &ACTION_EXAMINE},
     {"grab the sword", &ACTION_TAKE},
     {"walk to kitchen", &ACTION_MOVE},
