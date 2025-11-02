@@ -34,8 +34,8 @@ static inline words_t *wordsCreate(size_t len) {
 static inline void wordsDestroy(words_t **self) { deallocate(self); }
 
 words_t STOP_WORDS =
-    bufConst(5, "items", "inventory", "player", "player's", "location");
-words_t STOP_WORDS_CASE = bufConst(1, "EXITS");
+    bufConst(6, "item", "items", "inventory", "player", "player's", "location");
+words_t STOP_WORDS_CASE = bufConst(2, "EXITS", "EXIT");
 words_t STOP_CHARS = bufConst(2, "[", "(");
 words_t ACTION_MUST_HAVES = bufConst(1, "you");
 
@@ -290,4 +290,24 @@ static inline void narratorCommentSuccess(narrator_t *self, world_t *world,
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
   generateAndValidate(self->ai, self->prompt, comment, &ACTION_MUST_HAVES);
+}
+
+static inline void narratorDescribeEndGame(narrator_t *self, world_t *world,
+                                           game_state_t state,
+                                           string_t *description) {
+
+  if (state == GAME_STATE_CONTINUE) {
+    strClear(description);
+    return;
+  }
+
+  const config_t *config = self->ai->configuration;
+  const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
+  const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];
+
+  strFmt(self->prompt, sys_prompt_tpl->data, NARRATOR_END_GAME_SYS_PROMPT.data);
+  strFmtAppend(self->prompt, "\n ENDGAME: %s", world->end_game[state]);
+  strFmtAppend(self->prompt, res_prompt_tpl->data, "");
+
+  generateAndValidate(self->ai, self->prompt, description, &ACTION_MUST_HAVES);
 }

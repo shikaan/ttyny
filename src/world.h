@@ -71,10 +71,8 @@ static string_t FAILURE_CANNOT_COLLECT_ITEM = strConst("cannot collect item");
 static string_t FAILURE_CANNOT_BE_USED = strConst("item cannot be used");
 
 static string_t *failure_names[FAILURES] = {
-    &FAILURE_INVALID_TARGET,
-    &FAILURE_INVALID_LOCATION,
-    &FAILURE_INVALID_ITEM,
-    &FAILURE_CANNOT_COLLECT_ITEM,
+    &FAILURE_INVALID_TARGET, &FAILURE_INVALID_LOCATION,
+    &FAILURE_INVALID_ITEM,   &FAILURE_CANNOT_COLLECT_ITEM,
     &FAILURE_CANNOT_BE_USED,
 };
 
@@ -179,7 +177,7 @@ static inline void itemsAdd(items_t *self, item_t *item) {
   // TODO: make items_t extensible
 }
 
-static inline void itemsCat(items_t* self, items_t* other) {
+static inline void itemsCat(items_t *self, items_t *other) {
   for (size_t i = 0; i < other->used; i++) {
     itemsAdd(self, bufAt(other, i));
   }
@@ -197,9 +195,7 @@ static inline void itemsRemove(items_t *self, item_t *item) {
   }
 }
 
-static inline void itemsClear(items_t* self) {
-  bufClear(self, NULL);
-}
+static inline void itemsClear(items_t *self) { bufClear(self, NULL); }
 
 static inline void itemsDestroy(items_t **self) { deallocate(self); }
 
@@ -221,11 +217,9 @@ static inline locations_t *locationsCreate(size_t length) {
   return locations;
 }
 
-static inline void locationsClear(locations_t* self) {
-  bufClear(self, NULL);
-}
+static inline void locationsClear(locations_t *self) { bufClear(self, NULL); }
 
-static inline void locationsCat(locations_t* self, locations_t* other) {
+static inline void locationsCat(locations_t *self, locations_t *other) {
   for (size_t i = 0; i < other->used; i++) {
     bufPush(self, bufAt(other, i));
   }
@@ -238,20 +232,22 @@ typedef struct {
   uint16_t turns;
   // Objects carried by the character
   items_t *inventory;
-} state_t;
+} world_state_t;
 
 typedef enum {
   GAME_STATE_CONTINUE = 0,
   GAME_STATE_VICTORY,
   GAME_STATE_DEAD,
+
+  GAME_STATES
 } game_state_t;
 
 // Returns game state based on current world state
-typedef game_state_t (*digest_t)(state_t *);
+typedef game_state_t (*digest_t)(world_state_t *);
 
 typedef struct {
   // State of the world
-  state_t state;
+  world_state_t state;
   // Locations of the world
   locations_t *locations;
   // Objects in the world
@@ -260,4 +256,7 @@ typedef struct {
   location_t *current_location;
   // Callback to call on each round to see if the game is over
   digest_t digest;
+
+  // Brief description of end game conditions to allow AI to write a story
+  const char *end_game[GAME_STATES];
 } world_t;

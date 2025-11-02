@@ -274,17 +274,12 @@ int main(void) {
     loadingStop(&loading);
     printResponse(response);
 
-    switch (world->digest(&world->state)) {
-    case GAME_STATE_VICTORY:
-      puts("You won!");
-      return EXIT_SUCCESS;
-    case GAME_STATE_DEAD:
-      puts("You're dead!");
-      return EXIT_FAILURE;
-    case GAME_STATE_CONTINUE:
-    default:
-      break;
-    };
+    game_state_t game_state = world->digest(&world->state);
+    if (game_state != GAME_STATE_CONTINUE) {
+      narratorDescribeEndGame(narrator, world, game_state, response);
+      printResponse(response);
+      return 0;
+    }
   }
 
   return 0;
