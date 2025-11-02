@@ -1,7 +1,7 @@
 include flags.mk
 
 .PHONY: all
-all: zork
+all: mystty
 
 LLAMA_BUILD := build/llama.cpp
 LLAMA_STATIC_LIBS := $(LLAMA_BUILD)/src/libllama.a \
@@ -22,11 +22,11 @@ build/llama.cpp/src/libllama.a:
 		-DBUILD_SHARED_LIBS=OFF
 	cmake --build $(LLAMA_BUILD) -j --config Release
 
-zork: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
+mystty: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
 	-Ivendor/llama.cpp/ggml/include
-zork: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
+mystty: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
 	-framework Foundation -framework Metal -framework MetalKit
-zork: src/ai.o src/screen.o src/dm.o $(LLAMA_STATIC_LIBS)
+mystty: src/ai.o src/screen.o src/dm.o $(LLAMA_STATIC_LIBS)
 
 tests/parser.test: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
 	-Ivendor/llama.cpp/ggml/include
@@ -42,7 +42,7 @@ test: tests/buffers.test tests/parser.test tests/map.test
 
 .PHONY: clean
 clean:
-	rm -f ./zork
+	rm -f ./mystty
 	rm -f tests/*.test
 	rm -rf **/*.dSYM **/*.plist *.plist **/*.o
 
@@ -52,8 +52,8 @@ deep-clean: clean
 
 .PHONY: start
 start: all
-	./zork
+	./mystty
 
 .PHONY: start-profile
 start-profile: all
-	ASAN_OPTIONS=detect_leaks=1 LSAN_OPTIONS=suppressions=asan.supp ./zork
+	ASAN_OPTIONS=detect_leaks=1 LSAN_OPTIONS=suppressions=asan.supp ./mystty
