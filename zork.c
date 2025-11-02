@@ -3,6 +3,7 @@
 #include "src/narrator.h"
 #include "src/panic.h"
 #include "src/parser.h"
+#include "src/tty.h"
 #include "src/ui.h"
 #include "src/utils.h"
 #include "src/world.h"
@@ -13,7 +14,12 @@
 #include <string.h>
 
 const char *STATE_UPDATE = "\n~>";
-const char *NAME = "Zork";
+const char *NAME = fg_green(bold("mystty"));
+
+#define prompt fg_yellow
+#define command fg_blue
+#define location fg_magenta
+#define item fg_cyan
 
 int main(void) {
   string_t *input cleanup(strDestroy) = strCreate(512);
@@ -29,6 +35,7 @@ int main(void) {
   panicif(!parser, "cannot create narrator");
 
   puts("\e[1;1H\e[2J");
+
   strFmt(response,
          " ~   Welcome to %s!\n"
          " ~ \n"
@@ -37,21 +44,23 @@ int main(void) {
          "own words.\n"
          " ~ \n"
          " ~   Just type one action at a time naturally, like:\n"
-         " ~     • 'I want to go in the kitchen'\n"
-         " ~     • 'Pick up the lamp'\n"
-         " ~     • 'Can I open this door?'\n"
+         " ~     • %s\n"
+         " ~     • %s\n"
+         " ~     • %s\n"
          " ~ \n"
-         " ~   Type '/help' anytime, if you're stuck.\n"
+         " ~   Type %s anytime, if you're stuck.\n"
          " ~ \n"
          " ~   [Press ENTER to begin your adventure]",
-         NAME);
+         NAME, prompt("I want to go in the kitchen"),
+         prompt("Pick up the lamp"), prompt("Open this door"),
+         command("/help"));
   printResponse(response);
   fgetc(stdin);
   puts("\e[1;1H\e[2J");
 
   ui_handle_t *loading = loadingStart();
   narratorDescribeWorld(narrator, world, response);
-  strFmtAppend(response, "%s Location: %s.", STATE_UPDATE,
+  strFmtAppend(response, "%s Location: " location("%s") ".", STATE_UPDATE,
                world->current_location->object.name);
   loadingStop(&loading);
   printResponse(response);
@@ -98,7 +107,7 @@ int main(void) {
       // ignoring error: transition are expected to always succeed only for USE
       objectTransition(&location->object, &transition, action);
       narratorDescribeWorld(narrator, world, response);
-      strFmtAppend(response, "%s Location: %s.", STATE_UPDATE,
+      strFmtAppend(response, "%s Location: " location("%s") ".", STATE_UPDATE,
                    world->current_location->object.name);
       goto print;
     }
@@ -147,8 +156,8 @@ int main(void) {
       itemsAdd(world->state.inventory, item);
       itemsRemove(world->current_location->items, item);
       narratorCommentSuccess(narrator, world, input, response);
-      strFmtAppend(response, "%s %s added to inventory.", STATE_UPDATE,
-                   item->object.name);
+      strFmtAppend(response, "%s " item("%s") " added to inventory.",
+                   STATE_UPDATE, item->object.name);
 
       // ignoring error: transition are expected to always succeed only for USE
       objectTransition(&item->object, &transition, action);
@@ -168,8 +177,8 @@ int main(void) {
       itemsAdd(world->current_location->items, item);
       itemsRemove(world->state.inventory, item);
       narratorCommentSuccess(narrator, world, input, response);
-      strFmtAppend(response, "%s %s removed from inventory.", STATE_UPDATE,
-                   item->object.name);
+      strFmtAppend(response, "%s " item("%s") " removed from inventory.",
+                   STATE_UPDATE, item->object.name);
       // ignoring error: transitions always succeed only for USE
       objectTransition(&item->object, &transition, action);
       goto print;
@@ -191,7 +200,7 @@ int main(void) {
       if (transition == TRANSITION_RESULT_OK) {
         narratorCommentSuccess(narrator, world, input, response);
         strFmtAppend(
-            response, "%s %s used (state: %s).", STATE_UPDATE,
+            response, "%s " item("%s") " used.", STATE_UPDATE,
             item->object.name,
             bufAt(item->object.state_descriptions, item->object.current_state));
       } else {
@@ -206,16 +215,17 @@ int main(void) {
       location_t *first_exit =
           (location_t *)bufAt(world->current_location->exits, 0);
 
-      strFmt(suggestion, "'Go to %s'", first_exit->object.name);
+      strFmt(suggestion, prompt("Go to %s"), first_exit->object.name);
 
       if (world->current_location->items->used > 0) {
         for (size_t i = 0; i < world->current_location->items->used; i++) {
           object_t room_item = bufAt(world->current_location->items, i)->object;
           if (objectIsCollectible(&room_item)) {
-            strFmtAppend(suggestion, " or 'Take %s'", room_item.name);
+            strFmtAppend(suggestion, " or " prompt("Take %s"), room_item.name);
             break;
           } else {
-            strFmtAppend(suggestion, " or 'Examine %s'", room_item.name);
+            strFmtAppend(suggestion, " or " prompt("Examine %s"),
+                         room_item.name);
             break;
           }
         }
@@ -224,39 +234,42 @@ int main(void) {
       strFmt(response,
              " ~  In %s you can explore the world in natural language.\n"
              " ~  \n"
-             " ~  When items or locations are described, try interact:\n"
-             " ~     • 'Light the lamp'\n"
-             " ~     • 'Go to the garden'\n"
+             " ~  When items or locations are described, try to interact:\n"
+             " ~     • %s\n"
+             " ~     • %s\n"
              " ~  \n"
              " ~  When an action triggers a change, you will see a message "
              "prefixed with '~>'.\n"
-             " ~  \n"
-             " ~  You can type commands too. They all start with '/' and "
-             "their output is prefixed with `~`.\n"
+             " ~  You can type commands too. They all start with '/' and their "
+             "output is prefixed with `~`.\n"
              " ~  Available commands:\n"
-             " ~     • '/status' - shows the player status\n"
-             " ~     • '/help'   - displays this help\n"
-             " ~     • '/quit'   - ends the game\n"
+             " ~     • %s - shows the player status\n"
+             " ~     • %s   - displays this help\n"
+             " ~     • %s   - summarizes the current location\n"
+             " ~     • %s   - ends the game\n"
              " ~  \n"
              " ~  Based on your last input, you could try %s.",
-             NAME, suggestion->data);
+             NAME, prompt("Light the lamp"), prompt("Go to the garden"),
+             command("/status"), command("/help"), command("/tldr"),
+             command("/quit"), suggestion->data);
       goto print;
     case ACTION_TYPE_STATUS: {
       debug("action: /status\n");
       items_t *inventory = world->state.inventory;
 
       strFmt(response,
-             " ~   Location:  %s\n"
-             " ~   Turns:     %d\n"
-             " ~   Inventory:",
+             " ~   Location:  " location("%s") "\n"
+                                               " ~   Turns:     %d\n"
+                                               " ~   Inventory:",
              world->current_location->object.name, world->state.turns);
 
       if (inventory->used == 0) {
-        strFmtAppend(response, " empty.");
+        strFmtAppend(response, dim(" empty") ".");
       } else {
         for (size_t i = 0; i < inventory->used; i++) {
           item_t *inv_item = bufAt(inventory, i);
-          strFmtAppend(response, "\n ~     • %s [%s]", inv_item->object.name,
+          strFmtAppend(response, "\n ~     • " item("%s") " [%s]",
+                       inv_item->object.name,
                        bufAt(inv_item->object.state_descriptions,
                              inv_item->object.current_state));
         }
