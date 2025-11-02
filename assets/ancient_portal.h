@@ -1,8 +1,7 @@
 #include "../src/world.h"
 
 // --- State descriptions for objects ---
-static state_descriptions_t torch_states =
-    bufConst(3, "off", "held", "lit");
+static state_descriptions_t torch_states = bufConst(3, "off", "held", "lit");
 
 static state_descriptions_t shard_states =
     bufConst(3, "embedded", "held", "glowing");
@@ -13,8 +12,7 @@ static state_descriptions_t coin_states =
 static state_descriptions_t herb_states =
     bufConst(3, "growing", "held", "used");
 
-static state_descriptions_t key_states =
-    bufConst(3, "hidden", "held", "used");
+static state_descriptions_t key_states = bufConst(3, "hidden", "held", "used");
 
 static state_descriptions_t rune_states =
     bufConst(3, "dormant", "held", "activated");
@@ -32,41 +30,34 @@ static state_descriptions_t portal_chamber_states =
 
 // --- Transitions for objects ---
 static transitions_t torch_transitions =
-    bufConst(4,
-             {.trigger = ACTION_TYPE_TAKE, .from = 0, .to = 1},
+    bufConst(4, {.trigger = ACTION_TYPE_TAKE, .from = 0, .to = 1},
              {.trigger = ACTION_TYPE_USE, .from = 1, .to = 2},
              {.trigger = ACTION_TYPE_DROP, .from = 1, .to = 0},
              {.trigger = ACTION_TYPE_DROP, .from = 2, .to = 0});
 
 static transitions_t shard_transitions =
-    bufConst(2,
-             {.trigger = ACTION_TYPE_TAKE, .from = 0, .to = 1},
+    bufConst(2, {.trigger = ACTION_TYPE_TAKE, .from = 0, .to = 1},
              {.trigger = ACTION_TYPE_USE, .from = 1, .to = 2});
 
 static transitions_t coin_transitions =
-    bufConst(2,
-             {.trigger = ACTION_TYPE_TAKE, .from = 0, .to = 1},
+    bufConst(2, {.trigger = ACTION_TYPE_TAKE, .from = 0, .to = 1},
              {.trigger = ACTION_TYPE_DROP, .from = 1, .to = 2});
 
 static transitions_t herb_transitions =
-    bufConst(3,
-             {.trigger = ACTION_TYPE_TAKE, .from = 0, .to = 1},
+    bufConst(3, {.trigger = ACTION_TYPE_TAKE, .from = 0, .to = 1},
              {.trigger = ACTION_TYPE_USE, .from = 1, .to = 2},
              {.trigger = ACTION_TYPE_DROP, .from = 1, .to = 0});
 
 static transitions_t key_transitions =
-    bufConst(2,
-             {.trigger = ACTION_TYPE_TAKE, .from = 0, .to = 1},
+    bufConst(2, {.trigger = ACTION_TYPE_TAKE, .from = 0, .to = 1},
              {.trigger = ACTION_TYPE_USE, .from = 1, .to = 2});
 
 static transitions_t rune_transitions =
-    bufConst(2,
-             {.trigger = ACTION_TYPE_TAKE, .from = 0, .to = 1},
+    bufConst(2, {.trigger = ACTION_TYPE_TAKE, .from = 0, .to = 1},
              {.trigger = ACTION_TYPE_USE, .from = 1, .to = 2});
 
 static transitions_t golem_transitions =
-    bufConst(2,
-             {.trigger = ACTION_TYPE_EXAMINE, .from = 0, .to = 1},
+    bufConst(2, {.trigger = ACTION_TYPE_EXAMINE, .from = 0, .to = 1},
              {.trigger = ACTION_TYPE_USE, .from = 1, .to = 2});
 
 // --- Transitions for locations ---
@@ -74,59 +65,53 @@ static transitions_t portal_location_transitions =
     bufConst(1, {.trigger = ACTION_TYPE_USE, .from = 0, .to = 1});
 
 // --- Objects ---
-static item_t torch = {
-    .object = {.name = "Torch",
-               .type = OBJECT_TYPE_ITEM,
-               .current_state = 0,
-               .description = "wooden,sooty",
-               .state_descriptions = &torch_states,
-               .traits = 0b00000001, // collectible
-               .transitions = &torch_transitions}};
+static item_t torch = {.object = {.name = "Torch",
+                                  .type = OBJECT_TYPE_ITEM,
+                                  .current_state = 0,
+                                  .description = "wooden,sooty",
+                                  .state_descriptions = &torch_states,
+                                  .traits = 0b00000001, // collectible
+                                  .transitions = &torch_transitions}};
 
-static item_t crystal_shard = {
-    .object = {.name = "Crystal Shard",
-               .type = OBJECT_TYPE_ITEM,
-               .current_state = 0,
-               .description = "prismatic,cold",
-               .state_descriptions = &shard_states,
-               .traits = 0b00000001, // collectible
-               .transitions = &shard_transitions}};
+static item_t crystal_shard = {.object = {.name = "Crystal Shard",
+                                          .type = OBJECT_TYPE_ITEM,
+                                          .current_state = 0,
+                                          .description = "prismatic,cold",
+                                          .state_descriptions = &shard_states,
+                                          .traits = 0b00000001, // collectible
+                                          .transitions = &shard_transitions}};
 
-static item_t ancient_coin = {
-    .object = {.name = "Ancient Coin",
-               .type = OBJECT_TYPE_ITEM,
-               .current_state = 0,
-               .description = "golden,worn",
-               .state_descriptions = &coin_states,
-               .traits = 0b00000001, // collectible
-               .transitions = &coin_transitions}};
+static item_t ancient_coin = {.object = {.name = "Ancient Coin",
+                                         .type = OBJECT_TYPE_ITEM,
+                                         .current_state = 0,
+                                         .description = "golden,worn",
+                                         .state_descriptions = &coin_states,
+                                         .traits = 0b00000001, // collectible
+                                         .transitions = &coin_transitions}};
 
-static item_t healing_herb = {
-    .object = {.name = "Healing Herb",
-               .type = OBJECT_TYPE_ITEM,
-               .current_state = 0,
-               .description = "fragrant,green",
-               .state_descriptions = &herb_states,
-               .traits = 0b00000001, // collectible
-               .transitions = &herb_transitions}};
+static item_t healing_herb = {.object = {.name = "Healing Herb",
+                                         .type = OBJECT_TYPE_ITEM,
+                                         .current_state = 0,
+                                         .description = "fragrant,green",
+                                         .state_descriptions = &herb_states,
+                                         .traits = 0b00000001, // collectible
+                                         .transitions = &herb_transitions}};
 
-static item_t mystic_key = {
-    .object = {.name = "Mystic Key",
-               .type = OBJECT_TYPE_ITEM,
-               .current_state = 0,
-               .description = "ornate,silver",
-               .state_descriptions = &key_states,
-               .traits = 0b00000001, // collectible
-               .transitions = &key_transitions}};
+static item_t mystic_key = {.object = {.name = "Mystic Key",
+                                       .type = OBJECT_TYPE_ITEM,
+                                       .current_state = 0,
+                                       .description = "ornate,silver",
+                                       .state_descriptions = &key_states,
+                                       .traits = 0b00000001, // collectible
+                                       .transitions = &key_transitions}};
 
-static item_t portal_rune = {
-    .object = {.name = "Portal Rune",
-               .type = OBJECT_TYPE_ITEM,
-               .current_state = 0,
-               .description = "etched,stone",
-               .state_descriptions = &rune_states,
-               .traits = 0b00000001, // collectible
-               .transitions = &rune_transitions}};
+static item_t portal_rune = {.object = {.name = "Portal Rune",
+                                        .type = OBJECT_TYPE_ITEM,
+                                        .current_state = 0,
+                                        .description = "etched,stone",
+                                        .state_descriptions = &rune_states,
+                                        .traits = 0b00000001, // collectible
+                                        .transitions = &rune_transitions}};
 
 static item_t stone_golem = {
     .object = {.name = "Stone Golem",
@@ -139,21 +124,16 @@ static item_t stone_golem = {
 
 // --- Object buffers ---
 // The item list for every room needs to be as long as all objects
-static items_t grove_objects = {7, 2,
-                                {&torch, &healing_herb, NULL, NULL, NULL, NULL,
-                                 NULL}};
-static items_t riverbank_objects = {7, 1,
-                                    {&ancient_coin, NULL, NULL, NULL, NULL,
-                                     NULL, NULL}};
-static items_t cave_objects = {7, 2,
-                               {&crystal_shard, &stone_golem, NULL, NULL, NULL,
-                                NULL, NULL}};
-static items_t tower_objects = {7, 1,
-                                {&mystic_key, NULL, NULL, NULL, NULL, NULL,
-                                 NULL}};
-static items_t portal_objects = {7, 1,
-                                 {&portal_rune, NULL, NULL, NULL, NULL, NULL,
-                                  NULL}};
+static items_t grove_objects = {
+    7, 2, {&torch, &healing_herb, NULL, NULL, NULL, NULL, NULL}};
+static items_t riverbank_objects = {
+    7, 1, {&ancient_coin, NULL, NULL, NULL, NULL, NULL, NULL}};
+static items_t cave_objects = {
+    7, 2, {&crystal_shard, &stone_golem, NULL, NULL, NULL, NULL, NULL}};
+static items_t tower_objects = {
+    7, 1, {&mystic_key, NULL, NULL, NULL, NULL, NULL, NULL}};
+static items_t portal_objects = {
+    7, 1, {&portal_rune, NULL, NULL, NULL, NULL, NULL, NULL}};
 
 // --- Forward declarations for locations ---
 static locations_t grove_exits, riverbank_exits, cave_exits, tower_exits,
@@ -162,26 +142,33 @@ static location_t ancient_grove, riverbank, crystal_cave, ruined_tower,
     portal_chamber;
 
 // --- Location buffers for exits ---
-static locations_t grove_exits = {3, 3,
+static locations_t grove_exits = {3,
+                                  3,
                                   {(struct location_t *)&riverbank,
                                    (struct location_t *)&crystal_cave,
                                    (struct location_t *)&ruined_tower}};
 
 static locations_t riverbank_exits = {
-    2, 2, {(struct location_t *)&ancient_grove,
-           (struct location_t *)&crystal_cave}};
+    2,
+    2,
+    {(struct location_t *)&ancient_grove, (struct location_t *)&crystal_cave}};
 
-static locations_t cave_exits = {
-    3, 3, {(struct location_t *)&ancient_grove,
-           (struct location_t *)&riverbank,
-           (struct location_t *)&portal_chamber}};
+static locations_t cave_exits = {3,
+                                 3,
+                                 {(struct location_t *)&ancient_grove,
+                                  (struct location_t *)&riverbank,
+                                  (struct location_t *)&portal_chamber}};
 
 static locations_t tower_exits = {
-    1, 1, {(struct location_t *)&ancient_grove},
+    1,
+    1,
+    {(struct location_t *)&ancient_grove},
 };
 
 static locations_t portal_exits = {
-    1, 1, {(struct location_t *)&crystal_cave},
+    1,
+    1,
+    {(struct location_t *)&crystal_cave},
 };
 
 // --- Locations ---
@@ -258,12 +245,14 @@ static locations_t all_locations = {
     },
 };
 
-static items_t all_objects = {
-    7, 7, {&torch, &crystal_shard, &ancient_coin, &healing_herb, &mystic_key,
-           &portal_rune, &stone_golem}};
+static items_t all_objects = {7,
+                              7,
+                              {&torch, &crystal_shard, &ancient_coin,
+                               &healing_herb, &mystic_key, &portal_rune,
+                               &stone_golem}};
 
 // --- Digest function ---
-static game_state_t ancient_portal_digest(state_t *state) {
+static game_state_t ancient_portal_digest(world_state_t *state) {
   int hasActivatedRune = 0;
   int hasGlowingShard = 0;
   int hasUsedKey = 0;
@@ -300,4 +289,8 @@ world_t ancient_portal_world = {
     .locations = &all_locations,
     .digest = ancient_portal_digest,
     .current_location = &ancient_grove,
-    .items = &all_objects};
+    .items = &all_objects,
+    .end_game = {"The air tingles; the portal remains inert.",
+                 "The rune ignites; light tears open a path. You stride into "
+                 "the unknown.",
+                 "Silence spreads through the grove as the last spark dies."}};

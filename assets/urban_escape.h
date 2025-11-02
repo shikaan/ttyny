@@ -4,7 +4,8 @@
 static state_descriptions_t badge_states = bufConst(2, "unused", "scanned");
 static state_descriptions_t usb_states = bufConst(2, "unarchived", "archived");
 static state_descriptions_t cup_states = bufConst(2, "full", "empty");
-static state_descriptions_t camera_states = bufConst(2, "monitoring", "logged");
+static state_descriptions_t camera_states =
+    bufConst(2, "monitoring", "player detected");
 static state_descriptions_t panel_states = bufConst(2, "idle", "called");
 static state_descriptions_t door_states = bufConst(2, "closed", "open");
 static state_descriptions_t map_states = bufConst(2, "unread", "studied");
@@ -27,8 +28,8 @@ static transitions_t usb_transitions =
 static transitions_t cup_transitions =
     bufConst(1, (transition_t){.trigger = ACTION_TYPE_USE, .from = 0, .to = 1});
 
-static transitions_t camera_transitions =
-    bufConst(1, (transition_t){.trigger = ACTION_TYPE_EXAMINE, .from = 0, .to = 1});
+static transitions_t camera_transitions = bufConst(
+    1, (transition_t){.trigger = ACTION_TYPE_EXAMINE, .from = 0, .to = 1});
 
 static transitions_t panel_transitions =
     bufConst(1, (transition_t){.trigger = ACTION_TYPE_USE, .from = 0, .to = 1});
@@ -49,23 +50,21 @@ static item_t access_badge = {
                .traits = 0b00000001,
                .transitions = &badge_transitions}};
 
-static item_t usb_drive = {
-    .object = {.name = "USB Drive",
-               .type = OBJECT_TYPE_ITEM,
-               .current_state = 0,
-               .description = "metallic,small,blue-led",
-               .state_descriptions = &usb_states,
-               .traits = 0b00000001,
-               .transitions = &usb_transitions}};
+static item_t usb_drive = {.object = {.name = "USB Drive",
+                                      .type = OBJECT_TYPE_ITEM,
+                                      .current_state = 0,
+                                      .description = "metallic,small,blue-led",
+                                      .state_descriptions = &usb_states,
+                                      .traits = 0b00000001,
+                                      .transitions = &usb_transitions}};
 
-static item_t coffee_cup = {
-    .object = {.name = "Coffee Cup",
-               .type = OBJECT_TYPE_ITEM,
-               .current_state = 0,
-               .description = "paper,logo-stained,warm",
-               .state_descriptions = &cup_states,
-               .traits = 0b00000001,
-               .transitions = &cup_transitions}};
+static item_t coffee_cup = {.object = {.name = "Coffee Cup",
+                                       .type = OBJECT_TYPE_ITEM,
+                                       .current_state = 0,
+                                       .description = "paper,logo-stained,warm",
+                                       .state_descriptions = &cup_states,
+                                       .traits = 0b00000001,
+                                       .transitions = &cup_transitions}};
 
 static item_t security_camera = {
     .object = {.name = "Security Camera",
@@ -94,34 +93,56 @@ static item_t exit_door = {
                .traits = 0b00000000,
                .transitions = &door_transitions}};
 
-static item_t city_map = {
-    .object = {.name = "City Map",
-               .type = OBJECT_TYPE_ITEM,
-               .current_state = 0,
-               .description = "creased,ink-detailed",
-               .state_descriptions = &map_states,
-               .traits = 0b00000001,
-               .transitions = &map_transitions}};
+static item_t city_map = {.object = {.name = "City Map",
+                                     .type = OBJECT_TYPE_ITEM,
+                                     .current_state = 0,
+                                     .description = "creased,ink-detailed",
+                                     .state_descriptions = &map_states,
+                                     .traits = 0b00000001,
+                                     .transitions = &map_transitions}};
 
 // --- Object buffers per location (length = total items = 7) ---
-static items_t lobby_objects = {7, 2, {&access_badge, &coffee_cup, NULL, NULL, NULL, NULL, NULL}};
-static items_t office_objects = {7, 2, {&usb_drive, &security_camera, NULL, NULL, NULL, NULL, NULL}};
-static items_t server_room_objects = {7, 1, {&elevator_panel, NULL, NULL, NULL, NULL, NULL, NULL}};
-static items_t rooftop_objects = {7, 1, {&city_map, NULL, NULL, NULL, NULL, NULL, NULL}};
-static items_t corridor_objects = {7, 1, {&exit_door, NULL, NULL, NULL, NULL, NULL, NULL}};
-static items_t parking_objects = {7, 0, {NULL, NULL, NULL, NULL, NULL, NULL, NULL}};
+static items_t lobby_objects = {
+    7, 2, {&access_badge, &coffee_cup, NULL, NULL, NULL, NULL, NULL}};
+static items_t office_objects = {
+    7, 2, {&usb_drive, &security_camera, NULL, NULL, NULL, NULL, NULL}};
+static items_t server_room_objects = {
+    7, 1, {&elevator_panel, NULL, NULL, NULL, NULL, NULL, NULL}};
+static items_t rooftop_objects = {
+    7, 1, {&city_map, NULL, NULL, NULL, NULL, NULL, NULL}};
+static items_t corridor_objects = {
+    7, 1, {&exit_door, NULL, NULL, NULL, NULL, NULL, NULL}};
+static items_t parking_objects = {
+    7, 0, {NULL, NULL, NULL, NULL, NULL, NULL, NULL}};
 
 // --- Forward declarations for locations ---
-static locations_t lobby_exits, office_exits, server_room_exits, rooftop_exits, corridor_exits, parking_exits;
-static location_t lobby, open_office, server_room, rooftop_garden, exit_corridor, parking_level;
+static locations_t lobby_exits, office_exits, server_room_exits, rooftop_exits,
+    corridor_exits, parking_exits;
+static location_t lobby, open_office, server_room, rooftop_garden,
+    exit_corridor, parking_level;
 
 // --- Exit buffers ---
-static locations_t lobby_exits = {2, 2, {(struct location_t *)&open_office, (struct location_t *)&exit_corridor}};
-static locations_t office_exits = {3, 3, {(struct location_t *)&lobby, (struct location_t *)&server_room, (struct location_t *)&rooftop_garden}};
-static locations_t server_room_exits = {2, 2, {(struct location_t *)&open_office, (struct location_t *)&parking_level}};
+static locations_t lobby_exits = {
+    2,
+    2,
+    {(struct location_t *)&open_office, (struct location_t *)&exit_corridor}};
+static locations_t office_exits = {3,
+                                   3,
+                                   {(struct location_t *)&lobby,
+                                    (struct location_t *)&server_room,
+                                    (struct location_t *)&rooftop_garden}};
+static locations_t server_room_exits = {
+    2,
+    2,
+    {(struct location_t *)&open_office, (struct location_t *)&parking_level}};
 static locations_t rooftop_exits = {1, 1, {(struct location_t *)&open_office}};
-static locations_t corridor_exits = {2, 2, {(struct location_t *)&lobby, (struct location_t *)&parking_level}};
-static locations_t parking_exits = {3, 3, {(struct location_t *)&server_room, (struct location_t *)&exit_corridor, (struct location_t *)&lobby}};
+static locations_t corridor_exits = {
+    2, 2, {(struct location_t *)&lobby, (struct location_t *)&parking_level}};
+static locations_t parking_exits = {3,
+                                    3,
+                                    {(struct location_t *)&server_room,
+                                     (struct location_t *)&exit_corridor,
+                                     (struct location_t *)&lobby}};
 
 // --- Locations ---
 static location_t lobby = {
@@ -191,12 +212,22 @@ static location_t parking_level = {
     .exits = &parking_exits};
 
 // --- Aggregate buffers ---
-static locations_t all_locations = {6, 6, {(struct location_t *)&lobby, (struct location_t *)&open_office, (struct location_t *)&server_room, (struct location_t *)&rooftop_garden, (struct location_t *)&exit_corridor, (struct location_t *)&parking_level}};
-static items_t all_objects = {7, 7, {&access_badge, &usb_drive, &coffee_cup, &security_camera, &elevator_panel, &exit_door, &city_map}};
+static locations_t all_locations = {
+    6,
+    6,
+    {(struct location_t *)&lobby, (struct location_t *)&open_office,
+     (struct location_t *)&server_room, (struct location_t *)&rooftop_garden,
+     (struct location_t *)&exit_corridor, (struct location_t *)&parking_level}};
+static items_t all_objects = {7,
+                              7,
+                              {&access_badge, &usb_drive, &coffee_cup,
+                               &security_camera, &elevator_panel, &exit_door,
+                               &city_map}};
 
 // --- Digest function ---
-// Adds failure: 8 turns after the Security Camera is logged (examined) if victory not achieved.
-static game_state_t urban_escape_digest(state_t *state) {
+// Adds failure: 8 turns after the Security Camera is logged (examined) if
+// victory not achieved.
+static game_state_t urban_escape_digest(world_state_t *state) {
   static int cameraLoggedTurn = -1; // -1 means not yet logged
   int badgeScanned = 0;
   int usbArchived = 0;
@@ -231,15 +262,15 @@ static game_state_t urban_escape_digest(state_t *state) {
     return GAME_STATE_VICTORY;
 
   // Failure if camera logged and too many turns elapsed
-  if (cameraLoggedTurn != -1 &&
-      (int)state->turns - cameraLoggedTurn >= 8)
+  if (cameraLoggedTurn != -1 && (int)state->turns - cameraLoggedTurn >= 8)
     return GAME_STATE_DEAD;
 
   return GAME_STATE_CONTINUE;
 }
 
 // --- Player inventory ---
-static items_t urban_inventory = {.length = 7, .used = 0, .data = {NULL, NULL, NULL, NULL, NULL, NULL, NULL}};
+static items_t urban_inventory = {
+    .length = 7, .used = 0, .data = {NULL, NULL, NULL, NULL, NULL, NULL, NULL}};
 
 // --- World definition ---
 world_t urban_escape_world = {
@@ -247,4 +278,8 @@ world_t urban_escape_world = {
     .locations = &all_locations,
     .digest = urban_escape_digest,
     .current_location = &lobby,
-    .items = &all_objects};
+    .items = &all_objects,
+    .end_game = {
+        "Emergency lights flicker; procedures incomplete. You remain inside.",
+        "Badge scanned, data archived, exit door open. You slip out unnoticed.",
+        "Security sweeps in; the exit locks behind the converging footsteps."}};

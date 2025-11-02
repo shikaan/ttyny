@@ -18,12 +18,12 @@ static state_descriptions_t forest_states = bufConst(1, "dark");
 // --- Transitions for objects ---
 static transitions_t apple_transitions =
     bufConst(3, {.trigger = ACTION_TYPE_TAKE, .from = 0, .to = 1},
-      {.trigger = ACTION_TYPE_USE, .from = 1, .to = 2},
-      {.trigger = ACTION_TYPE_DROP, .from = 1, .to = 3});
+             {.trigger = ACTION_TYPE_USE, .from = 1, .to = 2},
+             {.trigger = ACTION_TYPE_DROP, .from = 1, .to = 3});
 
 static transitions_t sword_transitions =
     bufConst(2, {.trigger = ACTION_TYPE_TAKE, .from = 0, .to = 1},
-      {.trigger = ACTION_TYPE_DROP, .from = 1, .to = 0});
+             {.trigger = ACTION_TYPE_DROP, .from = 1, .to = 0});
 
 static transitions_t troll_transitions =
     bufConst(2, {.trigger = ACTION_TYPE_EXAMINE, .from = 0, .to = 1});
@@ -125,7 +125,7 @@ static locations_t all_locations = {
 static items_t all_objects = {3, 3, {&sword, &apple, &troll}};
 
 // --- Digest function ---
-static game_state_t bridge_troll_digest(state_t *state) {
+static game_state_t bridge_troll_digest(world_state_t *state) {
   for (size_t i = 0; i < state->inventory->used; ++i) {
     item_t *object = bufAt(state->inventory, i);
     if (object->object.name == sword.object.name) {
@@ -142,8 +142,13 @@ static items_t inventory = {
     .data = {NULL, NULL, NULL},
 };
 
-world_t troll_bridge_world = {.state = {.turns = 0, .inventory = &inventory},
-                              .locations = &all_locations,
-                              .digest = bridge_troll_digest,
-                              .current_location = &forest,
-                              .items = &all_objects};
+world_t troll_bridge_world = {
+    .state = {.turns = 0, .inventory = &inventory},
+    .locations = &all_locations,
+    .digest = bridge_troll_digest,
+    .current_location = &forest,
+    .items = &all_objects,
+    .end_game = {
+        "The woods wait; the bridge still looms ahead.",
+        "Sword in hand, you leave the troll behind and stride on.",
+        "The troll loses interest. Unfortunately, so does your story."}};
