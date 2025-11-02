@@ -31,11 +31,11 @@ static inline words_t *wordsCreate(size_t len) {
 
 static inline void wordsDestroy(words_t **self) { deallocate(self); }
 
-words_t STOP_WORDS =
+static words_t STOP_WORDS =
     bufConst(6, "item", "items", "inventory", "player", "player's", "location");
-words_t STOP_WORDS_CASE = bufConst(2, "EXITS", "EXIT");
-words_t STOP_CHARS = bufConst(2, "[", "(");
-words_t ACTION_MUST_HAVES = bufConst(1, "you");
+static words_t STOP_WORDS_CASE = bufConst(2, "EXITS", "EXIT");
+static words_t STOP_CHARS = bufConst(2, "[", "(");
+static words_t ACTION_MUST_HAVES = bufConst(1, "you");
 
 static failure_shot_t failure_shots[] = {
     {"look at the key", FAILURE_TYPE_INVALID_TARGET,
@@ -182,7 +182,7 @@ static void generateAndValidate(ai_t *ai, const string_t *prompt,
                                 string_t *response, words_t *must_haves) {
   int valid = 0;
   ai_result_t result;
-  while (!valid) {
+  for (size_t i = 0; i < 10 && !valid; i++) {
     strClear(response);
     aiReset(ai, &result);
     panicif(result != AI_RESULT_OK, "cannot reset model state");
@@ -286,7 +286,7 @@ void dmDescribeSuccess(dm_t *self, world_t *world, const string_t *input,
 }
 
 void dmDescribeEndGame(dm_t *self, world_t *world, game_state_t state,
-                      string_t *description) {
+                       string_t *description) {
 
   if (state == GAME_STATE_CONTINUE) {
     strClear(description);

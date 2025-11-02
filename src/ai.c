@@ -1,7 +1,6 @@
 #include "ai.h"
 #include "alloc.h"
 #include "buffers.h"
-#include "utils.h"
 #include <ggml-backend.h>
 #include <ggml.h>
 #include <llama.h>
@@ -13,8 +12,16 @@
 
 #define GPU_LAYERS 99
 
+// This list is made of words that yield ONE token so that we can bias the model
+// not to use it. WOrds that take more than a token introduce risk (you may bias
+// input that is otherwise good when it's part of another word).
+// The leading space is on purpose
+static const char *STOP_WORDS[] = {
+    " item", " items", " inventory", " player", " location", " EXIT",
+};
+
 #define throw(Error)                                                           \
-  *result = Error;                                                              \
+  *result = Error;                                                             \
   goto error;
 
 void aiResultFormat(ai_result_t res, string_t *response) {
@@ -60,6 +67,13 @@ static void filterLogs(enum ggml_log_level level, const char *text,
   (void)data;
 }
 
+static llama_token aiTokenizeWord(ai_t *self, const char *word) {
+  llama_token tbuf[8];
+  int len = (int)strlen(word);
+  int n = llama_tokenize(self->vocabulary, word, len, tbuf, 8, false, false);
+  return n == 1 ? tbuf[0] : (llama_token)-1;
+}
+
 static void aiInitSampler(ai_t *ai, ai_result_t *res, config_t *configuration) {
   if (ai->sampler) {
     llama_sampler_free(ai->sampler);
@@ -81,6 +95,24 @@ static void aiInitSampler(ai_t *ai, ai_result_t *res, config_t *configuration) {
     }
     llama_sampler_chain_add(ai->sampler, grammar_sampler);
   }
+
+  llama_logit_bias bias_list[arrLen(STOP_WORDS)];
+  for (size_t i = 0; i < arrLen(STOP_WORDS); i++) {
+    const char *word = STOP_WORDS[i];
+    llama_token token = aiTokenizeWord(ai, word);
+    bias_list[i] = (llama_logit_bias){token, -100.0f};
+  }
+
+  int32_t n_vocab = llama_vocab_n_tokens(ai->vocabulary);
+  struct llama_sampler *bias_sampler =
+      llama_sampler_init_logit_bias(n_vocab, arrLen(STOP_WORDS), bias_list);
+
+  if (!bias_sampler) {
+    *res = AI_RESULT_ERROR;
+    return;
+  }
+
+  llama_sampler_chain_add(ai->sampler, bias_sampler);
 
   llama_sampler_chain_add(ai->sampler,
                           llama_sampler_init_penalties(
@@ -135,8 +167,8 @@ error:
   return NULL;
 }
 
-void aiGenerate(ai_t *ai, ai_result_t *result, const string_t *prompt, string_t *response) {
-  debug(prompt->data);
+void aiGenerate(ai_t *ai, ai_result_t *result, const string_t *prompt,
+                string_t *response) {
   const bool is_first =
       llama_memory_seq_pos_max(llama_get_memory(ai->context), 0) == -1;
 

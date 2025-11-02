@@ -69,7 +69,6 @@ int main(void) {
 
     switch (action) {
     case ACTION_TYPE_MOVE: {
-      debug("action: move");
       parserExtractTarget(parser, input, world->current_location->exits, items,
                           &location, &item);
 
@@ -92,7 +91,6 @@ int main(void) {
       break;
     }
     case ACTION_TYPE_EXAMINE: {
-      debug("action: examine\n");
       itemsCat(items, world->current_location->items);
       itemsCat(items, world->state.inventory);
       parserExtractTarget(parser, input, world->current_location->exits, items,
@@ -121,7 +119,6 @@ int main(void) {
       printError(response);
     }
     case ACTION_TYPE_TAKE: {
-      debug("action: take\n");
       parserExtractTarget(parser, input, locations,
                           world->current_location->items, &location, &item);
 
@@ -155,7 +152,6 @@ int main(void) {
       break;
     }
     case ACTION_TYPE_DROP: {
-      debug("action: drop\n");
       parserExtractTarget(parser, input, locations, world->state.inventory,
                           &location, &item);
 
@@ -181,7 +177,6 @@ int main(void) {
       break;
     }
     case ACTION_TYPE_USE: {
-      debug("action: use\n");
       itemsCat(items, world->state.inventory);
       itemsCat(items, world->current_location->items);
       parserExtractTarget(parser, input, locations, items, &location, &item);
@@ -210,33 +205,28 @@ int main(void) {
       break;
     }
     case ACTION_TYPE_HELP: {
-      debug("action: /help\n");
       formatHelp(response, world);
       loadingStop(&loading);
       printCommandOutput(response);
       break;
     }
     case ACTION_TYPE_STATUS: {
-      debug("action: /status\n");
       formatStatus(response, world);
       loadingStop(&loading);
       printCommandOutput(response);
       break;
     }
     case ACTION_TYPE_TLDR: {
-      debug("action: /tldr\n");
       formatTldr(response, world);
       loadingStop(&loading);
       printCommandOutput(response);
       break;
     }
     case ACTION_TYPE_QUIT:
-      debug("action: quit\n");
       return 0;
     case ACTION_TYPES:
     case ACTION_TYPE_UNKNOWN:
     default:
-      debug("action: unknown\n");
       strFmt(response, "Not sure how to do that.");
       loadingStop(&loading);
       printError(response);
