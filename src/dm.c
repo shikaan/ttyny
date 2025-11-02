@@ -285,7 +285,7 @@ void dmDescribeSuccess(dm_t *self, world_t *world, const string_t *input,
   generateAndValidate(self->ai, self->prompt, comment, &ACTION_MUST_HAVES);
 }
 
-void dmNarrateEndGame(dm_t *self, world_t *world, game_state_t state,
+void dmDescribeEndGame(dm_t *self, world_t *world, game_state_t state,
                       string_t *description) {
 
   if (state == GAME_STATE_CONTINUE) {

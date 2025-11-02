@@ -4,7 +4,6 @@
 #include "src/panic.h"
 #include "src/parser.h"
 #include "src/screen.h"
-#include "src/tty.h"
 #include "src/utils.h"
 #include "src/world.h"
 #include <ggml.h>
@@ -12,8 +11,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-const char *NAME = fg_green(bold("mystty"));
 
 int main(void) {
   string_t *input cleanup(strDestroy) = strCreate(512);
@@ -26,19 +23,27 @@ int main(void) {
   panicif(!dm, "cannot create dm");
 
   parser_t *parser cleanup(parserDestroy) = parserCreate();
-  panicif(!parser, "cannot create dm");
+  panicif(!parser, "cannot create parser");
 
   locations_t *locations cleanup(locationsDestroy) =
       locationsCreate(world->locations->length);
   items_t *items cleanup(itemsDestroy) = itemsCreate(world->items->length);
 
-  printWelcomeScreen(NAME, response);
+  screenClear();
+  formatWelcomeScreen(response);
+  printCommandOutput(response);
+  fgetc(stdin);
+  screenClear();
 
   ui_handle_t *loading = loadingStart();
+
   dmDescribeWorld(dm, world, response);
   loadingStop(&loading);
+
   printDescription(response);
-  printLocationChange(response, world->current_location);
+
+  formatLocationChange(response, world->current_location);
+  printStateUpdate(response);
 
   while (1) {
     printPrompt();
@@ -82,7 +87,8 @@ int main(void) {
 
       loadingStop(&loading);
       printDescription(response);
-      printLocationChange(response, world->current_location);
+      formatLocationChange(response, world->current_location);
+      printStateUpdate(response);
       break;
     }
     case ACTION_TYPE_EXAMINE: {
@@ -140,7 +146,8 @@ int main(void) {
 
       loadingStop(&loading);
       printDescription(response);
-      strFmt(response, item("%s") " added to inventory.", item->object.name);
+
+      formatTake(response, item);
       printStateUpdate(response);
 
       // ignoring error: transition are expected to always succeed only for USE
@@ -166,8 +173,7 @@ int main(void) {
       loadingStop(&loading);
 
       printDescription(response);
-      strFmt(response, item("%s") " removed from inventory.",
-             item->object.name);
+      formatDrop(response, item);
       printStateUpdate(response);
 
       // ignoring error: transitions always succeed only for USE
@@ -194,7 +200,7 @@ int main(void) {
         loadingStop(&loading);
 
         printDescription(response);
-        strFmt(response, item("%s") " used.", item->object.name);
+        formatUse(response, item);
         printStateUpdate(response);
       } else {
         dmDescribeFail(dm, FAILURE_TYPE_CANNOT_BE_USED, input, response);
@@ -205,101 +211,21 @@ int main(void) {
     }
     case ACTION_TYPE_HELP: {
       debug("action: /help\n");
-      location_t *first_exit =
-          (location_t *)bufAt(world->current_location->exits, 0);
-
-      strFmt(suggestion, prompt("Go to %s"), first_exit->object.name);
-
-      if (world->current_location->items->used > 0) {
-        for (size_t i = 0; i < world->current_location->items->used; i++) {
-          object_t room_item = bufAt(world->current_location->items, i)->object;
-          if (objectIsCollectible(&room_item)) {
-            strFmtAppend(suggestion, " or " prompt("Take %s"), room_item.name);
-            break;
-          } else {
-            strFmtAppend(suggestion, " or " prompt("Examine %s"),
-                         room_item.name);
-            break;
-          }
-        }
-      }
-
-      strFmt(response,
-             "In %s you can explore the world in natural language.\n"
-             "\n"
-             "When items or locations are described, try to interact:\n"
-             "   • %s\n"
-             "   • %s\n"
-             "\n"
-             "When an action triggers a change, you will see a message "
-             "prefixed with '~>'.\n"
-             "You can type commands too. They all start with '/' and their "
-             "output is prefixed with `~`.\n"
-             "Available commands:\n"
-             "   • %s - shows the player status\n"
-             "   • %s   - displays this help\n"
-             "   • %s   - summarizes the current location\n"
-             "   • %s   - ends the game\n"
-             "\n"
-             "Based on your last input, you could try %s.",
-             NAME, prompt("Light the lamp"), prompt("Go to the garden"),
-             command("/status"), command("/help"), command("/tldr"),
-             command("/quit"), suggestion->data);
+      formatHelp(response, world);
       loadingStop(&loading);
       printCommandOutput(response);
       break;
     }
     case ACTION_TYPE_STATUS: {
       debug("action: /status\n");
-      items_t *inventory = world->state.inventory;
-
-      strFmt(response,
-             "Location:  " location("%s") "\n"
-                                          "Turns:     %d\n"
-                                          "Inventory:",
-             world->current_location->object.name, world->state.turns);
-
-      if (inventory->used == 0) {
-        strFmtAppend(response, dim(" empty") ".");
-      } else {
-        for (size_t i = 0; i < inventory->used; i++) {
-          item_t *inv_item = bufAt(inventory, i);
-          strFmtAppend(response, "\n  • " item("%s") " [%s]",
-                       inv_item->object.name,
-                       bufAt(inv_item->object.state_descriptions,
-                             inv_item->object.current_state));
-        }
-      }
-
+      formatStatus(response, world);
       loadingStop(&loading);
       printCommandOutput(response);
       break;
     }
     case ACTION_TYPE_TLDR: {
       debug("action: /tldr\n");
-      items_t *room_items = world->current_location->items;
-      locations_t *room_exits = world->current_location->exits;
-
-      strFmt(response,
-             "Current Location: " location("%s") "\n"
-                                                 "Items:",
-             world->current_location->object.name);
-
-      if (room_items->used == 0) {
-        strFmtAppend(response, dim(" none") ".");
-      } else {
-        for (size_t i = 0; i < room_items->used; i++) {
-          item_t *inv_item = bufAt(room_items, i);
-          strFmtAppend(response, "\n  • " item("%s"), inv_item->object.name);
-        }
-      }
-
-      strFmtAppend(response, "\nExits:");
-      for (size_t i = 0; i < room_exits->used; i++) {
-        location_t *room_exit = (location_t *)bufAt(room_exits, i);
-        strFmtAppend(response, "\n  • " location("%s"), room_exit->object.name);
-      }
-
+      formatTldr(response, world);
       loadingStop(&loading);
       printCommandOutput(response);
       break;
@@ -318,7 +244,7 @@ int main(void) {
 
     game_state_t game_state = world->digest(&world->state);
     if (game_state != GAME_STATE_CONTINUE) {
-      dmNarrateEndGame(dm, world, game_state, response);
+      dmDescribeEndGame(dm, world, game_state, response);
       loadingStop(&loading);
       printDescription(response);
       return 0;

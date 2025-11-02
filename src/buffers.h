@@ -120,7 +120,7 @@ static inline void strFmtOffset(string_t *self, size_t offset, const char *fmt,
   strFmtOffset(Self, 0, Fmt __VA_OPT__(, __VA_ARGS__));
 
 #define strFmtAppend(Self, Fmt, ...)                                           \
-  strFmtOffset(Self, Self->used, Fmt __VA_OPT__(, __VA_ARGS__));
+  strFmtOffset(Self, (Self)->used, Fmt __VA_OPT__(, __VA_ARGS__));
 
 static inline void strCat(string_t *self, const string_t *other) {
   size_t available = self->length - self->used;

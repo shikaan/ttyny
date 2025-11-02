@@ -1,9 +1,17 @@
 #include "screen.h"
 #include "alloc.h"
 #include "buffers.h"
+#include "tty.h"
 #include "world.h"
 #include <stddef.h>
 #include <stdio.h>
+
+#define prompt fg_yellow
+#define command fg_blue
+#define location fg_magenta
+#define item fg_cyan
+
+const char *NAME = fg_green(bold("mystty"));
 
 static void sleep_ms(unsigned ms) {
   struct timespec ts;
@@ -42,7 +50,8 @@ ui_handle_t *loadingStart(void) {
 }
 
 void loadingStop(ui_handle_t **handle) {
-  if (!(*handle) || !handle) return;
+  if (!(*handle) || !handle)
+    return;
   (*handle)->stop = 1;
   pthread_join((*handle)->tid, NULL);
   deallocate(handle);
@@ -91,20 +100,24 @@ static void printResponse(string_t *response, const char *prefix) {
 }
 
 void printError(string_t *response) { printResponse(response, " ! "); }
+
 void printStateUpdate(string_t *response) {
   puts("");
   printResponse(response, " ~> ");
 }
+
 void printCommandOutput(string_t *response) {
   printResponse(response, " ~   ");
 }
+
 void printDescription(string_t *response) { printResponse(response, " |  "); }
+
 void printPrompt(void) { printf("> "); }
 
 void screenClear(void) { puts("\e[1;1H\e[2J"); }
 
-void printWelcomeScreen(const char *name, string_t *response) {
-  screenClear();
+void formatWelcomeScreen(string_t *response) {
+
   strFmt(response,
          "Welcome to %s!\n"
          "\n"
@@ -120,15 +133,109 @@ void printWelcomeScreen(const char *name, string_t *response) {
          "Type %s anytime, if you're stuck.\n"
          "\n"
          "[Press ENTER to begin your adventure]",
-         name, prompt("I want to go in the kitchen"),
+         NAME, prompt("I want to go in the kitchen"),
          prompt("Pick up the lamp"), prompt("Open this door"),
          command("/help"));
-  printCommandOutput(response);
-  fgetc(stdin);
-  screenClear();
 }
 
-void printLocationChange(string_t *response, location_t *loc) {
-  strFmt(response, "Location: " location("%s"), loc->object.name);
-  printStateUpdate(response);
+void formatLocationChange(string_t *response, location_t *l) {
+  strFmt(response, "Location: " location("%s"), l->object.name);
+}
+
+void formatTake(string_t *response, const item_t *i) {
+  strFmt(response, item("%s") " added to inventory", i->object.name);
+}
+
+void formatDrop(string_t *response, const item_t *i) {
+  strFmt(response, item("%s") " removed from inventory", i->object.name);
+}
+
+void formatUse(string_t *response, const item_t *i) {
+  strFmt(response, item("%s") " used", i->object.name);
+}
+
+void formatHelp(string_t *response, const world_t *world) {
+  static string_t SUGGESTION = bufInit(512, 0);
+
+  location_t *first_exit =
+      (location_t *)bufAt(world->current_location->exits, 0);
+
+  strFmt(&SUGGESTION, prompt("Go to %s"), first_exit->object.name);
+
+  if (world->current_location->items->used > 0) {
+    object_t room_item = bufAt(world->current_location->items, 0)->object;
+    if (objectIsCollectible(&room_item)) {
+      strFmtAppend(&SUGGESTION, " or " prompt("Take %s"), room_item.name);
+    } else {
+      strFmtAppend(&SUGGESTION, " or " prompt("Examine %s"), room_item.name);
+    }
+  }
+
+  strFmt(response,
+         "In %s you can explore the world in natural language.\n"
+         "\n"
+         "When items or locations are described, try to interact:\n"
+         "   • %s\n"
+         "   • %s\n"
+         "\n"
+         "When an action triggers a change, you will see a message "
+         "prefixed with '~>'.\n"
+         "You can type commands too. They all start with '/' and their "
+         "output is prefixed with `~`.\n"
+         "Available commands:\n"
+         "   • %s - shows the player status\n"
+         "   • %s   - displays this help\n"
+         "   • %s   - summarizes the current location\n"
+         "   • %s   - ends the game\n"
+         "\n"
+         "Based on your last input, you could try %s.",
+         NAME, prompt("Light the lamp"), prompt("Go to the garden"),
+         command("/status"), command("/help"), command("/tldr"),
+         command("/quit"), SUGGESTION.data);
+}
+
+void formatStatus(string_t *response, const world_t *world) {
+  items_t *inventory = world->state.inventory;
+
+  strFmt(response,
+         "Location:  " location("%s") "\n"
+                                      "Turns:     %d\n"
+                                      "Inventory:",
+         world->current_location->object.name, world->state.turns);
+
+  if (inventory->used == 0) {
+    strFmtAppend(response, dim(" empty") ".");
+  } else {
+    for (size_t i = 0; i < inventory->used; i++) {
+      item_t *inv_item = bufAt(inventory, i);
+      strFmtAppend(response, "\n  • " item("%s") " [%s]", inv_item->object.name,
+                   bufAt(inv_item->object.state_descriptions,
+                         inv_item->object.current_state));
+    }
+  }
+}
+
+void formatTldr(string_t *response, const world_t *world) {
+  items_t *room_items = world->current_location->items;
+  locations_t *room_exits = world->current_location->exits;
+
+  strFmt(response,
+         "Current Location: " location("%s") "\n"
+                                             "Items:",
+         world->current_location->object.name);
+
+  if (room_items->used == 0) {
+    strFmtAppend(response, dim(" none") ".");
+  } else {
+    for (size_t i = 0; i < room_items->used; i++) {
+      item_t *inv_item = bufAt(room_items, i);
+      strFmtAppend(response, "\n  • " item("%s"), inv_item->object.name);
+    }
+  }
+
+  strFmtAppend(response, "\nExits:");
+  for (size_t i = 0; i < room_exits->used; i++) {
+    location_t *room_exit = (location_t *)bufAt(room_exits, i);
+    strFmtAppend(response, "\n  • " location("%s"), room_exit->object.name);
+  }
 }
