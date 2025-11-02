@@ -60,11 +60,11 @@ static config_t PARSER_CONFIG = {
 
 static config_t NARRATOR_CONFIG = {
     .path = "./models/qwen2.5-1.5b-instruct-q4_k_m.gguf",
-    .min_p = 0.1F,
-    .temp = 0.8F,
+    .min_p = 0.05F,
+    .temp = 0.6F,
     .context_size = 2048,
     .top_k = 50,
-    .repetition_penalty = 1.25F,
+    .repetition_penalty = 1.22F,
     .seed = 0,
     .grammar = NULL,
     .prompt_templates =

@@ -8,7 +8,7 @@
 
 typedef const char *key_t;
 typedef void *value_t;
-typedef uint8_t map_size_t;
+typedef uint64_t map_size_t;
 
 typedef enum { MAP_RESULT_OK = 0, MAP_ERROR_FULL } map_result_t;
 
@@ -55,7 +55,7 @@ static inline map_t *mapCreate(map_size_t size) {
   return self;
 }
 
-static inline int hasCollision(const map_t *self, key_t key, uint8_t index) {
+static inline int hasCollision(const map_t *self, key_t key, map_size_t index) {
   key_t old_key = self->keys[index];
   return old_key != NULL && strcmp(key, old_key) != 0;
 }
@@ -63,13 +63,13 @@ static inline int hasCollision(const map_t *self, key_t key, uint8_t index) {
 [[nodiscard]] static inline map_result_t mapSet(map_t *self, const char *key,
                                                 void *value) {
   panicif(!self, "map cannot not be null");
-  uint8_t index = memoryMakeKey(self, key);
+  map_size_t index = memoryMakeKey(self, key);
 
   if (hasCollision(self, key, index)) {
     uint8_t i;
 
     for (i = 1; i < self->size; i++) {
-      uint8_t probed_idx = (index + i) % self->size;
+      map_size_t probed_idx = (index + i) % self->size;
       const key_t probed_key = self->keys[probed_idx];
       if (!probed_key) {
         index = probed_idx;
@@ -90,10 +90,10 @@ set:
 
 static inline value_t mapGet(const map_t *self, const key_t key) {
   panicif(!self, "map cannot not be null");
-  const uint8_t index = memoryMakeKey(self, key);
+  const map_size_t index = memoryMakeKey(self, key);
 
-  for (uint8_t i = 0; i < self->size; i++) {
-    uint8_t probed_idx = (index + i) % self->size;
+  for (map_size_t i = 0; i < self->size; i++) {
+    map_size_t probed_idx = (index + i) % self->size;
     const key_t probed_key = self->keys[probed_idx];
 
     if (!probed_key)

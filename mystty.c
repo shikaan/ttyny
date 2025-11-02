@@ -18,7 +18,7 @@ int main(void) {
   string_t *target cleanup(strDestroy) = strCreate(128);
   world_t *world = &urban_escape_world;
 
-  dm_t *dm cleanup(dmDestroy) = dmCreate();
+  dm_t *dm cleanup(dmDestroy) = dmCreate(world);
   panicif(!dm, "cannot create dm");
 
   parser_t *parser cleanup(parserDestroy) = parserCreate();

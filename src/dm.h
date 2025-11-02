@@ -2,6 +2,7 @@
 
 #include "ai.h"
 #include "buffers.h"
+#include "map.h"
 #include "world.h"
 
 #include <stddef.h>
@@ -12,9 +13,10 @@ typedef struct {
   ai_t *ai;
   string_t *prompt;
   string_t *summary;
+  map_t* memory;
 } dm_t;
 
-dm_t *dmCreate(void);
+dm_t *dmCreate(world_t* world);
 
 void dmDescribeWorld(dm_t *, const world_t *, string_t *);
 void dmDescribeFail(dm_t *, failure_type_t, const string_t *, string_t *);

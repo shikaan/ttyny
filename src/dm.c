@@ -1,6 +1,8 @@
+#include "dm.h"
 #include "ai.h"
 #include "alloc.h"
 #include "buffers.h"
+#include "map.h"
 #include "utils.h"
 #include "world.h"
 
@@ -8,12 +10,6 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
-
-typedef struct {
-  ai_t *ai;
-  string_t *prompt;
-  string_t *summary;
-} dm_t;
 
 typedef struct {
   const char *action;
@@ -88,31 +84,24 @@ static void summarize(const world_t *world, string_t *summary) {
   }
 }
 
-dm_t *dmCreate(void) {
-  dm_t *narrator = allocate(sizeof(dm_t));
-  panicif(!narrator, "cannot allocate narrator");
+dm_t *dmCreate(world_t* world) {
+  dm_t *dm = allocate(sizeof(dm_t));
+  panicif(!dm, "cannot allocate narrator");
 
   ai_result_t result;
-  narrator->ai = aiCreate(&NARRATOR_CONFIG, &result);
-  panicif(!narrator->ai, "cannot allocate AI for narrator");
+  dm->ai = aiCreate(&NARRATOR_CONFIG, &result);
+  panicif(!dm->ai, "cannot allocate AI for narrator");
 
-  narrator->prompt = strCreate(4096);
-  panicif(!narrator->prompt, "cannot allocate prompt buffer");
+  dm->prompt = strCreate(4096);
+  panicif(!dm->prompt, "cannot allocate prompt buffer");
 
-  narrator->summary = strCreate(4096);
-  panicif(!narrator->summary, "cannot allocate summary buffer");
+  dm->summary = strCreate(4096);
+  panicif(!dm->summary, "cannot allocate summary buffer");
 
-  return narrator;
-}
+  dm->memory = mapCreate(world->items->used + world->locations->used);
+  panicif(!dm->memory, "cannot allocate memory");
 
-void dmDestroy(dm_t **self) {
-  if (!self || !*self)
-    return;
-
-  aiDestroy(&(*self)->ai);
-  strDestroy(&(*self)->prompt);
-  strDestroy(&(*self)->summary);
-  deallocate(self);
+  return dm;
 }
 
 static int hasStopWords(string_t *response) {
@@ -183,6 +172,13 @@ static void generateAndValidate(ai_t *ai, const string_t *prompt,
 }
 
 void dmDescribeWorld(dm_t *self, const world_t *world, string_t *description) {
+  key_t cache_key = world->current_location->object.name;
+  const char *cached = mapGet(self->memory, cache_key);
+  if (cached) {
+    strFmt(description, "%s", cached);
+    return;
+  }
+
   const config_t *config = self->ai->configuration;
   const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
   const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];
@@ -211,9 +207,18 @@ void dmDescribeWorld(dm_t *self, const world_t *world, string_t *description) {
   }
 
   generateAndValidate(self->ai, self->prompt, description, must_haves);
+
+  (void)mapSet(self->memory, cache_key, strdup(description->data));
 }
 
-void dmDescribeObject(dm_t *self, object_t *object, string_t *description) {
+void dmDescribeObject(dm_t *self, const object_t *object,
+                      string_t *description) {
+  key_t cache_key = object->name;
+  const char *cached = mapGet(self->memory, cache_key);
+  if (cached) {
+    strFmt(description, "%s", cached);
+    return;
+  }
   const config_t *config = self->ai->configuration;
   const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
   const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];
@@ -229,9 +234,11 @@ void dmDescribeObject(dm_t *self, object_t *object, string_t *description) {
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
   generateAndValidate(self->ai, self->prompt, description, NULL);
+
+  (void)mapSet(self->memory, cache_key, strdup(description->data));
 }
 
-void dmDescribeFail(dm_t *self, failure_type_t failure, string_t *input,
+void dmDescribeFail(dm_t *self, failure_type_t failure, const string_t *input,
                     string_t *comment) {
   const config_t *config = self->ai->configuration;
   const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
@@ -259,7 +266,7 @@ void dmDescribeFail(dm_t *self, failure_type_t failure, string_t *input,
   generateAndValidate(self->ai, self->prompt, comment, &ACTION_MUST_HAVES);
 }
 
-void dmDescribeSuccess(dm_t *self, world_t *world, const string_t *input,
+void dmDescribeSuccess(dm_t *self, const world_t *world, const string_t *input,
                        string_t *comment) {
   const config_t *config = self->ai->configuration;
   const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
@@ -275,7 +282,7 @@ void dmDescribeSuccess(dm_t *self, world_t *world, const string_t *input,
   generateAndValidate(self->ai, self->prompt, comment, &ACTION_MUST_HAVES);
 }
 
-void dmDescribeEndGame(dm_t *self, world_t *world, game_state_t state,
+void dmDescribeEndGame(dm_t *self, const world_t *world, game_state_t state,
                        string_t *description) {
 
   if (state == GAME_STATE_CONTINUE) {
@@ -292,4 +299,21 @@ void dmDescribeEndGame(dm_t *self, world_t *world, game_state_t state,
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
   generateAndValidate(self->ai, self->prompt, description, &ACTION_MUST_HAVES);
+}
+
+void dmDestroy(dm_t **self) {
+  if (!self || !*self)
+    return;
+
+  aiDestroy(&(*self)->ai);
+  strDestroy(&(*self)->prompt);
+  strDestroy(&(*self)->summary);
+
+  for (map_size_t i = 0; i < (*self)->memory->size; i++) {
+    char* memory = (*self)->memory->values[i];
+    deallocate(&memory);
+  }
+  mapDestroy(&(*self)->memory);
+
+  deallocate(self);
 }
