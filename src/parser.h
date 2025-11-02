@@ -84,6 +84,8 @@ static inline action_type_t parserExtractAction(parser_t *self,
         return ACTION_TYPE_STATUS;
       } else if (strStartsWith(&ACTION_QUIT, input)) {
         return ACTION_TYPE_QUIT;
+      } else if (strStartsWith(&ACTION_TLDR, input)) {
+        return ACTION_TYPE_TLDR;
       }
     }
 

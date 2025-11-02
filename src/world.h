@@ -17,6 +17,7 @@ typedef enum {
   ACTION_TYPE_HELP,
   ACTION_TYPE_STATUS,
   ACTION_TYPE_QUIT,
+  ACTION_TYPE_TLDR,
 
   ACTION_TYPES,
 } action_type_t;
@@ -29,15 +30,16 @@ static string_t ACTION_EXAMINE = strConst("examine");
 static string_t ACTION_HELP = strConst("/help");
 static string_t ACTION_STATUS = strConst("/status");
 static string_t ACTION_QUIT = strConst("/quit");
+static string_t ACTION_TLDR = strConst("/tldr");
 
 static action_type_t actions_types[ACTION_TYPES] = {
     ACTION_TYPE_MOVE,   ACTION_TYPE_TAKE,    ACTION_TYPE_DROP,
     ACTION_TYPE_USE,    ACTION_TYPE_EXAMINE, ACTION_TYPE_HELP,
-    ACTION_TYPE_STATUS, ACTION_TYPE_QUIT};
+    ACTION_TYPE_STATUS, ACTION_TYPE_QUIT,    ACTION_TYPE_TLDR};
 
 static string_t *action_names[ACTION_TYPES] = {
-    &ACTION_MOVE,    &ACTION_TAKE, &ACTION_DROP,   &ACTION_USE,
-    &ACTION_EXAMINE, &ACTION_HELP, &ACTION_STATUS, &ACTION_QUIT};
+    &ACTION_MOVE, &ACTION_TAKE,   &ACTION_DROP, &ACTION_USE, &ACTION_EXAMINE,
+    &ACTION_HELP, &ACTION_STATUS, &ACTION_QUIT, &ACTION_TLDR};
 
 typedef enum {
   OBJECT_TYPE_UNKNOWN = -1,

@@ -264,6 +264,35 @@ int main(void) {
 
       goto print;
     }
+    case ACTION_TYPE_TLDR: {
+      debug("action: /tldr\n");
+      items_t *room_items = world->current_location->items;
+      locations_t *room_exits = world->current_location->exits;
+
+      strFmt(response,
+             " ~   Current Location: " location("%s") "\n"
+                                                      " ~   Items:",
+             world->current_location->object.name);
+
+      if (room_items->used == 0) {
+        strFmtAppend(response, dim(" none") ".");
+      } else {
+        for (size_t i = 0; i < room_items->used; i++) {
+          item_t *inv_item = bufAt(room_items, i);
+          strFmtAppend(response, "\n ~     • " item("%s"),
+                       inv_item->object.name);
+        }
+      }
+
+      strFmtAppend(response, "\n ~   Exits:");
+      for (size_t i = 0; i < room_exits->used; i++) {
+        location_t *room_exit = (location_t *)bufAt(room_exits, i);
+        strFmtAppend(response, "\n ~     • " location("%s"),
+                     room_exit->object.name);
+      }
+
+      goto print;
+    }
     case ACTION_TYPE_QUIT:
       debug("action: quit\n");
       return 0;
