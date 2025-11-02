@@ -116,6 +116,7 @@ int main(void) {
       loadingStop(&loading);
       dmDescribeFail(dm, FAILURE_TYPE_INVALID_TARGET, input, response);
       printError(response);
+      break;
     }
     case ACTION_TYPE_TAKE: {
       parserExtractTarget(parser, input, locations,
