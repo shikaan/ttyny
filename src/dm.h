@@ -19,7 +19,6 @@ typedef struct {
 dm_t *dmCreate(world_t* world);
 
 void dmDescribeWorld(dm_t *, const world_t *, string_t *);
-void dmDescribeFail(dm_t *, failure_type_t, const string_t *, string_t *);
 void dmDescribeSuccess(dm_t *, const world_t *, const string_t *, string_t *);
 void dmDescribeObject(dm_t *, const object_t *, string_t *);
 void dmDescribeEndGame(dm_t *, const world_t *, game_state_t, string_t *);

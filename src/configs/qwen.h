@@ -23,10 +23,7 @@ static const string_t NARRATOR_OBJECT_DESC_SYS_PROMPT =
     strConst("You are the narrator of a fantasy game. "
              "You describe ITEM in one sentence.");
 
-static const string_t NARRATOR_FAILURE_SYS_PROMPT = strConst(
-    "You are the witty, sarcastic narrator of a classic text adventure. "
-    "In one sentence, You describe FAILURE of ACTION with a dry sense of "
-    "humor.");
+
 
 static const string_t NARRATOR_SUCCESS_SYS_PROMPT =
     strConst("You are the narrator of a fantasy game. "

@@ -72,7 +72,7 @@ int main(void) {
                           &location, &item);
 
       if (!location) {
-        dmDescribeFail(dm, FAILURE_TYPE_INVALID_TARGET, input, response);
+        strFmt(response, "You cannot go there!");
         loadingStop(&loading);
         printError(response);
         break;
@@ -114,7 +114,7 @@ int main(void) {
       }
 
       loadingStop(&loading);
-      dmDescribeFail(dm, FAILURE_TYPE_INVALID_TARGET, input, response);
+      strFmt(response, "I don't understand... Can you rephrase that?");
       printError(response);
       break;
     }
@@ -123,14 +123,14 @@ int main(void) {
                           world->current_location->items, &location, &item);
 
       if (!item) {
-        dmDescribeFail(dm, FAILURE_TYPE_INVALID_ITEM, input, response);
+        strFmt(response, "Not sure what you want to take.");
         loadingStop(&loading);
         printError(response);
         break;
       }
 
       if (!objectIsCollectible(&item->object)) {
-        dmDescribeFail(dm, FAILURE_TYPE_CANNOT_COLLECT_ITEM, input, response);
+        strFmt(response, "You cannot pick that up.");
         loadingStop(&loading);
         printError(response);
         break;
@@ -156,7 +156,7 @@ int main(void) {
                           &location, &item);
 
       if (!item) {
-        dmDescribeFail(dm, FAILURE_TYPE_INVALID_ITEM, input, response);
+        strFmt(response, "You cannot drop something that you don't own.");
         loadingStop(&loading);
         printError(response);
         break;
@@ -182,7 +182,7 @@ int main(void) {
       parserExtractTarget(parser, input, locations, items, &location, &item);
 
       if (!item) {
-        dmDescribeFail(dm, FAILURE_TYPE_INVALID_ITEM, input, response);
+        strFmt(response, "Not sure what you mean.");
         loadingStop(&loading);
         printError(response);
         break;
@@ -198,7 +198,8 @@ int main(void) {
         formatUse(response, item);
         printStateUpdate(response);
       } else {
-        dmDescribeFail(dm, FAILURE_TYPE_CANNOT_BE_USED, input, response);
+        strFmt(response, "Did you mean %s? Unfortunately, cannot be used...",
+               item->object.name);
         loadingStop(&loading);
         printError(response);
       }
@@ -227,7 +228,7 @@ int main(void) {
     case ACTION_TYPES:
     case ACTION_TYPE_UNKNOWN:
     default:
-      strFmt(response, "Not sure how to do that.");
+      strFmt(response, "Not sure how to do that...");
       loadingStop(&loading);
       printError(response);
     }

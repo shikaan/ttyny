@@ -33,28 +33,6 @@ static words_t STOP_WORDS_CASE = bufConst(3, "EXITS", "EXIT", "ITEMS");
 static words_t STOP_CHARS = bufConst(3, "[", "(", "*");
 static words_t ACTION_MUST_HAVES = bufConst(1, "you");
 
-static failure_shot_t failure_shots[] = {
-    {"look at the key", FAILURE_TYPE_INVALID_TARGET,
-     "You can't see any such thing."},
-    {"inspect banana", FAILURE_TYPE_INVALID_TARGET,
-     "A banana? The area is distinctly banana-free."},
-    {"enter the closet", FAILURE_TYPE_INVALID_LOCATION,
-     "The closet, pleasant as it may be, is not an exit."},
-    {"enter the bottle", FAILURE_TYPE_INVALID_LOCATION,
-     "You'd have to be considerably smaller to fit in there."},
-    {"take mountain", FAILURE_TYPE_CANNOT_COLLECT_ITEM,
-     "You try to take it, but it won't budge."},
-    {"take horizon", FAILURE_TYPE_CANNOT_COLLECT_ITEM,
-     "It politely remains where it is."},
-    {"use phantom wrench", FAILURE_TYPE_INVALID_ITEM, "You lack such a thing."},
-    {"drop imaginary gem", FAILURE_TYPE_INVALID_ITEM,
-     "Hard to drop what you don't possess."},
-    {"use plain wall", FAILURE_TYPE_CANNOT_BE_USED,
-     "The wall is unimpressed by your efforts."},
-    {"use decorative plant", FAILURE_TYPE_CANNOT_BE_USED,
-     "It offers ambiance, not functionality."},
-};
-
 static void summarize(const world_t *world, string_t *summary) {
   location_t *current_location = world->current_location;
 
