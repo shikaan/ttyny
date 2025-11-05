@@ -34,18 +34,16 @@ static words_t STOP_WORDS_CASE = bufConst(3, "EXITS", "EXIT", "ITEMS");
 static words_t STOP_CHARS = bufConst(3, "[", "(", "*");
 static words_t ACTION_MUST_HAVES = bufConst(1, "you");
 
-static void summarize(const world_t *world, string_t *summary) {
-  location_t *current_location = world->current_location;
+static void summarize(const location_t *location, string_t *summary) {
+  strFmt(summary, "LOCATION: %s (%s) [%s]\n", location->object.name,
+         location->object.description,
+         bufAt(location->object.state_descriptions,
+               location->object.current_state));
 
-  strFmt(summary, "LOCATION: %s (%s) [%s]\n", current_location->object.name,
-         current_location->object.description,
-         bufAt(current_location->object.state_descriptions,
-               current_location->object.current_state));
-
-  if (current_location->items->used) {
+  if (location->items->used) {
     strFmtAppend(summary, "ITEMS:\n");
-    for (size_t i = 0; i < current_location->items->used; i++) {
-      item_t *item = bufAt(current_location->items, i);
+    for (size_t i = 0; i < location->items->used; i++) {
+      item_t *item = bufAt(location->items, i);
       strFmtAppend(
           summary, "  - %s (%s) [%s]\n", item->object.name,
           item->object.description,
@@ -54,8 +52,8 @@ static void summarize(const world_t *world, string_t *summary) {
   }
 
   strFmtOffset(summary, summary->used, "EXITS:\n");
-  for (size_t i = 0; i < current_location->exits->used; i++) {
-    location_t *exit = (location_t *)bufAt(current_location->exits, i);
+  for (size_t i = 0; i < location->exits->used; i++) {
+    location_t *exit = (location_t *)bufAt(location->exits, i);
     strFmtAppend(
         summary, "  - %s (%s) [%s]\n", exit->object.name,
         exit->object.description,
@@ -153,8 +151,9 @@ static void generateAndValidate(ai_t *ai, const string_t *prompt,
   }
 }
 
-void dmDescribeWorld(dm_t *self, const world_t *world, string_t *description) {
-  key_t cache_key = world->current_location->object.name;
+void dmDescribeLocation(dm_t *self, const location_t *location,
+                        string_t *description) {
+  key_t cache_key = location->object.name;
   char *cached = mapGet(self->descriptions, cache_key);
   if (cached) {
     strFmt(description, "%s", cached);
@@ -170,23 +169,22 @@ void dmDescribeWorld(dm_t *self, const world_t *world, string_t *description) {
   strFmt(self->prompt, sys_prompt_tpl->data,
          NARRATOR_WORLD_DESC_SYS_PROMPT.data);
 
-  summarize(world, self->summary);
+  summarize(location, self->summary);
   strFmtAppend(self->prompt, "\n%s", self->summary->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
   // TODO: this seems inefficient: this list can never be longer than all
   // elements + all exits, it could be statically allocated
   words_t *must_haves cleanup(wordsDestroy) =
-      wordsCreate(world->current_location->items->used +
-                  world->current_location->exits->used);
+      wordsCreate(location->items->used + location->exits->used);
 
-  for (size_t i = 0; i < world->current_location->items->used; i++) {
-    item_t *item = bufAt(world->current_location->items, i);
+  for (size_t i = 0; i < location->items->used; i++) {
+    item_t *item = bufAt(location->items, i);
     bufPush(must_haves, item->object.name);
   }
 
-  for (size_t i = 0; i < world->current_location->exits->used; i++) {
-    location_t *exit = (location_t *)bufAt(world->current_location->exits, i);
+  for (size_t i = 0; i < location->exits->used; i++) {
+    location_t *exit = (location_t *)bufAt(location->exits, i);
     bufPush(must_haves, exit->object.name);
   }
 
@@ -238,7 +236,7 @@ void dmDescribeSuccess(dm_t *self, const world_t *world, const string_t *input,
   const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];
 
   strFmt(self->prompt, sys_prompt_tpl->data, NARRATOR_SUCCESS_SYS_PROMPT.data);
-  summarize(world, self->summary);
+  summarize(world->current_location, self->summary);
   strFmtAppend(self->prompt, "\n%s", self->summary->data);
   strFmtAppend(self->prompt, usr_prompt_tpl->data, input->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
@@ -277,6 +275,7 @@ void dmDestroy(dm_t **self) {
     char *memory = (*self)->descriptions->values[i];
     deallocate(&memory);
   }
+  // TODO should we clean also this just in case?
   mapDestroy(&(*self)->descriptions);
 
   deallocate(self);

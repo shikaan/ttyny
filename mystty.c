@@ -36,7 +36,7 @@ int main(void) {
 
   ui_handle_t *loading = loadingStart();
 
-  dmDescribeWorld(dm, world, response);
+  dmDescribeLocation(dm, world->current_location, response);
   loadingStop(&loading);
 
   printDescription(response);
@@ -81,7 +81,7 @@ int main(void) {
       world->current_location = location;
       // ignoring error: transition are expected to always succeed only for USE
       objectTransition(&location->object, &transition, action);
-      dmDescribeWorld(dm, world, response);
+      dmDescribeLocation(dm, location, response);
 
       loadingStop(&loading);
       printDescription(response);
