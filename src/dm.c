@@ -3,6 +3,7 @@
 #include "alloc.h"
 #include "buffers.h"
 #include "map.h"
+#include "ring.h"
 #include "utils.h"
 #include "world.h"
 
@@ -62,7 +63,7 @@ static void summarize(const world_t *world, string_t *summary) {
   }
 }
 
-dm_t *dmCreate(world_t* world) {
+dm_t *dmCreate(world_t *world) {
   dm_t *dm = allocate(sizeof(dm_t));
   panicif(!dm, "cannot allocate narrator");
 
@@ -76,8 +77,11 @@ dm_t *dmCreate(world_t* world) {
   dm->summary = strCreate(4096);
   panicif(!dm->summary, "cannot allocate summary buffer");
 
-  dm->memory = mapCreate(world->items->used + world->locations->used);
-  panicif(!dm->memory, "cannot allocate memory");
+  dm->descriptions = mapCreate(world->items->used + world->locations->used);
+  panicif(!dm->descriptions, "cannot allocate memory");
+
+  dm->history = ringCreate(3);
+  panicif(!dm->history, "cannot allocate history");
 
   return dm;
 }
@@ -151,9 +155,11 @@ static void generateAndValidate(ai_t *ai, const string_t *prompt,
 
 void dmDescribeWorld(dm_t *self, const world_t *world, string_t *description) {
   key_t cache_key = world->current_location->object.name;
-  const char *cached = mapGet(self->memory, cache_key);
+  char *cached = mapGet(self->descriptions, cache_key);
   if (cached) {
     strFmt(description, "%s", cached);
+    char *evicted = ringPushUniq(self->history, cached);
+    deallocate(&evicted);
     return;
   }
 
@@ -186,15 +192,20 @@ void dmDescribeWorld(dm_t *self, const world_t *world, string_t *description) {
 
   generateAndValidate(self->ai, self->prompt, description, must_haves);
 
-  (void)mapSet(self->memory, cache_key, strdup(description->data));
+  char *copy = strdup(description->data);
+  (void)mapSet(self->descriptions, cache_key, copy);
+  string_t *evicted = ringPushUniq(self->history, copy);
+  deallocate(&evicted);
 }
 
 void dmDescribeObject(dm_t *self, const object_t *object,
                       string_t *description) {
   key_t cache_key = object->name;
-  const char *cached = mapGet(self->memory, cache_key);
+  char *cached = mapGet(self->descriptions, cache_key);
   if (cached) {
     strFmt(description, "%s", cached);
+    char *evicted = ringPushUniq(self->history, cached);
+    deallocate(&evicted);
     return;
   }
   const config_t *config = self->ai->configuration;
@@ -213,35 +224,10 @@ void dmDescribeObject(dm_t *self, const object_t *object,
 
   generateAndValidate(self->ai, self->prompt, description, NULL);
 
-  (void)mapSet(self->memory, cache_key, strdup(description->data));
-}
-
-void dmDescribeFail(dm_t *self, failure_type_t failure, const string_t *input,
-                    string_t *comment) {
-  const config_t *config = self->ai->configuration;
-  const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
-  const string_t *usr_prompt_tpl = config->prompt_templates[PROMPT_TYPE_USR];
-  const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];
-
-  strFmt(self->prompt, sys_prompt_tpl->data, NARRATOR_FAILURE_SYS_PROMPT.data);
-
-  const char *tpl = "ACTION: %s\n"
-                    "FAILURE: %s";
-
-  char shot_buffer[256] = {};
-  for (size_t i = 0; i < arrLen(failure_shots); i++) {
-    const failure_shot_t shot = failure_shots[i];
-    snprintf(shot_buffer, sizeof(shot_buffer), tpl, shot.action,
-             failure_names[shot.failure]->data);
-    strFmtAppend(self->prompt, usr_prompt_tpl->data, shot_buffer);
-    strFmtAppend(self->prompt, res_prompt_tpl->data, shot.response);
-  }
-
-  strFmt(self->summary, tpl, input->data, failure_names[failure]->data);
-  strFmtAppend(self->prompt, usr_prompt_tpl->data, self->summary->data);
-  strFmtAppend(self->prompt, res_prompt_tpl->data, "");
-
-  generateAndValidate(self->ai, self->prompt, comment, &ACTION_MUST_HAVES);
+  char *copy = strdup(description->data);
+  (void)mapSet(self->descriptions, cache_key, copy);
+  string_t *evicted = ringPushUniq(self->history, copy);
+  deallocate(&evicted);
 }
 
 void dmDescribeSuccess(dm_t *self, const world_t *world, const string_t *input,
@@ -287,11 +273,11 @@ void dmDestroy(dm_t **self) {
   strDestroy(&(*self)->prompt);
   strDestroy(&(*self)->summary);
 
-  for (map_size_t i = 0; i < (*self)->memory->size; i++) {
-    char* memory = (*self)->memory->values[i];
+  for (map_size_t i = 0; i < (*self)->descriptions->size; i++) {
+    char *memory = (*self)->descriptions->values[i];
     deallocate(&memory);
   }
-  mapDestroy(&(*self)->memory);
+  mapDestroy(&(*self)->descriptions);
 
   deallocate(self);
 }
