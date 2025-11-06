@@ -10,10 +10,12 @@ void actions(void) {
   panicif(!cmd, "cannot initialize command buffer");
 
   action_type_t action;
+  operation_t op;
 
 #define test(Command, Action)                                                  \
   strFmt(cmd, "%s", Command);                                                  \
-  action = parserExtractAction(parser, cmd);                                   \
+  parserGetOperation(parser, &op, cmd);                                        \
+  action = op.as.action;                                                       \
   expectEqli(action, Action, Command);
 
   case("move");
