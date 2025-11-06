@@ -23,16 +23,13 @@ static const string_t NARRATOR_OBJECT_DESC_SYS_PROMPT =
     strConst("You are the narrator of a fantasy game. "
              "You describe ITEM in one sentence.");
 
-
-
 static const string_t NARRATOR_SUCCESS_SYS_PROMPT =
     strConst("You are the narrator of a fantasy game. "
              "You describe ACTION in one sentence. Use 'you' for the player.");
 
 static const string_t NARRATOR_END_GAME_SYS_PROMPT =
-    strConst("You are the narrator of a fantasy game. "
-             "In 2 sentences, describe ENDGAME for the player. Be encouraging. "
-             "Use 'you'.");
+    strConst("You are the narrator of a text adventure game. "
+             "In 3 sentences, summarize the end of the game.");
 
 static string_t RES_PROMPT = strConst("<|im_end|>\n<|im_start|>assistant\n%s");
 static string_t USR_PROMPT = strConst("<|im_end|>\n<|im_start|>user\n%s");
@@ -58,10 +55,10 @@ static config_t PARSER_CONFIG = {
 static config_t NARRATOR_CONFIG = {
     .path = "./models/qwen2.5-1.5b-instruct-q4_k_m.gguf",
     .min_p = 0.05F,
-    .temp = 0.6F,
+    .temp = 0.5F,
     .context_size = 2048,
     .top_k = 50,
-    .repetition_penalty = 1.22F,
+    .repetition_penalty = 1.25F,
     .seed = 0,
     .grammar = NULL,
     .prompt_templates =

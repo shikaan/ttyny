@@ -1,9 +1,10 @@
-#include "assets/urban_escape.h"
+#include "assets/speckled_band_world.h"
 #include "src/buffers.h"
 #include "src/dm.h"
 #include "src/panic.h"
 #include "src/parser.h"
 #include "src/screen.h"
+#include "src/tty.h"
 #include "src/utils.h"
 #include "src/world.h"
 #include <ggml.h>
@@ -16,7 +17,7 @@ int main(void) {
   string_t *input cleanup(strDestroy) = strCreate(512);
   string_t *response cleanup(strDestroy) = strCreate(4096);
   string_t *target cleanup(strDestroy) = strCreate(128);
-  world_t *world = &urban_escape_world;
+  world_t *world = &speckled_band_world;
 
   dm_t *dm cleanup(dmDestroy) = dmCreate(world);
   panicif(!dm, "cannot create dm");
@@ -257,9 +258,10 @@ int main(void) {
 
     game_state_t game_state = world->digest(&world->state);
     if (game_state != GAME_STATE_CONTINUE) {
+      loading = loadingStart();
       dmDescribeEndGame(dm, world, game_state, response);
       loadingStop(&loading);
-      printDescription(response);
+      printEndGame(response, game_state);
       return 0;
     }
   }

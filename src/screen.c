@@ -100,7 +100,7 @@ static void printResponse(string_t *response, const char *prefix) {
   putchar('\n');
 }
 
-void printError(string_t *response) { printResponse(response, " ! "); }
+void printError(string_t *response) { printResponse(response, fg_red(" !  ")); }
 
 void printStateUpdate(string_t *response) {
   puts("");
@@ -112,6 +112,15 @@ void printCommandOutput(string_t *response) {
 }
 
 void printDescription(string_t *response) { printResponse(response, " |  "); }
+
+void printEndGame(string_t *response, game_state_t state) {
+  if (state == GAME_STATE_VICTORY) {
+    strFmtAppend(response, fg_green("\n\n     >> You won! <<"))
+  } else {
+    strFmtAppend(response, fg_red("\n\n     >> You lost! <<"))
+  }
+  printResponse(response, "    ");
+}
 
 void printPrompt(void) { printf("> "); }
 

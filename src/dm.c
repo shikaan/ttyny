@@ -28,7 +28,7 @@ static words_t STOP_CHARS = bufConst(3, "[", "(", "*");
 static words_t ACTION_MUST_HAVES = bufConst(1, "you");
 
 static void summarize(const location_t *location, string_t *summary) {
-  strFmt(summary, "LOCATION: %s (%s) [%s]\n", location->object.name,
+  strFmt(summary, "LOCATION: %s: %s [%s]\n", location->object.name,
          location->object.description,
          bufAt(location->object.state_descriptions,
                location->object.current_state));
@@ -38,7 +38,7 @@ static void summarize(const location_t *location, string_t *summary) {
     for (size_t i = 0; i < location->items->used; i++) {
       item_t *item = bufAt(location->items, i);
       strFmtAppend(
-          summary, "  - %s (%s) [%s]\n", item->object.name,
+          summary, "  - %s: %s [%s]\n", item->object.name,
           item->object.description,
           bufAt(item->object.state_descriptions, item->object.current_state));
     }
@@ -48,7 +48,7 @@ static void summarize(const location_t *location, string_t *summary) {
   for (size_t i = 0; i < location->exits->used; i++) {
     location_t *exit = (location_t *)bufAt(location->exits, i);
     strFmtAppend(
-        summary, "  - %s (%s) [%s]\n", exit->object.name,
+        summary, "  - %s: %s [%s]\n", exit->object.name,
         exit->object.description,
         bufAt(exit->object.state_descriptions, exit->object.current_state));
   }
@@ -236,10 +236,11 @@ void dmDescribeEndGame(dm_t *self, const world_t *world, game_state_t state,
 
   const config_t *config = self->ai->configuration;
   const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
+  const string_t *usr_prompt_tpl = config->prompt_templates[PROMPT_TYPE_USR];
   const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];
 
   strFmt(self->prompt, sys_prompt_tpl->data, NARRATOR_END_GAME_SYS_PROMPT.data);
-  strFmtAppend(self->prompt, "\n ENDGAME: %s", world->end_game[state]);
+  strFmtAppend(self->prompt, usr_prompt_tpl->data, world->end_game[state]);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
   generateAndValidate(self->ai, self->prompt, description, &ACTION_MUST_HAVES);
