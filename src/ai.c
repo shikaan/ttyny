@@ -13,7 +13,7 @@
 #define GPU_LAYERS 99
 
 // This list is made of words that yield ONE token so that we can bias the model
-// not to use it. WOrds that take more than a token introduce risk (you may bias
+// not to use it. Words that take more than a token introduce risk (you may bias
 // input that is otherwise good when it's part of another word).
 // The leading space is on purpose
 static const char *STOP_WORDS[] = {
