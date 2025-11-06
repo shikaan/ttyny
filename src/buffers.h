@@ -146,9 +146,10 @@ static inline int strEq(const string_t *self, const string_t *other) {
          (strncmp(self->data, other->data, self->used) == 0);
 }
 
-static inline int strStartsWith(const string_t *self, const string_t *other) {
-  return self->used >= other->used &&
-         (strncmp(self->data, other->data, other->used) == 0);
+static inline int strStartsWith(const string_t *haysack,
+                                const string_t *needle) {
+  return haysack->used >= needle->used &&
+         (strncmp(haysack->data, needle->data, needle->used) == 0);
 }
 
 static inline void strTrim(string_t *self) {

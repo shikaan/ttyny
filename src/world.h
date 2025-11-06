@@ -14,32 +14,36 @@ typedef enum {
   ACTION_TYPE_USE,
   ACTION_TYPE_EXAMINE,
 
-  ACTION_TYPE_HELP,
-  ACTION_TYPE_STATUS,
-  ACTION_TYPE_QUIT,
-  ACTION_TYPE_TLDR,
-
   ACTION_TYPES,
 } action_type_t;
+
+typedef enum {
+  COMMAND_TYPE_UNKNOWN = -1,
+  COMMAND_TYPE_HELP = 0,
+  COMMAND_TYPE_STATUS,
+  COMMAND_TYPE_QUIT,
+  COMMAND_TYPE_TLDR,
+
+  COMMAND_TYPES
+} command_type_t;
 
 static string_t ACTION_MOVE = strConst("move");
 static string_t ACTION_USE = strConst("use");
 static string_t ACTION_TAKE = strConst("take");
 static string_t ACTION_DROP = strConst("drop");
 static string_t ACTION_EXAMINE = strConst("examine");
-static string_t ACTION_HELP = strConst("/help");
-static string_t ACTION_STATUS = strConst("/status");
-static string_t ACTION_QUIT = strConst("/quit");
-static string_t ACTION_TLDR = strConst("/tldr");
+
+static string_t COMMAND_HELP = strConst("/help");
+static string_t COMMAND_STATUS = strConst("/status");
+static string_t COMMAND_QUIT = strConst("/quit");
+static string_t COMMAND_TLDR = strConst("/tldr");
 
 static action_type_t actions_types[ACTION_TYPES] = {
-    ACTION_TYPE_MOVE,   ACTION_TYPE_TAKE,    ACTION_TYPE_DROP,
-    ACTION_TYPE_USE,    ACTION_TYPE_EXAMINE, ACTION_TYPE_HELP,
-    ACTION_TYPE_STATUS, ACTION_TYPE_QUIT,    ACTION_TYPE_TLDR};
+    ACTION_TYPE_MOVE, ACTION_TYPE_TAKE, ACTION_TYPE_DROP, ACTION_TYPE_USE,
+    ACTION_TYPE_EXAMINE};
 
 static string_t *action_names[ACTION_TYPES] = {
-    &ACTION_MOVE, &ACTION_TAKE,   &ACTION_DROP, &ACTION_USE, &ACTION_EXAMINE,
-    &ACTION_HELP, &ACTION_STATUS, &ACTION_QUIT, &ACTION_TLDR};
+    &ACTION_MOVE, &ACTION_TAKE, &ACTION_DROP, &ACTION_USE, &ACTION_EXAMINE};
 
 typedef enum {
   OBJECT_TYPE_UNKNOWN = -1,
@@ -49,48 +53,49 @@ typedef enum {
   OBJECT_TYPES,
 } object_type_t;
 
+// Unique identifier of the object in the world
+// must be human readable, because it will be displayed to the user
 typedef const char *object_name_t;
 
 static inline int objectNameEq(object_name_t self, object_name_t other) {
   return strcmp(self, other) == 0;
 }
 
-// Boolean map of traits for objects and location.
-// The traits are fixed. Interactions in the game change the state (last 2 bits)
-// according to the transactions
+// Boolean map of traits for objects and locations.
 //
-// ITEM  (76543210)
-// 0     = collectible
-// 1     = ...
-// 2     = ...
-// 3     = ...
-// 4     = ...
-// 5     = ...
-// 6     = ...
-// 7     = ...
-//
-// LOCATION (76543210)
-// 0     = ...
-// 1     = ...
-// 2     = ...
-// 3     = ...
-// 4     = ...
-// 5     = ...
-// (6-7) = 4 possible states
+// ITEM  (76543210)     |  LOCATION
+// 0     = collectible  |  0     = lit
+// 1     = ...          |  1     = ...
+// 2     = ...          |  2     = ...
+// 3     = ...          |  3     = ...
+// 4     = ...          |  4     = ...
+// 5     = ...          |  5     = ...
+// 6     = ...          |  6     = ...
+// 7     = ...          |  7     = ...
 typedef uint8_t traits_t;
 
+// A number representing the state of a given object
+// States are described in state_descriptions_t such that the n-th description
+// corresponds to the state n.
 typedef uint8_t object_state_t;
 
+// List of description of the state of the object.
+// These descriptions will be used by the language model to describe the object
+// in a given state
 typedef Buffer(const char *) state_descriptions_t;
 
+// When an object is affected by `trigger` its state changes from `from` to `to`
 typedef struct {
   action_type_t trigger;
   object_state_t from;
   object_state_t to;
 } transition_t;
 
+// List of transitions for a given object
 typedef Buffer(transition_t) transitions_t;
 
+// Objects describe generic game objects, such as items, locations, or NPCs
+// (not implemented yet).
 typedef struct {
   // Name of the object
   object_name_t name;
@@ -113,6 +118,8 @@ typedef enum {
   TRANSITION_RESULT_NO_TRANSITIONS,
 } transition_result_t;
 
+// Attempts an object transition due to `action`.
+// The result of the attempt is store in result.
 static inline void objectTransition(object_t *self, transition_result_t *result,
                                     action_type_t action) {
   if (!self->transitions) {
@@ -137,13 +144,13 @@ static inline int objectIsCollectible(object_t *self) {
   return (self->traits & 0b00000001) == 1;
 }
 
+// An item is an object the player can interact with. It represents a physical
+// thing like a lamp or an apple.
 typedef struct {
   object_t object;
 } item_t;
 
 typedef Buffer(item_t *) items_t;
-
-static const items_t NO_ITEMS = {0, 0, {}};
 
 static inline items_t *itemsCreate(size_t length) {
   items_t *items = NULL;
@@ -178,11 +185,11 @@ static inline void itemsClear(items_t *self) { bufClear(self, NULL); }
 
 static inline void itemsDestroy(items_t **self) { deallocate(self); }
 
+// A location is a game object representing a place the user can visit.
 struct location_t; // Forward declaration
 typedef Buffer(struct location_t *) locations_t;
 
 typedef struct {
-  // The base object MUST be the first member
   object_t object;
   // Objects to be found in this location
   items_t *items;

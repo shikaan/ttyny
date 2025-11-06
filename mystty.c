@@ -51,12 +51,53 @@ int main(void) {
     if (input->used == 0)
       continue;
 
-    world->state.turns++;
-
     strClear(response);
     loading = loadingStart();
 
-    action_type_t action = parserExtractAction(parser, input);
+    operation_t operation;
+    parserGetOperation(parser, &operation, input);
+
+    if (operation.type == OPERATION_TYPE_COMMAND) {
+      switch (operation.as.command) {
+      case COMMAND_TYPE_HELP: {
+        formatHelp(response, world);
+        loadingStop(&loading);
+        printCommandOutput(response);
+        break;
+      }
+      case COMMAND_TYPE_STATUS: {
+        formatStatus(response, world);
+        loadingStop(&loading);
+        printCommandOutput(response);
+        break;
+      }
+      case COMMAND_TYPE_TLDR: {
+        formatTldr(response, world);
+        loadingStop(&loading);
+        printCommandOutput(response);
+        break;
+      }
+      case COMMAND_TYPE_QUIT:
+        strFmt(response, "Okay, bye!");
+        loadingStop(&loading);
+        printCommandOutput(response);
+        return 0;
+      case COMMAND_TYPE_UNKNOWN:
+      case COMMAND_TYPES:
+      default: {
+        strFmt(response, "Not sure how to do that...");
+        loadingStop(&loading);
+        printError(response);
+        break;
+      }
+      }
+      continue;
+    }
+
+    action_type_t action = operation.as.action;
+
+    // Advance turn count only for actions, not for commands
+    world->state.turns++;
 
     item_t *item = NULL;
     location_t *location = NULL;
@@ -206,26 +247,6 @@ int main(void) {
       }
       break;
     }
-    case ACTION_TYPE_HELP: {
-      formatHelp(response, world);
-      loadingStop(&loading);
-      printCommandOutput(response);
-      break;
-    }
-    case ACTION_TYPE_STATUS: {
-      formatStatus(response, world);
-      loadingStop(&loading);
-      printCommandOutput(response);
-      break;
-    }
-    case ACTION_TYPE_TLDR: {
-      formatTldr(response, world);
-      loadingStop(&loading);
-      printCommandOutput(response);
-      break;
-    }
-    case ACTION_TYPE_QUIT:
-      return 0;
     case ACTION_TYPES:
     case ACTION_TYPE_UNKNOWN:
     default:

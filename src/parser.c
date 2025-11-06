@@ -1,6 +1,7 @@
 #include "parser.h"
 #include "configs/qwen.h"
 #include "panic.h"
+#include "world.h"
 
 static string_t ACTION_GRAMMAR = strConst(
     "root ::= \"move\" | \"use\" | \"take\" | \"drop\" | \"examine\"\n");
@@ -57,24 +58,36 @@ parser_t *parserCreate(void) {
   return parser;
 }
 
-action_type_t parserExtractAction(parser_t *self, const string_t *input) {
+void parserGetOperation(parser_t *self, operation_t *operation,
+                        const string_t *input) {
   const int is_command = bufAt(input, 0) == '/';
 
   if (is_command) {
-    if (input->used > 1) {
-      if (strStartsWith(&ACTION_HELP, input)) {
-        return ACTION_TYPE_HELP;
-      } else if (strStartsWith(&ACTION_STATUS, input)) {
-        return ACTION_TYPE_STATUS;
-      } else if (strStartsWith(&ACTION_QUIT, input)) {
-        return ACTION_TYPE_QUIT;
-      } else if (strStartsWith(&ACTION_TLDR, input)) {
-        return ACTION_TYPE_TLDR;
-      }
+    operation->type = OPERATION_TYPE_COMMAND;
+    operation->as.command = COMMAND_TYPE_UNKNOWN;
+
+    if (input->used <= 1)
+      return;
+
+    if (strStartsWith(&COMMAND_HELP, input)) {
+      operation->as.command = COMMAND_TYPE_HELP;
+      return;
+    } else if (strStartsWith(&COMMAND_STATUS, input)) {
+      operation->as.command = COMMAND_TYPE_STATUS;
+      return;
+    } else if (strStartsWith(&COMMAND_QUIT, input)) {
+      operation->as.command = COMMAND_TYPE_QUIT;
+      return;
+    } else if (strStartsWith(&COMMAND_TLDR, input)) {
+      operation->as.command = COMMAND_TYPE_TLDR;
+      return;
     }
 
-    return ACTION_TYPE_UNKNOWN;
+    return;
   }
+
+  operation->type = OPERATION_TYPE_ACTION;
+  operation->as.action = ACTION_TYPE_UNKNOWN;
 
   const config_t *config = self->ai->configuration;
   const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
@@ -101,11 +114,10 @@ action_type_t parserExtractAction(parser_t *self, const string_t *input) {
 
   for (size_t i = 0; i < ACTION_TYPES; i++) {
     if (strEq(self->response, action_names[i])) {
-      return actions_types[i];
+      operation->as.action = actions_types[i];
+      return;
     }
   }
-
-  return ACTION_TYPE_UNKNOWN;
 }
 
 void parserExtractTarget(parser_t *self, const string_t *input,
