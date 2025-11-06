@@ -18,7 +18,7 @@ typedef struct {
   value_t *values;
 } map_t;
 
-static inline map_size_t memoryMakeKey(const map_t *self, key_t key) {
+static inline map_size_t mapMakeKey(const map_t *self, key_t key) {
   uint64_t hash = 14695981039346656037U;
   const uint64_t prime = 1099511628211U;
 
@@ -60,10 +60,10 @@ static inline int hasCollision(const map_t *self, key_t key, map_size_t index) {
   return old_key != NULL && strcmp(key, old_key) != 0;
 }
 
-[[nodiscard]] static inline map_result_t mapSet(map_t *self, const char *key,
-                                                void *value) {
+[[nodiscard]] static inline map_result_t mapSet(map_t *self, const key_t key,
+                                                value_t value) {
   panicif(!self, "map cannot not be null");
-  map_size_t index = memoryMakeKey(self, key);
+  map_size_t index = mapMakeKey(self, key);
 
   if (hasCollision(self, key, index)) {
     uint8_t i;
@@ -90,7 +90,7 @@ set:
 
 static inline value_t mapGet(const map_t *self, const key_t key) {
   panicif(!self, "map cannot not be null");
-  const map_size_t index = memoryMakeKey(self, key);
+  const map_size_t index = mapMakeKey(self, key);
 
   for (map_size_t i = 0; i < self->size; i++) {
     map_size_t probed_idx = (index + i) % self->size;
@@ -105,6 +105,16 @@ static inline value_t mapGet(const map_t *self, const key_t key) {
   }
 
   return NULL;
+}
+
+static inline value_t mapDelete(map_t *self, const key_t key) {
+  value_t previous = mapGet(self, key);
+  if (!previous)
+    return NULL;
+
+  // Cannot fail allocations, value is already there.
+  (void)mapSet(self, key, NULL);
+  return previous;
 }
 
 static inline void mapDestroy(map_t **self) {

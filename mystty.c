@@ -192,13 +192,14 @@ int main(void) {
 
       if (transition == TRANSITION_RESULT_OK) {
         dmDescribeSuccess(dm, world, input, response);
+        dmForget(dm, &item->object);
         loadingStop(&loading);
 
         printDescription(response);
         formatUse(response, item);
         printStateUpdate(response);
       } else {
-        strFmt(response, "Did you mean %s? Unfortunately, cannot be used...",
+        strFmt(response, "Did you mean %s? Unfortunately, it cannot be used...",
                item->object.name);
         loadingStop(&loading);
         printError(response);

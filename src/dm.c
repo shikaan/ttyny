@@ -3,7 +3,6 @@
 #include "alloc.h"
 #include "buffers.h"
 #include "map.h"
-#include "ring.h"
 #include "utils.h"
 #include "world.h"
 
@@ -157,8 +156,6 @@ void dmDescribeLocation(dm_t *self, const location_t *location,
   char *cached = mapGet(self->descriptions, cache_key);
   if (cached) {
     strFmt(description, "%s", cached);
-    char *evicted = ringPushUniq(self->history, cached);
-    deallocate(&evicted);
     return;
   }
 
@@ -192,8 +189,6 @@ void dmDescribeLocation(dm_t *self, const location_t *location,
 
   char *copy = strdup(description->data);
   (void)mapSet(self->descriptions, cache_key, copy);
-  string_t *evicted = ringPushUniq(self->history, copy);
-  deallocate(&evicted);
 }
 
 void dmDescribeObject(dm_t *self, const object_t *object,
@@ -202,8 +197,6 @@ void dmDescribeObject(dm_t *self, const object_t *object,
   char *cached = mapGet(self->descriptions, cache_key);
   if (cached) {
     strFmt(description, "%s", cached);
-    char *evicted = ringPushUniq(self->history, cached);
-    deallocate(&evicted);
     return;
   }
   const config_t *config = self->ai->configuration;
@@ -224,8 +217,6 @@ void dmDescribeObject(dm_t *self, const object_t *object,
 
   char *copy = strdup(description->data);
   (void)mapSet(self->descriptions, cache_key, copy);
-  string_t *evicted = ringPushUniq(self->history, copy);
-  deallocate(&evicted);
 }
 
 void dmDescribeSuccess(dm_t *self, const world_t *world, const string_t *input,
@@ -261,6 +252,12 @@ void dmDescribeEndGame(dm_t *self, const world_t *world, game_state_t state,
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
   generateAndValidate(self->ai, self->prompt, description, &ACTION_MUST_HAVES);
+}
+
+void dmForget(dm_t *self, const object_t *object) {
+  key_t cache_key = object->name;
+  char *value = mapDelete(self->descriptions, cache_key);
+  deallocate(&value);
 }
 
 void dmDestroy(dm_t **self) {
