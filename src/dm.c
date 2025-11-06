@@ -11,12 +11,6 @@
 #include <stdio.h>
 #include <string.h>
 
-typedef struct {
-  const char *action;
-  const failure_type_t failure;
-  const char *response;
-} failure_shot_t;
-
 typedef Buffer(const char *) words_t;
 
 static inline words_t *wordsCreate(size_t len) {

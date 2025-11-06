@@ -55,29 +55,6 @@ static inline int objectNameEq(object_name_t self, object_name_t other) {
   return strcmp(self, other) == 0;
 }
 
-typedef enum {
-  FAILURE_TYPE_INVALID_TARGET,
-  FAILURE_TYPE_INVALID_LOCATION,
-  FAILURE_TYPE_INVALID_ITEM,
-  FAILURE_TYPE_CANNOT_COLLECT_ITEM,
-  FAILURE_TYPE_CANNOT_BE_USED,
-
-  FAILURES,
-} failure_type_t;
-
-static string_t FAILURE_INVALID_TARGET = strConst("missing or invalid target");
-static string_t FAILURE_INVALID_LOCATION =
-    strConst("missing or invalid location");
-static string_t FAILURE_INVALID_ITEM = strConst("missing or invalid item");
-static string_t FAILURE_CANNOT_COLLECT_ITEM = strConst("cannot collect item");
-static string_t FAILURE_CANNOT_BE_USED = strConst("item cannot be used");
-
-static string_t *failure_names[FAILURES] = {
-    &FAILURE_INVALID_TARGET, &FAILURE_INVALID_LOCATION,
-    &FAILURE_INVALID_ITEM,   &FAILURE_CANNOT_COLLECT_ITEM,
-    &FAILURE_CANNOT_BE_USED,
-};
-
 // Boolean map of traits for objects and location.
 // The traits are fixed. Interactions in the game change the state (last 2 bits)
 // according to the transactions
@@ -258,7 +235,6 @@ typedef struct {
   location_t *current_location;
   // Callback to call on each round to see if the game is over
   digest_t digest;
-
   // Brief description of end game conditions to allow AI to write a story
   const char *end_game[GAME_STATES];
 } world_t;
