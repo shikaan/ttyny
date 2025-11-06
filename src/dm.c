@@ -71,9 +71,6 @@ dm_t *dmCreate(world_t *world) {
   dm->descriptions = mapCreate(world->items->used + world->locations->used);
   panicif(!dm->descriptions, "cannot allocate memory");
 
-  dm->history = ringCreate(3);
-  panicif(!dm->history, "cannot allocate history");
-
   return dm;
 }
 
