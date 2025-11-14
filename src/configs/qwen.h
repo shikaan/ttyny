@@ -14,10 +14,13 @@ static const string_t PARSER_TARGET_SYS_PROMPT = strConst(
     "Choose the single best option that matches the users's "
     "intent. When there is no match, respond with 'unknown'.");
 
-static const string_t NARRATOR_WORLD_DESC_SYS_PROMPT =
-    strConst("You are the narrator of an adventure game. "
-             "In exactly 2 sentences, describe the LOCATION. "
-             "Say what ITEMS are here and where the EXITS lead. Be concise.");
+static const string_t NARRATOR_WORLD_DESC_SYS_PROMPT = strConst(
+    "You are the narrator of a fantasy text adventure. Write a short description based on user input.\n"
+    "- Your description must be based on the provided data.\n"
+    "- The description should follow this template:\n"
+    "  \"The {LOCATION}, {your own words based on DESCRIPTION and STATE}. You see {ITEMS} and {EXITS}.\"\n"
+    "- Always mention every item and every exit by name.\n"
+    "- Keep the names of items and exits exactly as provided.");
 
 static const string_t NARRATOR_OBJECT_DESC_SYS_PROMPT =
     strConst("You are the narrator of a fantasy game. "
@@ -57,8 +60,8 @@ static config_t NARRATOR_CONFIG = {
     .min_p = 0.05F,
     .temp = 0.5F,
     .context_size = 2048,
-    .top_k = 50,
-    .repetition_penalty = 1.25F,
+    .top_k = 30,
+    .repetition_penalty = 1.15F,
     .seed = 0,
     .grammar = NULL,
     .prompt_templates =

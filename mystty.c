@@ -4,7 +4,6 @@
 #include "src/panic.h"
 #include "src/parser.h"
 #include "src/screen.h"
-#include "src/tty.h"
 #include "src/utils.h"
 #include "src/world.h"
 #include <ggml.h>
@@ -17,7 +16,6 @@ int main(void) {
   string_t *input cleanup(strDestroy) = strCreate(512);
   string_t *response cleanup(strDestroy) = strCreate(4096);
   string_t *target cleanup(strDestroy) = strCreate(128);
-  world_t *world = &speckled_band_world;
 
   dm_t *dm cleanup(dmDestroy) = dmCreate(world);
   panicif(!dm, "cannot create dm");

@@ -11,14 +11,7 @@
 #include <time.h>
 
 #define GPU_LAYERS 99
-
-// This list is made of words that yield ONE token so that we can bias the model
-// not to use it. Words that take more than a token introduce risk (you may bias
-// input that is otherwise good when it's part of another word).
-// The leading space is on purpose
-static const char *STOP_WORDS[] = {
-    " item", " items", " inventory", " player", " location", " EXIT",
-};
+static const char STOP_CHARS[] = {'[', '*', '('};
 
 #define throw(Error)                                                           \
   *result = Error;                                                             \
@@ -53,6 +46,9 @@ void aiResultFormat(ai_result_t res, string_t *response) {
   case AI_RESULT_ERROR_ALLOCATION_FAILED:
     strFmt(response, "allocation failed");
     return;
+  case AI_RESULT_ERROR_INVALID_OUTPUT_DETECTED:
+    strFmt(response, "invalid output");
+    return;
   default:
   case AI_RESULT_ERROR:
     strFmt(response, "unexpected error");
@@ -60,18 +56,20 @@ void aiResultFormat(ai_result_t res, string_t *response) {
   }
 }
 
+static int containsStopChar(char string[]) {
+  for (size_t i = 0; i < arrLen(STOP_CHARS); i++) {
+    if (strchr(string, STOP_CHARS[i]) != NULL) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
 static void filterLogs(enum ggml_log_level level, const char *text,
                        void *data) {
   (void)level;
   (void)text;
   (void)data;
-}
-
-static llama_token aiTokenizeWord(ai_t *self, const char *word) {
-  llama_token tbuf[8];
-  int len = (int)strlen(word);
-  int n = llama_tokenize(self->vocabulary, word, len, tbuf, 8, false, false);
-  return n == 1 ? tbuf[0] : (llama_token)-1;
 }
 
 static void aiInitSampler(ai_t *ai, ai_result_t *res, config_t *configuration) {
@@ -95,24 +93,6 @@ static void aiInitSampler(ai_t *ai, ai_result_t *res, config_t *configuration) {
     }
     llama_sampler_chain_add(ai->sampler, grammar_sampler);
   }
-
-  llama_logit_bias bias_list[arrLen(STOP_WORDS)];
-  for (size_t i = 0; i < arrLen(STOP_WORDS); i++) {
-    const char *word = STOP_WORDS[i];
-    llama_token token = aiTokenizeWord(ai, word);
-    bias_list[i] = (llama_logit_bias){token, -100.0f};
-  }
-
-  int32_t n_vocab = llama_vocab_n_tokens(ai->vocabulary);
-  struct llama_sampler *bias_sampler =
-      llama_sampler_init_logit_bias(n_vocab, arrLen(STOP_WORDS), bias_list);
-
-  if (!bias_sampler) {
-    *res = AI_RESULT_ERROR;
-    return;
-  }
-
-  llama_sampler_chain_add(ai->sampler, bias_sampler);
 
   llama_sampler_chain_add(ai->sampler,
                           llama_sampler_init_penalties(
@@ -213,6 +193,10 @@ void aiGenerate(ai_t *ai, ai_result_t *result, const string_t *prompt,
 
     if (offset < 0) {
       throw(AI_RESULT_ERROR_TOKEN_PARSING_FAILED);
+    }
+
+    if (containsStopChar(parsed_token)) {
+      throw(AI_RESULT_ERROR_INVALID_OUTPUT_DETECTED);
     }
 
     if (response->used + (size_t)offset > response->length) {

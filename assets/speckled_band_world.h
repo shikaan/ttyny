@@ -35,10 +35,11 @@
  *   - Leash Hook: reptile scale residue
  *
  * TIMED FAILURE:
- *   Trigger: First entry into Roylott's Study (ACTION_TYPE_MOVE to roylott_study)
- *   Reason: Roylott notices intrusion in his private space, confirms investigation, plans escape
- *   Duration: 12 turns after trigger
- *   Consequence: Roylott flees to India if evidence not assembled and acted upon in time
+ *   Trigger: First entry into Roylott's Study (ACTION_TYPE_MOVE to
+ * roylott_study) Reason: Roylott notices intrusion in his private space,
+ * confirms investigation, plans escape Duration: 12 turns after trigger
+ *   Consequence: Roylott flees to India if evidence not assembled and acted
+ * upon in time
  */
 
 // Total items in world
@@ -50,9 +51,9 @@
 
 // Witness Statement (collectible document)
 static state_descriptions_t witness_statement_states_buf =
-    bufConst(2, "sealed envelope addressed to detective",
+    bufConst(2, "sealed envelope",
              "Helen testimony: midnight whistling, metallic clang, Julia's "
-             "final words speckled band");
+             "final words: speckled band");
 
 // Ventilator Grate (non-collectible, fixed between rooms)
 static state_descriptions_t ventilator_grate_states_buf =
@@ -254,7 +255,7 @@ static item_t leash_hook = {
  * ======================================================================== */
 
 // Entry Hall: where investigation begins, initial briefing materials
-static items_t entry_hall_items_buf =
+static items_t grand_foyer_items_buf =
     bufInit(TOTAL_ITEMS, 2, &witness_statement, &medical_report, NULL, NULL,
             NULL, NULL, NULL, NULL, NULL, NULL);
 
@@ -277,11 +278,11 @@ static items_t connecting_passage_items_buf =
  * LOCATION STATE DESCRIPTIONS
  * ======================================================================== */
 
-static state_descriptions_t entry_hall_states_buf =
+static state_descriptions_t grand_foyer_states_buf =
     bufConst(1, "grand but decaying entrance, cold draft, faded portraits");
 
 static state_descriptions_t julia_bedroom_states_buf =
-    bufConst(1, "locked bedroom, musty and undisturbed since tragedy");
+    bufConst(1, "locked bedroom, musty and intact since tragedy");
 
 static state_descriptions_t roylott_study_states_buf = bufConst(
     1, "cluttered study, tobacco smoke, exotic animal smell, Indian artifacts");
@@ -294,24 +295,24 @@ static state_descriptions_t connecting_passage_states_buf =
  * ======================================================================== */
 
 // Forward declarations for circular references
-static location_t entry_hall;
+static location_t grand_foyer;
 static location_t julia_bedroom;
 static location_t roylott_study;
 static location_t connecting_passage;
 
 // Entry Hall exits
-static locations_t entry_hall_exits_buf =
+static locations_t grand_foyer_exits_buf =
     bufConst(2, (struct location_t *)&julia_bedroom,
              (struct location_t *)&roylott_study);
 
 // Julia's Bedroom exits
 static locations_t julia_bedroom_exits_buf =
-    bufConst(2, (struct location_t *)&entry_hall,
+    bufConst(2, (struct location_t *)&grand_foyer,
              (struct location_t *)&connecting_passage);
 
 // Roylott's Study exits
 static locations_t roylott_study_exits_buf =
-    bufConst(2, (struct location_t *)&entry_hall,
+    bufConst(2, (struct location_t *)&grand_foyer,
              (struct location_t *)&connecting_passage);
 
 // Connecting Passage exits
@@ -320,19 +321,19 @@ static locations_t connecting_passage_exits_buf =
              (struct location_t *)&roylott_study);
 
 // Location objects
-static location_t entry_hall = {
-    .object = {.name = "Entry Hall",
+static location_t grand_foyer = {
+    .object = {.name = "Grand Foyer",
                .type = OBJECT_TYPE_LOCATION,
                .current_state = 0,
                .description = "main entrance of Stoke Moran manor",
-               .state_descriptions = &entry_hall_states_buf,
+               .state_descriptions = &grand_foyer_states_buf,
                .traits = 0b00000001, // lit
                .transitions = NULL},
-    .items = &entry_hall_items_buf,
-    .exits = &entry_hall_exits_buf};
+    .items = &grand_foyer_items_buf,
+    .exits = &grand_foyer_exits_buf};
 
 static location_t julia_bedroom = {
-    .object = {.name = "Julia Bedroom",
+    .object = {.name = "Julia's Bedroom",
                .type = OBJECT_TYPE_LOCATION,
                .current_state = 0,
                .description =
@@ -370,7 +371,7 @@ static location_t connecting_passage = {
  * ======================================================================== */
 
 static locations_t all_locations = bufConst(
-    4, (struct location_t *)&entry_hall, (struct location_t *)&julia_bedroom,
+    4, (struct location_t *)&grand_foyer, (struct location_t *)&julia_bedroom,
     (struct location_t *)&roylott_study,
     (struct location_t *)&connecting_passage);
 
@@ -395,9 +396,11 @@ static items_t inventory = bufInit(TOTAL_ITEMS, 0, NULL, NULL, NULL, NULL, NULL,
  *
  * TIMED FAILURE TRIGGER:
  *   - Starts when player first enters Roylott's Study (location transition)
- *   - Reason: Roylott notices intrusion, confirms Helen brought investigator, plans escape
+ *   - Reason: Roylott notices intrusion, confirms Helen brought investigator,
+ * plans escape
  *   - Duration: 12 turns after entering study
- *   - Consequence: If evidence not assembled within 12 turns, Roylott flees to India
+ *   - Consequence: If evidence not assembled within 12 turns, Roylott flees to
+ * India
  *
  * VICTORY CONDITIONS (any ONE set satisfies):
  *
@@ -420,8 +423,9 @@ static game_state_t digest(world_state_t *state) {
   // Static variable to track when countdown begins (-1 = not started)
   static int trigger_turn = -1;
 
-  // Start countdown when player first interacts with ANY item in Roylott's Study
-  // This indicates they've entered and begun investigating his private space
+  // Start countdown when player first interacts with ANY item in Roylott's
+  // Study This indicates they've entered and begun investigating his private
+  // space
   if (trigger_turn == -1) {
     if (metal_safe.object.current_state > 0 ||
         brass_whistle.object.current_state > 0 ||
@@ -446,8 +450,9 @@ static game_state_t digest(world_state_t *state) {
     return GAME_STATE_VICTORY;
   }
 
-  // TIMED FAILURE: 12 turns after entering Roylott's Study (interacting with study items)
-  // If timer started and 12 turns elapsed without victory, Roylott flees
+  // TIMED FAILURE: 12 turns after entering Roylott's Study (interacting with
+  // study items) If timer started and 12 turns elapsed without victory, Roylott
+  // flees
   if (trigger_turn >= 0 && state->turns >= trigger_turn + 12) {
     return GAME_STATE_DEAD;
   }
@@ -464,7 +469,7 @@ static world_t speckled_band_world = {
     .state = {.turns = 0, .inventory = &inventory},
     .locations = &all_locations,
     .items = &all_objects,
-    .current_location = &entry_hall,
+    .current_location = &grand_foyer,
     .digest = digest,
     .end_game = {
         // GAME_STATE_CONTINUE (index 0)
@@ -482,5 +487,9 @@ static world_t speckled_band_world = {
         "Helen Stoner is saved, Roylott arrested, justice served.",
 
         // GAME_STATE_DEAD (index 2)
-        "Time expired. Your intrusion into Dr. Roylott's study alerted him to the investigation. "
-        "Sensing exposure was imminent, he fled England to his connections in India beyond extradition."}};
+        "Time expired. Your intrusion into Dr. Roylott's study alerted him to "
+        "the investigation. "
+        "Sensing exposure was imminent, he fled England to his connections in "
+        "India beyond extradition."}};
+
+static world_t *world = &speckled_band_world;

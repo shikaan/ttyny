@@ -34,6 +34,12 @@ tests/parser.test: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerat
 	-framework Foundation -framework Metal -framework MetalKit
 tests/parser.test: src/ai.o src/parser.o $(LLAMA_STATIC_LIBS)
 
+tests/narrator.test: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
+	-Ivendor/llama.cpp/ggml/include
+tests/narrator.test: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
+	-framework Foundation -framework Metal -framework MetalKit
+tests/narrator.test: src/ai.o src/dm.o $(LLAMA_STATIC_LIBS)
+
 .PHONY: test
 test: tests/buffers.test tests/parser.test tests/map.test
 	tests/buffers.test

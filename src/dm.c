@@ -22,39 +22,42 @@ static inline words_t *wordsCreate(size_t len) {
 static inline void wordsDestroy(words_t **self) { deallocate(self); }
 
 static words_t STOP_WORDS =
-    bufConst(6, "item", "items", "inventory", "player", "player's", "location");
+    bufConst(4, "inventory", "player", "player's", "location");
 static words_t STOP_WORDS_CASE = bufConst(3, "EXITS", "EXIT", "ITEMS");
-static words_t STOP_CHARS = bufConst(3, "[", "(", "*");
 static words_t ACTION_MUST_HAVES = bufConst(1, "you");
 
-static void summarize(const location_t *location, string_t *summary) {
-  strFmt(summary, "LOCATION: %s: %s [%s]\n", location->object.name,
-         location->object.description,
+static void describeLocation(const location_t *location, string_t *summary) {
+  strFmt(summary,
+         "LOCATION: %s\n"
+         "DESCRIPTION: %s\n"
+         "STATE: %s\n",
+         location->object.name, location->object.description,
          bufAt(location->object.state_descriptions,
                location->object.current_state));
 
   if (location->items->used) {
-    strFmtAppend(summary, "ITEMS:\n");
+    strFmtAppend(summary, "\nITEMS: ");
     for (size_t i = 0; i < location->items->used; i++) {
       item_t *item = bufAt(location->items, i);
-      strFmtAppend(
-          summary, "  - %s: %s [%s]\n", item->object.name,
-          item->object.description,
-          bufAt(item->object.state_descriptions, item->object.current_state));
+      if (i > 0)
+        strFmtAppend(summary, ", ");
+      strFmtAppend(summary, "%s", item->object.name);
     }
   }
 
-  strFmtOffset(summary, summary->used, "EXITS:\n");
+  strFmtAppend(summary, "\nEXITS: ");
   for (size_t i = 0; i < location->exits->used; i++) {
     location_t *exit = (location_t *)bufAt(location->exits, i);
-    strFmtAppend(
-        summary, "  - %s: %s [%s]\n", exit->object.name,
-        exit->object.description,
-        bufAt(exit->object.state_descriptions, exit->object.current_state));
+    if (i > 0)
+      strFmtAppend(summary, ", ");
+    strFmtAppend(summary, "%s", exit->object.name);
   }
+  strFmtAppend(summary, "\n");
 }
 
 dm_t *dmCreate(world_t *world) {
+  panicif(!world || !world->items || !world->locations,
+          "need to init world first");
   dm_t *dm = allocate(sizeof(dm_t));
   panicif(!dm, "cannot allocate narrator");
 
@@ -88,6 +91,7 @@ static int hasStopWords(string_t *response) {
     for (size_t i = 0; i < STOP_WORDS.used; i++) {
       const char *word = bufAt(&STOP_WORDS, i);
       if (strcasecmp(token, word) == 0) {
+        info("Invalid: Found a STOP WORD %s", word);
         return 1;
       }
     }
@@ -95,13 +99,7 @@ static int hasStopWords(string_t *response) {
     for (size_t i = 0; i < STOP_WORDS_CASE.used; i++) {
       const char *word = bufAt(&STOP_WORDS_CASE, i);
       if (strcmp(token, word) == 0) {
-        return 1;
-      }
-    }
-
-    for (size_t i = 0; i < STOP_CHARS.used; i++) {
-      const char *word = bufAt(&STOP_CHARS, i);
-      if (strchr(token, word[0]) != NULL) {
+        info("Invalid: Found a STOP WORD %s", word);
         return 1;
       }
     }
@@ -120,6 +118,7 @@ static int hasAllMustHaves(string_t *response, words_t *must_haves) {
   for (size_t i = 0; i < must_haves->used; i++) {
     const char *word = bufAt(must_haves, i);
     if (!strcasestr(response->data, word)) {
+      info("Invalid: Missing must have %s", word);
       return 0;
     }
   }
@@ -136,8 +135,17 @@ static void generateAndValidate(ai_t *ai, const string_t *prompt,
     aiReset(ai, &result);
     panicif(result != AI_RESULT_OK, "cannot reset model state");
     aiGenerate(ai, &result, prompt, response);
-    panicif(result != AI_RESULT_OK, "cannot generate response");
+    if (result != AI_RESULT_OK) {
+      valid = 0;
+      continue;
+    }
     valid = !hasStopWords(response) && hasAllMustHaves(response, must_haves);
+
+    if (!valid)
+      debug("Rejected:\n%s\n", response->data);
+  }
+  if (!valid) {
+    info("Invalid: giving up")
   }
 }
 
@@ -151,14 +159,15 @@ void dmDescribeLocation(dm_t *self, const location_t *location,
   }
 
   const config_t *config = self->ai->configuration;
+  const string_t *usr_prompt_tpl = config->prompt_templates[PROMPT_TYPE_USR];
   const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
   const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];
 
   strFmt(self->prompt, sys_prompt_tpl->data,
          NARRATOR_WORLD_DESC_SYS_PROMPT.data);
 
-  summarize(location, self->summary);
-  strFmtAppend(self->prompt, "\n%s", self->summary->data);
+  describeLocation(location, self->summary);
+  strFmtAppend(self->prompt, usr_prompt_tpl->data, self->summary->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
   // TODO: this seems inefficient: this list can never be longer than all
@@ -176,6 +185,7 @@ void dmDescribeLocation(dm_t *self, const location_t *location,
     bufPush(must_haves, exit->object.name);
   }
 
+  debug("Prompt:\n%s\n", self->prompt->data);
   generateAndValidate(self->ai, self->prompt, description, must_haves);
 
   char *copy = strdup(description->data);
@@ -218,7 +228,7 @@ void dmDescribeSuccess(dm_t *self, const world_t *world, const string_t *input,
   const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];
 
   strFmt(self->prompt, sys_prompt_tpl->data, NARRATOR_SUCCESS_SYS_PROMPT.data);
-  summarize(world->current_location, self->summary);
+  describeLocation(world->current_location, self->summary);
   strFmtAppend(self->prompt, "\n%s", self->summary->data);
   strFmtAppend(self->prompt, usr_prompt_tpl->data, input->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
