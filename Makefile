@@ -41,10 +41,11 @@ tests/narrator.test: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Acceler
 tests/narrator.test: src/ai.o src/dm.o $(LLAMA_STATIC_LIBS)
 
 .PHONY: test
-test: tests/buffers.test tests/parser.test tests/map.test
+test: tests/buffers.test tests/parser.test tests/map.test tests/narrator.test
 	tests/buffers.test
 	tests/map.test
 	tests/parser.test
+	tests/narrator.test
 
 .PHONY: clean
 clean:
