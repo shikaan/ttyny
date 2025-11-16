@@ -1,6 +1,6 @@
 #include "assets/speckled_band_world.h"
 #include "src/buffers.h"
-#include "src/dm.h"
+#include "src/master.h"
 #include "src/panic.h"
 #include "src/parser.h"
 #include "src/screen.h"
@@ -17,8 +17,8 @@ int main(void) {
   string_t *response cleanup(strDestroy) = strCreate(4096);
   string_t *target cleanup(strDestroy) = strCreate(128);
 
-  dm_t *dm cleanup(dmDestroy) = dmCreate(world);
-  panicif(!dm, "cannot create dm");
+  master_t *master cleanup(masterDestroy) = masterCreate(world);
+  panicif(!master, "cannot create master");
 
   parser_t *parser cleanup(parserDestroy) = parserCreate();
   panicif(!parser, "cannot create parser");
@@ -35,7 +35,7 @@ int main(void) {
 
   ui_handle_t *loading = loadingStart();
 
-  dmDescribeLocation(dm, world->current_location, response);
+  masterDescribeLocation(master, world->current_location, response);
   loadingStop(&loading);
 
   printDescription(response);
@@ -121,7 +121,7 @@ int main(void) {
       world->current_location = location;
       // ignoring error: transition are expected to always succeed only for USE
       objectTransition(&location->object, &transition, action);
-      dmDescribeLocation(dm, location, response);
+      masterDescribeLocation(master, location, response);
 
       loadingStop(&loading);
       printDescription(response);
@@ -138,7 +138,7 @@ int main(void) {
       if (item) {
         // ignoring error: transitions always succeed only for USE
         objectTransition(&item->object, &transition, action);
-        dmDescribeObject(dm, &item->object, response);
+        masterDescribeObject(master, &item->object, response);
         loadingStop(&loading);
         printDescription(response);
         break;
@@ -147,7 +147,7 @@ int main(void) {
       if (location) {
         // ignoring error: transitions always succeed only for USE
         objectTransition(&location->object, &transition, action);
-        dmDescribeObject(dm, &location->object, response);
+        masterDescribeObject(master, &location->object, response);
         loadingStop(&loading);
         printDescription(response);
         break;
@@ -179,7 +179,7 @@ int main(void) {
       itemsAdd(world->state.inventory, item);
       itemsRemove(world->current_location->items, item);
 
-      dmDescribeSuccess(dm, world, input, response);
+      masterDescribeSuccess(master, world, input, response);
 
       loadingStop(&loading);
       printDescription(response);
@@ -205,7 +205,7 @@ int main(void) {
       itemsAdd(world->current_location->items, item);
       itemsRemove(world->state.inventory, item);
 
-      dmDescribeSuccess(dm, world, input, response);
+      masterDescribeSuccess(master, world, input, response);
       loadingStop(&loading);
 
       printDescription(response);
@@ -231,8 +231,8 @@ int main(void) {
       objectTransition(&item->object, &transition, action);
 
       if (transition == TRANSITION_RESULT_OK) {
-        dmDescribeSuccess(dm, world, input, response);
-        dmForget(dm, &item->object);
+        masterDescribeSuccess(master, world, input, response);
+        masterForget(master, &item->object);
         loadingStop(&loading);
 
         printDescription(response);
@@ -257,7 +257,7 @@ int main(void) {
     game_state_t game_state = world->digest(&world->state);
     if (game_state != GAME_STATE_CONTINUE) {
       loading = loadingStart();
-      dmDescribeEndGame(dm, world, game_state, response);
+      masterDescribeEndGame(master, world, game_state, response);
       loadingStop(&loading);
       printEndGame(response, game_state);
       return 0;

@@ -26,7 +26,7 @@ mystty: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
 	-Ivendor/llama.cpp/ggml/include
 mystty: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
 	-framework Foundation -framework Metal -framework MetalKit
-mystty: src/ai.o src/screen.o src/dm.o src/parser.o $(LLAMA_STATIC_LIBS)
+mystty: src/ai.o src/screen.o src/master.o src/parser.o $(LLAMA_STATIC_LIBS)
 
 tests/parser.test: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
 	-Ivendor/llama.cpp/ggml/include
@@ -34,18 +34,18 @@ tests/parser.test: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerat
 	-framework Foundation -framework Metal -framework MetalKit
 tests/parser.test: src/ai.o src/parser.o $(LLAMA_STATIC_LIBS)
 
-tests/narrator.test: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
+tests/master.test: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
 	-Ivendor/llama.cpp/ggml/include
-tests/narrator.test: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
+tests/master.test: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
 	-framework Foundation -framework Metal -framework MetalKit
-tests/narrator.test: src/ai.o src/dm.o $(LLAMA_STATIC_LIBS)
+tests/master.test: src/ai.o src/master.o $(LLAMA_STATIC_LIBS)
 
 .PHONY: test
-test: tests/buffers.test tests/parser.test tests/map.test tests/narrator.test
+test: tests/buffers.test tests/parser.test tests/map.test tests/master.test
 	tests/buffers.test
 	tests/map.test
 	tests/parser.test
-	tests/narrator.test
+	tests/master.test
 
 .PHONY: clean
 clean:

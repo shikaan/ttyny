@@ -1,6 +1,6 @@
+#include "../src/master.h"
 #include "../assets/speckled_band_world.h"
 #include "../src/buffers.h"
-#include "../src/dm.h"
 #include "../src/utils.h"
 #include "test.h"
 #include "timers.h"
@@ -31,7 +31,7 @@ double_t avg(size_t size, uint64_t samples[SAMPLE_SIZE]) {
 
 void describeLocation(void) {
   string_t *buffer = strCreate(1024);
-  dm_t *dm = dmCreate(world);
+  master_t *master = masterCreate(world);
 
   uint64_t samples[SAMPLE_SIZE] = {};
 
@@ -40,12 +40,12 @@ void describeLocation(void) {
         (location_t *)world->locations->data[i % world->locations->length];
     strClear(buffer);
     uint64_t elapsed = readTimer();
-    dmDescribeLocation(dm, room, buffer);
+    masterDescribeLocation(master, room, buffer);
     elapsed = readTimer() - elapsed;
     debug("Attempt #%lu duration: %f\n", i + 1,
           (double)elapsed / (double)MICROSECONDS);
     samples[i] = elapsed;
-    dmForget(dm, &room->object);
+    masterForget(master, &room->object);
 
     if (i != 0 && (i % 10) == 0) {
       info("current average: %fs\n", avg(i, samples) / (double)MICROSECONDS);

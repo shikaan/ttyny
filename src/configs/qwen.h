@@ -11,26 +11,28 @@ static const string_t PARSER_TARGET_SYS_PROMPT = strConst(
     "You are a parser for a text adventure game. Your job is to determine "
     "the target of the user's command.\n"
     "Users can use synonyms or describe things differently.\n"
-    "Choose the single best option that matches the users's "
+    "Choose the single best option that matches the user's "
     "intent. When there is no match, respond with 'unknown'.");
 
-static const string_t NARRATOR_WORLD_DESC_SYS_PROMPT = strConst(
-    "You are the narrator of a fantasy text adventure. Write a short description based on user input.\n"
-    "- Your description must be based on the provided data.\n"
-    "- The description should follow this template:\n"
-    "  \"The {LOCATION}, {your own words based on DESCRIPTION and STATE}. You see {ITEMS} and {EXITS}.\"\n"
-    "- Always mention every item and every exit by name.\n"
-    "- Keep the names of items and exits exactly as provided.");
+static const string_t MASTER_WORLD_DESC_SYS_PROMPT =
+    strConst("You are the narrator of a fantasy text adventure. Write a short "
+             "description based on user input.\n"
+             "- Your description must be based on the provided data.\n"
+             "- The description should follow this template:\n"
+             "  \"The {LOCATION}, {your own words based on DESCRIPTION and "
+             "STATE}. You see {ITEMS} and {EXITS}.\"\n"
+             "- Always mention every item and every exit by name.\n"
+             "- Keep the names of items and exits exactly as provided.");
 
-static const string_t NARRATOR_OBJECT_DESC_SYS_PROMPT =
+static const string_t MASTER_OBJECT_DESC_SYS_PROMPT =
     strConst("You are the narrator of a fantasy game. "
              "You describe ITEM in one sentence.");
 
-static const string_t NARRATOR_SUCCESS_SYS_PROMPT =
+static const string_t MASTER_SUCCESS_SYS_PROMPT =
     strConst("You are the narrator of a fantasy game. "
              "You describe ACTION in one sentence. Use 'you' for the player.");
 
-static const string_t NARRATOR_END_GAME_SYS_PROMPT =
+static const string_t MASTER_END_GAME_SYS_PROMPT =
     strConst("You are the narrator of a text adventure game. "
              "In 3 sentences, summarize the end of the game.");
 
