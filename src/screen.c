@@ -173,11 +173,13 @@ void formatHelp(string_t *response, const world_t *world) {
   strFmt(suggestion, prompt("Go to %s"), first_exit->object.name);
 
   if (world->current_location->items->used > 0) {
-    object_t room_item = bufAt(world->current_location->items, 0)->object;
-    if (objectIsCollectible(&room_item)) {
-      strFmtAppend(suggestion, " or " prompt("Take %s"), room_item.name);
+    item_t *room_item = bufAt(world->current_location->items, 0);
+    if (room_item->collectible) {
+      strFmtAppend(suggestion, " or " prompt("Take %s"),
+                   room_item->object.name);
     } else {
-      strFmtAppend(suggestion, " or " prompt("Examine %s"), room_item.name);
+      strFmtAppend(suggestion, " or " prompt("Examine %s"),
+                   room_item->object.name);
     }
   }
 

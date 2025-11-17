@@ -1,4 +1,4 @@
-#include "assets/speckled_band_world.h"
+#include "assets/story_world.h"
 #include "src/buffers.h"
 #include "src/master.h"
 #include "src/panic.h"
@@ -13,6 +13,9 @@
 #include <string.h>
 
 int main(void) {
+  init(&story_world);
+  world_t *world = &story_world;
+
   string_t *input cleanup(strDestroy) = strCreate(512);
   string_t *response cleanup(strDestroy) = strCreate(4096);
   string_t *target cleanup(strDestroy) = strCreate(128);
@@ -120,7 +123,8 @@ int main(void) {
 
       world->current_location = location;
       // ignoring error: transition are expected to always succeed only for USE
-      objectTransition(&location->object, &transition, action);
+      objectTransition(&location->object, action, world->state.inventory,
+                       &transition);
       masterDescribeLocation(master, location, response);
 
       loadingStop(&loading);
@@ -137,7 +141,8 @@ int main(void) {
 
       if (item) {
         // ignoring error: transitions always succeed only for USE
-        objectTransition(&item->object, &transition, action);
+        objectTransition(&item->object, action, world->state.inventory,
+                         &transition);
         masterDescribeObject(master, &item->object, response);
         loadingStop(&loading);
         printDescription(response);
@@ -146,7 +151,8 @@ int main(void) {
 
       if (location) {
         // ignoring error: transitions always succeed only for USE
-        objectTransition(&location->object, &transition, action);
+        objectTransition(&location->object, action, world->state.inventory,
+                         &transition);
         masterDescribeObject(master, &location->object, response);
         loadingStop(&loading);
         printDescription(response);
@@ -169,7 +175,7 @@ int main(void) {
         break;
       }
 
-      if (!objectIsCollectible(&item->object)) {
+      if (!item->collectible) {
         strFmt(response, "You cannot pick that up.");
         loadingStop(&loading);
         printError(response);
@@ -188,7 +194,8 @@ int main(void) {
       printStateUpdate(response);
 
       // ignoring error: transition are expected to always succeed only for USE
-      objectTransition(&item->object, &transition, action);
+      objectTransition(&item->object, action, world->state.inventory,
+                       &transition);
       break;
     }
     case ACTION_TYPE_DROP: {
@@ -213,7 +220,8 @@ int main(void) {
       printStateUpdate(response);
 
       // ignoring error: transitions always succeed only for USE
-      objectTransition(&item->object, &transition, action);
+      objectTransition(&item->object, action, world->state.inventory,
+                       &transition);
       break;
     }
     case ACTION_TYPE_USE: {
@@ -228,9 +236,11 @@ int main(void) {
         break;
       }
 
-      objectTransition(&item->object, &transition, action);
+      objectTransition(&item->object, action, world->state.inventory,
+                       &transition);
 
-      if (transition == TRANSITION_RESULT_OK) {
+      switch (transition) {
+      case TRANSITION_RESULT_OK:
         masterDescribeSuccess(master, world, input, response);
         masterForget(master, &item->object);
         loadingStop(&loading);
@@ -238,11 +248,19 @@ int main(void) {
         printDescription(response);
         formatUse(response, item);
         printStateUpdate(response);
-      } else {
+        break;
+      case TRANSITION_RESULT_MISSING_ITEM:
+        strFmt(response, "You need a utensil for that");
+        loadingStop(&loading);
+        printError(response);
+        break;
+      case TRANSITION_RESULT_NO_TRANSITION:
+      default:
         strFmt(response, "Did you mean %s? Unfortunately, it cannot be used...",
                item->object.name);
         loadingStop(&loading);
         printError(response);
+        break;
       }
       break;
     }

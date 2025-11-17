@@ -2,9 +2,16 @@
 
 #include "alloc.h"
 #include "buffers.h"
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+
+// Forward declarations
+struct item_t;
+struct location_t;
+struct locations_t;
+struct object_t;
 
 typedef enum {
   ACTION_TYPE_UNKNOWN = -1,
@@ -61,23 +68,13 @@ static inline int objectNameEq(object_name_t self, object_name_t other) {
   return strcmp(self, other) == 0;
 }
 
-// Boolean map of traits for objects and locations.
-//
-// ITEM  (76543210)     |  LOCATION
-// 0     = collectible  |  0     = lit
-// 1     = ...          |  1     = ...
-// 2     = ...          |  2     = ...
-// 3     = ...          |  3     = ...
-// 4     = ...          |  4     = ...
-// 5     = ...          |  5     = ...
-// 6     = ...          |  6     = ...
-// 7     = ...          |  7     = ...
-typedef uint8_t traits_t;
-
 // A number representing the state of a given object
 // States are described in state_descriptions_t such that the n-th description
 // corresponds to the state n.
 typedef uint8_t object_state_t;
+
+typedef struct item_t item_t;
+typedef Buffer(struct item_t *) items_t;
 
 // List of description of the state of the object.
 // These descriptions will be used by the language model to describe the object
@@ -89,6 +86,7 @@ typedef struct {
   action_type_t trigger;
   object_state_t from;
   object_state_t to;
+  items_t *required_items;
 } transition_t;
 
 // List of transitions for a given object
@@ -107,54 +105,27 @@ typedef struct {
   const char *description;
   // Human-readable state descriptions
   state_descriptions_t *state_descriptions;
-  // Object traits as per above
-  traits_t traits;
   // Transitions from one state to the next
   transitions_t *transitions;
 } object_t;
 
 typedef enum {
   TRANSITION_RESULT_OK,
-  TRANSITION_RESULT_NO_TRANSITIONS,
+  TRANSITION_RESULT_NO_TRANSITION,
+  TRANSITION_RESULT_MISSING_ITEM,
 } transition_result_t;
-
-// Attempts an object transition due to `action`.
-// The result of the attempt is store in result.
-static inline void objectTransition(object_t *self, transition_result_t *result,
-                                    action_type_t action) {
-  if (!self->transitions) {
-    *result = TRANSITION_RESULT_OK;
-    return;
-  }
-
-  for (size_t i = 0; i < self->transitions->used; i++) {
-    transition_t transition = bufAt(self->transitions, i);
-    if (transition.trigger == action &&
-        self->current_state == transition.from) {
-      self->current_state = transition.to;
-      *result = TRANSITION_RESULT_OK;
-      return;
-    }
-  }
-
-  *result = TRANSITION_RESULT_NO_TRANSITIONS;
-}
-
-static inline int objectIsCollectible(object_t *self) {
-  return (self->traits & 0b00000001) == 1;
-}
 
 // An item is an object the player can interact with. It represents a physical
 // thing like a lamp or an apple.
-typedef struct {
+typedef struct item_t {
   object_t object;
+  // True if the item can be picked up
+  bool collectible;
 } item_t;
-
-typedef Buffer(item_t *) items_t;
 
 static inline items_t *itemsCreate(size_t length) {
   items_t *items = NULL;
-  makeBufCreate(items_t, item_t *, items, length);
+  makeBufCreate(items_t, struct item_t *, items, length);
   return items;
 }
 
@@ -181,12 +152,53 @@ static inline void itemsRemove(items_t *self, item_t *item) {
   }
 }
 
+static inline int itemsFind(items_t *self, item_t *item) {
+  for (size_t i = 0; i < self->used; i++) {
+    if (bufAt(self, i) == item) {
+      return (int)i;
+    }
+  }
+  return -1;
+}
+
 static inline void itemsClear(items_t *self) { bufClear(self, NULL); }
 
 static inline void itemsDestroy(items_t **self) { deallocate(self); }
 
+// Attempts an object transition due to `action`.
+// The result of the attempt is store in result.
+static inline void objectTransition(object_t *self, action_type_t action,
+                                    items_t *inventory,
+                                    transition_result_t *result) {
+  if (!self->transitions) {
+    *result = TRANSITION_RESULT_OK;
+    return;
+  }
+
+  for (size_t i = 0; i < self->transitions->used; i++) {
+    transition_t transition = bufAt(self->transitions, i);
+    if (transition.trigger == action &&
+        self->current_state == transition.from) {
+
+      if (transition.required_items) {
+        items_t *required_items = transition.required_items;
+        for (size_t j = 0; j < required_items->used; j++) {
+          if (itemsFind(inventory, bufAt(required_items, j)) < 0) {
+            *result = TRANSITION_RESULT_MISSING_ITEM;
+            return;
+          }
+        }
+      }
+      self->current_state = transition.to;
+      *result = TRANSITION_RESULT_OK;
+      return;
+    }
+  }
+
+  *result = TRANSITION_RESULT_NO_TRANSITION;
+}
+
 // A location is a game object representing a place the user can visit.
-struct location_t; // Forward declaration
 typedef Buffer(struct location_t *) locations_t;
 
 typedef struct {
