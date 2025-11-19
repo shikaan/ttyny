@@ -55,23 +55,23 @@ static inline map_t *mapCreate(map_size_t size) {
   return self;
 }
 
-static inline int hasCollision(const map_t *self, key_t key, map_size_t index) {
-  key_t old_key = self->keys[index];
-  return old_key != NULL && strcmp(key, old_key) != 0;
-}
-
 [[nodiscard]] static inline map_result_t mapSet(map_t *self, const key_t key,
                                                 value_t value) {
   panicif(!self, "map cannot not be null");
   map_size_t index = mapMakeKey(self, key);
+  key_t old_key = self->keys[index];
+  int collides_with_old_key = !!old_key && strcmp(key, old_key) != 0;
 
-  if (hasCollision(self, key, index)) {
+  // When there is a collision with another key, look for the next free index
+  if (collides_with_old_key) {
     uint8_t i;
 
     for (i = 1; i < self->size; i++) {
       map_size_t probed_idx = (index + i) % self->size;
       const key_t probed_key = self->keys[probed_idx];
-      if (!probed_key) {
+
+      // If the value does not exist or exists and is the same key
+      if (!probed_key || (probed_key && strcmp(probed_key, key) == 0)) {
         index = probed_idx;
         goto set;
       }

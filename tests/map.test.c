@@ -59,6 +59,14 @@ void collisions(void) {
   panicif(result != MAP_RESULT_OK, "set failed");
 
   expectNull(mapGet(map2, key2), "doesn't return item from colliding key");
+
+  map_t *map3 cleanup(mapDestroy) = mapCreate(5);
+  (void)mapSet(map3, key1, &value1);
+  (void)mapSet(map3, key2, &value1);
+  (void)mapSet(map3, key2, &value2);
+
+  int *resolved3 = mapGet(map3, key2);
+  expectEqli(value2, *resolved3, "returns correct value when updating linearl-probed key");
 }
 
 int main(void) {
