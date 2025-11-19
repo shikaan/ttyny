@@ -68,7 +68,9 @@ void expect(int condition, const char *name, const char *message) {
     printf("  fail - %s: %s\n", name, message);
     return;
   }
+  #ifndef FAILED_ONLY
   printf("   ok  - %s\n", name);
+  #endif
 }
 
 /**
@@ -281,7 +283,7 @@ int report(void) {
 #ifndef FAILED_ONLY
   printf("\n%d assertions, %d failed\n", total, failed);
 #else
-  printf("%d assertions, %d failed\n", total, failed);
+  printf("%d failed\n", failed);
 #endif
   return failed;
 }
