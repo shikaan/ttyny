@@ -12,12 +12,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef void (*print_callback_t)(string_t *);
+
 int main(void) {
   story_world_init(&story_world);
   world_t *world = &story_world;
 
   string_t *input cleanup(strDestroy) = strCreate(512);
   string_t *response cleanup(strDestroy) = strCreate(4096);
+  string_t *state cleanup(strDestroy) = strCreate(1024);
   string_t *target cleanup(strDestroy) = strCreate(128);
 
   master_t *master cleanup(masterDestroy) = masterCreate(world);
@@ -106,8 +109,10 @@ int main(void) {
 
     itemsClear(items);
     locationsClear(locations);
+    strClear(state);
 
     transition_result_t transition;
+    print_callback_t printCallback = printDescription;
 
     switch (action) {
     case ACTION_TYPE_MOVE: {
@@ -117,7 +122,7 @@ int main(void) {
       if (!location) {
         strFmt(response, "You cannot go there!");
         loadingStop(&loading);
-        printError(response);
+        printCallback = printError;
         break;
       }
 
@@ -128,9 +133,8 @@ int main(void) {
       masterDescribeLocation(master, location, response);
 
       loadingStop(&loading);
-      printDescription(response);
-      formatLocationChange(response, world->current_location);
-      printStateUpdate(response);
+      printCallback = printDescription;
+      formatLocationChange(state, world->current_location);
       break;
     }
     case ACTION_TYPE_EXAMINE: {
@@ -144,8 +148,7 @@ int main(void) {
         objectTransition(&item->object, action, world->state.inventory,
                          &transition);
         masterDescribeObject(master, &item->object, response);
-        loadingStop(&loading);
-        printDescription(response);
+        printCallback = printDescription;
         break;
       }
 
@@ -154,14 +157,12 @@ int main(void) {
         objectTransition(&location->object, action, world->state.inventory,
                          &transition);
         masterDescribeObject(master, &location->object, response);
-        loadingStop(&loading);
-        printDescription(response);
+        printCallback = printDescription;
         break;
       }
 
-      loadingStop(&loading);
       strFmt(response, "I don't understand... Can you rephrase that?");
-      printError(response);
+      printCallback = printError;
       break;
     }
     case ACTION_TYPE_TAKE: {
@@ -170,15 +171,13 @@ int main(void) {
 
       if (!item) {
         strFmt(response, "Not sure what you want to take.");
-        loadingStop(&loading);
-        printError(response);
+        printCallback = printError;
         break;
       }
 
       if (!item->collectible) {
         strFmt(response, "You cannot pick that up.");
-        loadingStop(&loading);
-        printError(response);
+        printCallback = printError;
         break;
       }
 
@@ -187,11 +186,8 @@ int main(void) {
 
       masterDescribeSuccess(master, world, input, response);
 
-      loadingStop(&loading);
-      printDescription(response);
-
-      formatTake(response, item);
-      printStateUpdate(response);
+      printCallback = printDescription;
+      formatTake(state, item);
 
       // ignoring error: transition are expected to always succeed only for USE
       objectTransition(&item->object, action, world->state.inventory,
@@ -204,8 +200,7 @@ int main(void) {
 
       if (!item) {
         strFmt(response, "You cannot drop something that you don't own.");
-        loadingStop(&loading);
-        printError(response);
+        printCallback = printError;
         break;
       }
 
@@ -213,11 +208,9 @@ int main(void) {
       itemsRemove(world->state.inventory, item);
 
       masterDescribeSuccess(master, world, input, response);
-      loadingStop(&loading);
 
-      printDescription(response);
-      formatDrop(response, item);
-      printStateUpdate(response);
+      printCallback = printDescription;
+      formatDrop(state, item);
 
       // ignoring error: transitions always succeed only for USE
       objectTransition(&item->object, action, world->state.inventory,
@@ -231,8 +224,7 @@ int main(void) {
 
       if (!item) {
         strFmt(response, "Not sure what you mean.");
-        loadingStop(&loading);
-        printError(response);
+        printCallback = printError;
         break;
       }
 
@@ -243,23 +235,19 @@ int main(void) {
       case TRANSITION_RESULT_OK:
         masterDescribeSuccess(master, world, input, response);
         masterForget(master, &item->object);
-        loadingStop(&loading);
 
-        printDescription(response);
-        formatUse(response, item);
-        printStateUpdate(response);
+        printCallback = printDescription;
+        formatUse(state, item);
         break;
       case TRANSITION_RESULT_MISSING_ITEM:
         strFmt(response, "You need a utensil for that");
-        loadingStop(&loading);
-        printError(response);
+        printCallback = printError;
         break;
       case TRANSITION_RESULT_NO_TRANSITION:
       default:
         strFmt(response, "Did you mean %s? Unfortunately, it cannot be used...",
                item->object.name);
-        loadingStop(&loading);
-        printError(response);
+        printCallback = printError;
         break;
       }
       break;
@@ -268,17 +256,21 @@ int main(void) {
     case ACTION_TYPE_UNKNOWN:
     default:
       strFmt(response, "Not sure how to do that...");
-      loadingStop(&loading);
-      printError(response);
+      printCallback = printError;
     }
 
     game_state_t game_state = world->digest(world);
     if (game_state != GAME_STATE_CONTINUE) {
-      loading = loadingStart();
       masterDescribeEndGame(master, input, world, game_state, response);
       loadingStop(&loading);
       printEndGame(response, game_state);
       return 0;
+    }
+
+    loadingStop(&loading);
+    printCallback(response);
+    if (state->length > 0) {
+      printStateUpdate(state);
     }
   }
 
