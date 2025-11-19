@@ -1,5 +1,8 @@
 include flags.mk
 
+LOG_LEVEL := -1
+CFLAGS := $(CFLAGS) -DLOG_LEVEL=$(LOG_LEVEL)
+
 .PHONY: all
 all: mystty
 
