@@ -11,6 +11,8 @@
 #define command fg_blue
 #define location fg_magenta
 #define item fg_cyan
+#define success fg_green
+#define fail fg_red
 
 const char *NAME = fg_green(bold("mystty"));
 
@@ -100,12 +102,9 @@ static void printResponse(string_t *response, const char *prefix) {
   putchar('\n');
 }
 
-void printError(string_t *response) { printResponse(response, fg_red(" !  ")); }
+void printError(string_t *response) { printResponse(response, fail(" !  ")); }
 
-void printStateUpdate(string_t *response) {
-  puts("");
-  printResponse(response, " ~> ");
-}
+void printStateUpdate(string_t *response) { printResponse(response, "\n ~> "); }
 
 void printCommandOutput(string_t *response) {
   printResponse(response, " ~   ");
@@ -115,11 +114,11 @@ void printDescription(string_t *response) { printResponse(response, " |  "); }
 
 void printEndGame(string_t *response, game_state_t state) {
   if (state == GAME_STATE_VICTORY) {
-    strFmtAppend(response, fg_green("\n\n     >> You won! <<"))
+    strFmtAppend(response, "\n\n" success("~~~> YOU WON! <~~~"))
   } else {
-    strFmtAppend(response, fg_red("\n\n     >> You lost! <<"))
+    strFmtAppend(response, "\n\n" fail("~~~> GAME OVER <~~~"))
   }
-  printResponse(response, "    ");
+  printResponse(response, " |  ");
 }
 
 void printPrompt(void) { printf("> "); }
@@ -127,7 +126,6 @@ void printPrompt(void) { printf("> "); }
 void screenClear(void) { puts("\e[1;1H\e[2J"); }
 
 void formatWelcomeScreen(string_t *response) {
-
   strFmt(response,
          "Welcome to %s!\n"
          "\n"
