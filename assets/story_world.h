@@ -528,7 +528,7 @@ static inline void story_world_init(world_t *world) {
       .items = (items_t *)&fog_items,
       .exits = (locations_t *)&fog_exits};
 
-  lab_req.data[0] = &VOLATILE_PHIAL;
+  lab_req.data[0] = &SILVER_FILIGREE_KEY;
 
   SEALED_LABORATORY = (location_t){
       .object = {.name = "sealed laboratory",
@@ -541,7 +541,7 @@ static inline void story_world_init(world_t *world) {
                  .transitions = (transitions_t *)&lab_trans},
       .items = (items_t *)&lab_items,
       .exits = (locations_t *)&lab_exits};
-  lab_trans.data[0] = (transition_t){.trigger = ACTION_TYPE_USE,
+  lab_trans.data[0] = (transition_t){.trigger = ACTION_TYPE_MOVE,
                                      .from = 0,
                                      .to = 1,
                                      .required_items = (items_t *)&lab_req};

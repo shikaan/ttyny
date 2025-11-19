@@ -121,18 +121,21 @@ int main(void) {
 
       if (!location) {
         strFmt(response, "You cannot go there!");
-        loadingStop(&loading);
+        printCallback = printError;
+        break;
+      }
+
+      objectTransition(&location->object, action, world->state.inventory,
+                       &transition);
+
+      if (transition == TRANSITION_RESULT_MISSING_ITEM) {
+        strFmt(response, "You need an item or a key to go there...");
         printCallback = printError;
         break;
       }
 
       world->current_location = location;
-      // ignoring error: transition are expected to always succeed only for USE
-      objectTransition(&location->object, action, world->state.inventory,
-                       &transition);
       masterDescribeLocation(master, location, response);
-
-      loadingStop(&loading);
       printCallback = printDescription;
       formatLocationChange(state, world->current_location);
       break;
@@ -269,7 +272,7 @@ int main(void) {
 
     loadingStop(&loading);
     printCallback(response);
-    if (state->length > 0) {
+    if (state->used > 0) {
       printStateUpdate(state);
     }
   }
