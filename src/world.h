@@ -12,6 +12,7 @@ struct item_t;
 struct location_t;
 struct locations_t;
 struct object_t;
+typedef struct world_t world_t;
 
 typedef enum {
   ACTION_TYPE_UNKNOWN = -1,
@@ -76,10 +77,9 @@ typedef uint8_t object_state_t;
 typedef struct item_t item_t;
 typedef Buffer(struct item_t *) items_t;
 
-// List of description of the state of the object.
-// These descriptions will be used by the language model to describe the object
-// in a given state
-typedef Buffer(const char *) state_descriptions_t;
+// List of descriptions.
+// They will be used by the language model to describe objects or situations.
+typedef Buffer(const char *) descriptions_t;
 
 // When an object is affected by `trigger` its state changes from `from` to `to`
 typedef struct {
@@ -104,7 +104,7 @@ typedef struct {
   // Description of the object
   const char *description;
   // Human-readable state descriptions
-  state_descriptions_t *state_descriptions;
+  descriptions_t *state_descriptions;
   // Transitions from one state to the next
   transitions_t *transitions;
 } object_t;
@@ -241,9 +241,9 @@ typedef enum {
 } game_state_t;
 
 // Returns game state based on current world state
-typedef game_state_t (*digest_t)(world_state_t *);
+typedef game_state_t (*digest_t)(world_t *);
 
-typedef struct {
+struct world_t {
   // State of the world
   world_state_t state;
   // Locations of the world
@@ -252,8 +252,9 @@ typedef struct {
   items_t *items;
   // Pointer to the location where the adventure starts
   location_t *current_location;
+  // Description of the end of the game. To be filled by the digest function
+  // when the game ends
+  const char *current_end_game;
   // Callback to call on each round to see if the game is over
   digest_t digest;
-  // Brief description of end game conditions to allow AI to write a story
-  const char *end_game[GAME_STATES];
-} world_t;
+};

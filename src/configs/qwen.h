@@ -32,9 +32,11 @@ static const string_t MASTER_SUCCESS_SYS_PROMPT =
     strConst("You are the narrator of a fantasy game. "
              "You describe ACTION in one sentence. Use 'you' for the player.");
 
-static const string_t MASTER_END_GAME_SYS_PROMPT =
-    strConst("You are the narrator of a text adventure game. "
-             "In 3 sentences, summarize the end of the game.");
+static const string_t MASTER_END_GAME_SYS_PROMPT = strConst(
+    "You are the narrator of a text adventure game writing the final scene. "
+    "In 2 sentences, describe how ACTION led to ENDING due to REASON. "
+    "Use 'you' for the player. DO NOT INVENT ADDITIONAL DETAILS. Use previous "
+    "output for context.");
 
 static string_t RES_PROMPT = strConst("<|im_end|>\n<|im_start|>assistant\n%s");
 static string_t USR_PROMPT = strConst("<|im_end|>\n<|im_start|>user\n%s");

@@ -247,27 +247,23 @@ static game_state_t world_digest(world_t *world) {
   int phial_ruptured = VOLATILE_PHIAL.object.current_state == 1;
 
   if (laboratory_breached) {
-    world->current_end_game = bufAt(world->end_game_descriptions, 2);
+    world->current_end_game = "sealed laboratory breached";
     return GAME_STATE_DEAD;
   }
   if (phial_ruptured) {
-    world->current_end_game = bufAt(world->end_game_descriptions, 3);
+    world->current_end_game = "volatile phial ruptured";
     return GAME_STATE_DEAD;
   }
   if (beacon_restored) {
-    world->current_end_game = bufAt(world->end_game_descriptions, 0);
+    world->current_end_game = "lighthouse beacon restored";
     return GAME_STATE_VICTORY;
   }
   if (exhibition_complete) {
-    world->current_end_game = bufAt(world->end_game_descriptions, 1);
+    world->current_end_game = "museum exhibition assembled";
     return GAME_STATE_VICTORY;
   }
   return GAME_STATE_CONTINUE;
 }
-
-static descriptions_t END_GAME_DESCRIPTIONS =
-    bufConst(4, "lighthouse beacon restored", "museum exhibition assembled",
-             "sealed laboratory breached", "volatile phial ruptured");
 
 // Single initialization function - call once, no cleanup needed
 static inline void story_world_init(world_t *world) {
@@ -583,7 +579,6 @@ static inline void story_world_init(world_t *world) {
   world->state.inventory = itemsCreate(16);
   world->locations = (locations_t *)&WORLD_LOCATIONS;
   world->items = (items_t *)&WORLD_ITEMS;
-  world->end_game_descriptions = (descriptions_t *)&END_GAME_DESCRIPTIONS;
   world->current_location = &CLIFF_APPROACH;
   world->current_end_game = NULL;
   world->digest = world_digest;

@@ -13,7 +13,7 @@
 #include <string.h>
 
 int main(void) {
-  init(&story_world);
+  story_world_init(&story_world);
   world_t *world = &story_world;
 
   string_t *input cleanup(strDestroy) = strCreate(512);
@@ -272,10 +272,10 @@ int main(void) {
       printError(response);
     }
 
-    game_state_t game_state = world->digest(&world->state);
+    game_state_t game_state = world->digest(world);
     if (game_state != GAME_STATE_CONTINUE) {
       loading = loadingStart();
-      masterDescribeEndGame(master, world, game_state, response);
+      masterDescribeEndGame(master, input, world, game_state, response);
       loadingStop(&loading);
       printEndGame(response, game_state);
       return 0;

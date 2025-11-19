@@ -23,10 +23,11 @@ static inline void wordsDestroy(words_t **self) { deallocate(self); }
 
 static words_t STOP_WORDS =
     bufConst(4, "inventory", "player", "player's", "location");
-static words_t STOP_WORDS_CASE = bufConst(3, "EXITS", "EXIT", "ITEMS");
+static words_t STOP_WORDS_CASE =
+    bufConst(4, "EXITS", "EXIT", "ITEMS", "ACTION");
 static words_t ACTION_MUST_HAVES = bufConst(1, "you");
 
-static void describeLocation(const location_t *location, string_t *summary) {
+static void summarizeLocation(const location_t *location, string_t *summary) {
   strFmt(summary,
          "LOCATION: %s\n"
          "DESCRIPTION: %s\n"
@@ -146,6 +147,7 @@ static int hasAllMustHaves(string_t *response, words_t *must_haves) {
 
 static void generateAndValidate(ai_t *ai, const string_t *prompt,
                                 string_t *response, words_t *must_haves) {
+  debug("Prompt:\n%s", prompt->data);
   int valid = 0;
   ai_result_t result;
   for (size_t i = 0; i < 20 && !valid; i++) {
@@ -163,7 +165,7 @@ static void generateAndValidate(ai_t *ai, const string_t *prompt,
       debug("Rejected:\n%s\n", response->data);
   }
   if (!valid) {
-    info("Invalid: giving up")
+    error("Invalid output: giving up.")
   }
 }
 
@@ -183,7 +185,7 @@ void masterDescribeLocation(master_t *self, const location_t *location,
 
   strFmt(self->prompt, sys_prompt_tpl->data, MASTER_WORLD_DESC_SYS_PROMPT.data);
 
-  describeLocation(location, self->summary);
+  summarizeLocation(location, self->summary);
   strFmtAppend(self->prompt, usr_prompt_tpl->data, self->summary->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
@@ -202,7 +204,6 @@ void masterDescribeLocation(master_t *self, const location_t *location,
     bufPush(must_haves, exit->object.name);
   }
 
-  debug("Prompt:\n%s\n", self->prompt->data);
   generateAndValidate(self->ai, self->prompt, description, must_haves);
 
   char *copy = strdup(description->data);
@@ -245,7 +246,7 @@ void masterDescribeSuccess(master_t *self, const world_t *world,
   const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];
 
   strFmt(self->prompt, sys_prompt_tpl->data, MASTER_SUCCESS_SYS_PROMPT.data);
-  describeLocation(world->current_location, self->summary);
+  summarizeLocation(world->current_location, self->summary);
   strFmtAppend(self->prompt, "\n%s", self->summary->data);
   strFmtAppend(self->prompt, usr_prompt_tpl->data, input->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
@@ -253,9 +254,9 @@ void masterDescribeSuccess(master_t *self, const world_t *world,
   generateAndValidate(self->ai, self->prompt, comment, &ACTION_MUST_HAVES);
 }
 
-void masterDescribeEndGame(master_t *self, const world_t *world,
-                           game_state_t state, string_t *description) {
-
+void masterDescribeEndGame(master_t *self, const string_t *last_action,
+                           const world_t *world, game_state_t state,
+                           string_t *description) {
   if (state == GAME_STATE_CONTINUE) {
     strClear(description);
     return;
@@ -267,7 +268,16 @@ void masterDescribeEndGame(master_t *self, const world_t *world,
   const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];
 
   strFmt(self->prompt, sys_prompt_tpl->data, MASTER_END_GAME_SYS_PROMPT.data);
-  strFmtAppend(self->prompt, usr_prompt_tpl->data, world->end_game[state]);
+
+  // Using a shot to provide some context
+  strFmtAppend(self->prompt, usr_prompt_tpl->data, "look around");
+  masterDescribeLocation(self, world->current_location, self->summary);
+  strFmtAppend(self->prompt, res_prompt_tpl->data, self->summary->data);
+
+  strFmt(self->summary, "ACTION: %s\nENDING: %s\nREASON: %s", last_action->data,
+         state == GAME_STATE_VICTORY ? "victory" : "death",
+         world->current_end_game);
+  strFmtAppend(self->prompt, usr_prompt_tpl->data, self->summary->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
   generateAndValidate(self->ai, self->prompt, description, &ACTION_MUST_HAVES);
@@ -291,7 +301,6 @@ void masterDestroy(master_t **self) {
     char *memory = (*self)->descriptions->values[i];
     deallocate(&memory);
   }
-  // TODO should we clean also this just in case?
   mapDestroy(&(*self)->descriptions);
 
   deallocate(self);
