@@ -24,7 +24,7 @@ static inline void wordsDestroy(words_t **self) { deallocate(self); }
 static words_t STOP_WORDS =
     bufConst(4, "inventory", "player", "player's", "location");
 static words_t STOP_WORDS_CASE =
-    bufConst(4, "EXITS", "EXIT", "ITEMS", "ACTION");
+    bufConst(7, "EXITS", "EXIT", "ITEMS", "ACTION", "DESCRIPTION", "STATE", "TARGET");
 static words_t ACTION_MUST_HAVES = bufConst(1, "you");
 
 typedef struct {
