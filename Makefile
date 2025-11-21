@@ -6,6 +6,10 @@ CFLAGS := $(CFLAGS) -DLOG_LEVEL=$(LOG_LEVEL)
 .PHONY: all
 all: mystty
 
+build/linenoise.o: CFLAGS = -Wall -W -Os
+build/linenoise.o: vendor/linenoise/linenoise.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
 LLAMA_BUILD := build/llama.cpp
 LLAMA_STATIC_LIBS := $(LLAMA_BUILD)/src/libllama.a \
 	$(LLAMA_BUILD)/ggml/src/libggml.a \
@@ -29,7 +33,7 @@ mystty: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
 	-Ivendor/llama.cpp/ggml/include
 mystty: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
 	-framework Foundation -framework Metal -framework MetalKit
-mystty: src/ai.o src/screen.o src/master.o src/parser.o $(LLAMA_STATIC_LIBS)
+mystty: src/ai.o src/screen.o src/master.o src/parser.o build/linenoise.o $(LLAMA_STATIC_LIBS)
 
 tests/parser.test: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
 	-Ivendor/llama.cpp/ggml/include
