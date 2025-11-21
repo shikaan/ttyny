@@ -7,12 +7,30 @@
 #include "src/utils.h"
 #include "src/world.h"
 #include <ggml.h>
+#include <linenoise.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 typedef void (*print_callback_t)(string_t *);
+
+void completion(const char *buf, linenoiseCompletions *lc) {
+  if (buf[0] == '/') {
+    for (size_t i = 0; i < COMMAND_TYPES; i++) {
+      if (strncmp(buf, command_names[i]->data, strlen(buf)) == 0) {
+        linenoiseAddCompletion(lc, command_names[i]->data);
+      }
+    }
+  }
+}
+
+int quit(string_t *response, ui_handle_t *loading) {
+  strFmt(response, "Okay, bye!");
+  loadingStop(&loading);
+  printCommandOutput(response);
+  return 0;
+}
 
 int main(void) {
   story_world_init(&story_world);
@@ -49,12 +67,23 @@ int main(void) {
   formatLocationChange(response, world->current_location);
   printStateUpdate(response);
 
+  linenoiseSetCompletionCallback(completion);
+
   while (1) {
-    printPrompt();
-    strReadFrom(input, stdin);
+    char *line = linenoise("> ");
+
+    // This is invoked on Ctrl+C/D
+    if (!line) {
+      return quit(response, loading);
+    }
+
+    strFmt(input, "%s", line);
+    linenoiseFree(line);
 
     if (input->used == 0)
       continue;
+
+    linenoiseHistoryAdd(input->data);
 
     strClear(response);
     loading = loadingStart();
@@ -82,11 +111,9 @@ int main(void) {
         printCommandOutput(response);
         break;
       }
-      case COMMAND_TYPE_QUIT:
-        strFmt(response, "Okay, bye!");
-        loadingStop(&loading);
-        printCommandOutput(response);
-        return 0;
+      case COMMAND_TYPE_QUIT: {
+        return quit(response, loading);
+      }
       case COMMAND_TYPE_UNKNOWN:
       case COMMAND_TYPES:
       default: {

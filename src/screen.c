@@ -121,8 +121,6 @@ void printEndGame(string_t *response, game_state_t state) {
   printResponse(response, " |  ");
 }
 
-void printPrompt(void) { printf("> "); }
-
 void screenClear(void) { puts("\e[1;1H\e[2J"); }
 
 void formatWelcomeScreen(string_t *response) {

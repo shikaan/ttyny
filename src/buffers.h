@@ -132,15 +132,6 @@ static inline void strCat(string_t *self, const string_t *other) {
   self->data[self->used] = 0;
 }
 
-static inline void strReadFrom(string_t *self, FILE *file) {
-  const char *read_string = fgets(self->data, (int)self->length, file);
-  if (read_string == NULL)
-    return;
-
-  self->used = strlen(read_string) - 1;
-  self->data[self->used] = 0;
-}
-
 static inline int strEq(const string_t *self, const string_t *other) {
   return self->used == other->used &&
          (strncmp(self->data, other->data, self->used) == 0);

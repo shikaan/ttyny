@@ -53,6 +53,9 @@ static action_type_t actions_types[ACTION_TYPES] = {
 static string_t *action_names[ACTION_TYPES] = {
     &ACTION_MOVE, &ACTION_TAKE, &ACTION_DROP, &ACTION_USE, &ACTION_EXAMINE};
 
+static string_t *command_names[COMMAND_TYPES] = {&COMMAND_HELP, &COMMAND_STATUS,
+                                                 &COMMAND_QUIT, &COMMAND_TLDR};
+
 typedef enum {
   OBJECT_TYPE_UNKNOWN = -1,
   OBJECT_TYPE_ITEM = 0,

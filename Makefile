@@ -30,7 +30,7 @@ build/llama.cpp/src/libllama.a:
 	cmake --build $(LLAMA_BUILD) -j --config Release
 
 mystty: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
-	-Ivendor/llama.cpp/ggml/include
+	-Ivendor/llama.cpp/ggml/include -Ivendor/linenoise
 mystty: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
 	-framework Foundation -framework Metal -framework MetalKit
 mystty: src/ai.o src/screen.o src/master.o src/parser.o build/linenoise.o $(LLAMA_STATIC_LIBS)

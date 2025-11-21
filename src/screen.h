@@ -16,7 +16,6 @@ void printError(string_t *);
 void printStateUpdate(string_t *);
 void printCommandOutput(string_t *);
 void printDescription(string_t *);
-void printPrompt(void);
 void printEndGame(string_t *, game_state_t);
 
 void formatWelcomeScreen(string_t *);
