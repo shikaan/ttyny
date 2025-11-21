@@ -118,12 +118,20 @@ int main(void) {
       case COMMAND_TYPE_UNKNOWN:
       case COMMAND_TYPES:
       default: {
-        strFmt(response, "Not sure how to do that...");
+        strFmt(response, "That's not a command I recognize...");
         loadingStop(&loading);
         printError(response);
         break;
       }
       }
+      continue;
+    }
+
+    // Perform some cheap validation before invoking further AI
+    if (!strchr(input->data, ' ')) {
+      strFmt(response, "I need more details...");
+      loadingStop(&loading);
+      printError(response);
       continue;
     }
 
@@ -201,13 +209,13 @@ int main(void) {
                           world->current_location->items, &location, &item);
 
       if (!item) {
-        strFmt(response, "Not sure what you want to take.");
+        strFmt(response, "Take what? You need to be more specific than that.");
         printCallback = printError;
         break;
       }
 
       if (!item->collectible) {
-        strFmt(response, "You cannot pick that up.");
+        strFmt(response, "You cannot pick that %s up.", item->object.name);
         printCallback = printError;
         break;
       }
