@@ -183,6 +183,13 @@ static void generateAndValidate(ai_t *ai, const string_t *prompt,
   }
 }
 
+static int objectIsReadable(const object_t *object) {
+  if (!object || object->type != OBJECT_TYPE_ITEM)
+    return 0;
+  const item_t *item = (const item_t *)object;
+  return item->readable;
+}
+
 void masterDescribeLocation(master_t *self, const location_t *location,
                             string_t *description) {
   key_t cache_key = location->object.name;
@@ -232,6 +239,16 @@ void masterDescribeObject(master_t *self, const object_t *object,
     strFmt(description, "%s", cached);
     return;
   }
+
+  if (objectIsReadable(object)) {
+    const char *state_desc =
+        bufAt(object->state_descriptions, object->current_state);
+    strFmt(description, "%s reads:\n\n%s", object->name, state_desc);
+    char *copy = strdup(description->data);
+    (void)mapSet(self->descriptions, cache_key, copy);
+    return;
+  }
+
   const config_t *config = self->ai->configuration;
   const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
   const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];

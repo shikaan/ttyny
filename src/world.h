@@ -124,6 +124,8 @@ typedef struct item_t {
   object_t object;
   // True if the item can be picked up
   bool collectible;
+  // True if EXAMINE/USE should present: "<name> reads: \"<state description>\""
+  bool readable;
 } item_t;
 
 static inline items_t *itemsCreate(size_t length) {
