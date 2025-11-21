@@ -67,6 +67,7 @@ int main(void) {
   formatLocationChange(response, world->current_location);
   printStateUpdate(response);
 
+  linenoiseHistorySetMaxLen(15);
   linenoiseSetCompletionCallback(completion);
 
   while (1) {
