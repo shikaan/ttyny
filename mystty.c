@@ -1,4 +1,4 @@
-#include "assets/story_world.h"
+#include "assets/grayfen.h"
 #include "src/buffers.h"
 #include "src/master.h"
 #include "src/panic.h"
@@ -33,9 +33,6 @@ int quit(string_t *response, ui_handle_t *loading) {
 }
 
 int main(void) {
-  story_world_init(&story_world);
-  world_t *world = &story_world;
-
   string_t *input cleanup(strDestroy) = strCreate(512);
   string_t *response cleanup(strDestroy) = strCreate(4096);
   string_t *state cleanup(strDestroy) = strCreate(1024);

@@ -1,5 +1,5 @@
 #include "../src/master.h"
-#include "../assets/story_world.h"
+#include "../assets/grayfen.h"
 #include "../src/buffers.h"
 #include "../src/utils.h"
 #include "test.h"
@@ -30,9 +30,6 @@ double_t avg(size_t size, uint64_t samples[SAMPLE_SIZE]) {
 }
 
 void describeLocation(void) {
-  story_world_init(&story_world);
-  world_t *world = &story_world;
-
   string_t *buffer cleanup(strDestroy) = strCreate(1024);
   master_t *master cleanup(masterDestroy) = masterCreate(world);
 
@@ -61,9 +58,6 @@ void describeLocation(void) {
 }
 
 void describeEndgame(void) {
-  story_world_init(&story_world);
-  world_t *world = &story_world;
-
   string_t *buffer cleanup(strDestroy) = strCreate(1024);
   string_t *input cleanup(strDestroy) = strCreate(128);
   master_t *master cleanup(masterDestroy) = masterCreate(world);
