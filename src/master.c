@@ -27,6 +27,20 @@ static words_t STOP_WORDS_CASE =
     bufConst(4, "EXITS", "EXIT", "ITEMS", "ACTION");
 static words_t ACTION_MUST_HAVES = bufConst(1, "you");
 
+typedef struct {
+  const char *input;
+  const char *output;
+} action_desc_shot_t;
+
+static action_desc_shot_t action_desc_shots[] = {
+    {"ACTION: take apple\nTARGET: apple (A ripe red fruit)",
+     "You pick up the apple."},
+    {"ACTION: use knife\nTARGET: knife (A sharp steel blade)",
+     "You brandish the knife, its blade gleaming."},
+    {"ACTION: drop the ball\nTARGET: ball (A leather sphere)",
+     "You drop the ball and it bounces away."},
+};
+
 static void summarizeLocation(const location_t *location, string_t *summary) {
   strFmt(summary,
          "LOCATION: %s\n"
@@ -238,17 +252,33 @@ void masterDescribeObject(master_t *self, const object_t *object,
   (void)mapSet(self->descriptions, cache_key, copy);
 }
 
-void masterDescribeSuccess(master_t *self, const world_t *world,
-                           const string_t *input, string_t *comment) {
+void masterDescribeAction(master_t *self, const world_t *world,
+                          const string_t *input, const object_t *object,
+                          string_t *comment) {
   const config_t *config = self->ai->configuration;
   const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
   const string_t *usr_prompt_tpl = config->prompt_templates[PROMPT_TYPE_USR];
   const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];
 
-  strFmt(self->prompt, sys_prompt_tpl->data, MASTER_SUCCESS_SYS_PROMPT.data);
-  summarizeLocation(world->current_location, self->summary);
-  strFmtAppend(self->prompt, "\n%s", self->summary->data);
-  strFmtAppend(self->prompt, usr_prompt_tpl->data, input->data);
+  strFmt(self->prompt, sys_prompt_tpl->data, MASTER_ACTION_SYS_PROMPT.data);
+
+  // Using a shot to provide some context
+  strFmtAppend(self->prompt, usr_prompt_tpl->data, "look around");
+  masterDescribeLocation(self, world->current_location, self->summary);
+  strFmtAppend(self->prompt, res_prompt_tpl->data, self->summary->data);
+
+  // // Add few-shot examples
+  for (size_t i = 0; i < arrLen(action_desc_shots); i++) {
+    action_desc_shot_t shot = action_desc_shots[i];
+    strFmtAppend(self->prompt, usr_prompt_tpl->data, shot.input);
+    strFmtAppend(self->prompt, res_prompt_tpl->data, shot.output);
+  }
+
+  strFmt(self->summary,
+         "ACTION: %s\nTARGET:\n name: %s\n description: %s\n state: %s\n",
+         input->data, object->name, object->description,
+         bufAt(object->state_descriptions, object->current_state));
+  strFmtAppend(self->prompt, usr_prompt_tpl->data, self->summary->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
   generateAndValidate(self->ai, self->prompt, comment, &ACTION_MUST_HAVES);

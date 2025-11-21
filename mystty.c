@@ -215,7 +215,7 @@ int main(void) {
       itemsAdd(world->state.inventory, item);
       itemsRemove(world->current_location->items, item);
 
-      masterDescribeSuccess(master, world, input, response);
+      masterDescribeAction(master, world, input, &item->object, response);
 
       printCallback = printDescription;
       formatTake(state, item);
@@ -238,7 +238,7 @@ int main(void) {
       itemsAdd(world->current_location->items, item);
       itemsRemove(world->state.inventory, item);
 
-      masterDescribeSuccess(master, world, input, response);
+      masterDescribeAction(master, world, input, &item->object, response);
 
       printCallback = printDescription;
       formatDrop(state, item);
@@ -264,7 +264,7 @@ int main(void) {
 
       switch (transition) {
       case TRANSITION_RESULT_OK:
-        masterDescribeSuccess(master, world, input, response);
+        masterDescribeAction(master, world, input, &item->object, response);
         masterForget(master, &item->object);
 
         printCallback = printDescription;

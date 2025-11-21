@@ -28,9 +28,12 @@ static const string_t MASTER_OBJECT_DESC_SYS_PROMPT =
     strConst("You are the narrator of a fantasy game. "
              "You describe ITEM in one sentence.");
 
-static const string_t MASTER_SUCCESS_SYS_PROMPT =
-    strConst("You are the narrator of a fantasy game. "
-             "You describe ACTION in one sentence. Use 'you' for the player.");
+static const string_t MASTER_ACTION_SYS_PROMPT = strConst(
+    "You are the narrator of a fantasy game. "
+    "You describe ACTION in one sentence.\n"
+    " - Use 'you' for the player.\n"
+    " - You must ONLY describe the action. No feelings, no sensations.\n"
+    " - You must ONLY use the context to check the output.\n");
 
 static const string_t MASTER_END_GAME_SYS_PROMPT = strConst(
     "You are the narrator of a text adventure game writing the final scene. "

@@ -29,8 +29,9 @@ void masterDescribeLocation(master_t *, const location_t *, string_t *);
 // The input string will be truncated.
 void masterDescribeObject(master_t *, const object_t *, string_t *);
 
-void masterDescribeSuccess(master_t *, const world_t *, const string_t *,
-                           string_t *);
+void masterDescribeAction(master_t *, const world_t *, const string_t *,
+                           const object_t *, string_t *);
+
 void masterDescribeEndGame(master_t *, const string_t *, const world_t *,
                            game_state_t, string_t *);
 // Forget the description of a given object that was previously described.
