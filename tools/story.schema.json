@@ -47,9 +47,12 @@
     },
     "RequirementTuple": {
       "type": "string",
-      "items": [{ "type": "string", "pattern": "^.+\\.\\d+" }],
-      "minItems": 2,
-      "maxItems": 2
+      "pattern": "^.+(\\.\\d+){0,1}"
+    },
+    "RequirementTuples": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/RequirementTuple" },
+      "minItems": 1
     },
     "Requirements": {
       "type": "object",
@@ -57,15 +60,15 @@
       "properties": {
         "inventory": {
           "description": "Player inventory membership conditions.",
-          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/RequirementTuple" }]
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/RequirementTuples" }]
         },
         "items": {
           "description": "Item state conditions (by name or name.state).",
-          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/RequirementTuple" }]
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/RequirementTuples" }]
         },
         "locations": {
           "description": "Location state membership conditions (by name or name.state).",
-          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/RequirementTuple" }]
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/RequirementTuples" }]
         },
         "turns": {
           "description": "Turn count constraints.",
