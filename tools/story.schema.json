@@ -1,6 +1,4 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.com/story.schema.json",
   "title": "Interactive Story Definition",
   "description": "Schema for defining items, locations, transitions, and endings for the story engine.",
   "type": "object",
@@ -8,14 +6,12 @@
   "additionalProperties": false,
   "properties": {
     "items": {
-      "type": "array",
-      "description": "All item definitions available in the story.",
-      "items": { "$ref": "#/$defs/Item" }
+      "$ref": "#/$defs/Items",
+      "description": "All item definitions available in the story."
     },
     "locations": {
-      "type": "array",
-      "description": "All location definitions available in the story.",
-      "items": { "$ref": "#/$defs/Location" }
+      "$ref": "#/$defs/Locations",
+      "description": "All location definitions available in the story."
     },
     "endings": {
       "type": "array",
@@ -41,25 +37,33 @@
       },
       "minItems": 1
     },
+    "Items": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Item" }
+    },
+    "Locations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Location" }
+    },
     "Requirements": {
       "type": "object",
       "description": "Requirements that must be satisfied to perform a transition or reach an ending. Each field may be null (no constraint) or a specific constraint object.",
       "properties": {
         "inventory": {
           "description": "Player inventory membership conditions.",
-          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/Requirement" }]
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/Items" }]
         },
         "items": {
           "description": "Item state conditions (by name or name.state).",
-          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/Requirement" }]
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/Items" }]
         },
         "locations": {
           "description": "Location state membership conditions (by name or name.state).",
-          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/Requirement" }]
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/Locations" }]
         },
         "turns": {
           "description": "Turn count constraints.",
-          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/Requirement" }]
+          "oneOf": [{ "type": "null" }, { "type": "number", "minimum": 1 }]
         }
       },
       "required": ["inventory", "items", "locations", "turns"],
