@@ -66,7 +66,7 @@ deep-clean: clean
 
 .PHONY: start
 start: all
-	./mystty
+	./mystty assets/grayfen.json
 
 .PHONY: start-profile
 start-profile: all

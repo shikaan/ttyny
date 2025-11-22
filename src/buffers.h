@@ -59,6 +59,8 @@
   Result->length = Length;                                                     \
   Result->used = 0;
 
+#define bufEach(BufferPtr, Index) for ((Index) = 0; i < (BufferPtr)->used; i++)
+
 // String
 typedef Buffer(char) string_t;
 

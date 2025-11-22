@@ -16,12 +16,14 @@ typedef struct item_t {
   bool readable;
 } item_t;
 
-static inline bool itemEquals(item_t *self, item_t *other) {
-  return self == other;
-}
+static inline void itemDestroy(item_t **self) {
+  if (!self || !*self)
+    return;
 
-static inline bool itemHasSameId(item_t *self, item_t *other) {
-  return objectNameEq(self->object.name, other->object.name);
+  object_t *obj = &(*self)->object;
+  objectDestroyInner(&obj);
+
+  deallocate(self);
 }
 
 static inline items_t *itemsCreate(size_t length) {
@@ -50,9 +52,18 @@ static inline void itemsRemove(items_t *self, item_t *item) {
 
 typedef bool (*item_cmp_t)(item_t *self, item_t *other);
 
-static inline int itemsFind(items_t *self, item_t *item, item_cmp_t compare) {
+static inline int itemsFind(items_t *self, item_t *item) {
   for (size_t i = 0; i < self->used; i++) {
-    if (compare(bufAt(self, i), item)) {
+    if (bufAt(self, i) == item) {
+      return (int)i;
+    }
+  }
+  return -1;
+}
+
+static inline int itemsFindByName(items_t *self, object_name_t name) {
+  for (size_t i = 0; i < self->used; i++) {
+    if (objectNameEq(bufAt(self, i)->object.name, name)) {
       return (int)i;
     }
   }

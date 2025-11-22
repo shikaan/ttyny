@@ -4,7 +4,6 @@
 #include "item.h"
 #include "location.h"
 #include "object.h"
-#include "requirements.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -23,21 +22,56 @@ typedef enum {
 
 struct world_t {
   // All item definitions available in the story.
+  // This is an owning list: the rest uses these items, but don't own them
   items_t *items;
   // All location definitions available in the story.
+  // This is an owning list: the rest uses these locations, but don't own them
   locations_t *locations;
   // Possible termination states of the story.
   endings_t *endings;
 
   // How many turns since the game has started.
   uint16_t turns;
-  // Objects carried by the player.
+  // Non-owning list of objects carried by the player.
   items_t *inventory;
   // Where is the story currently taking place.
   location_t *location;
   // Description of the end of the game. Not null only if game is over.
-  const char *end_game;
+  // It's owned by the endings list
+  char *end_game;
 };
+
+// forward declared from loader.h
+world_t *worldCreateFromFile(const char *path);
+
+static inline void worldDestroy(world_t **self) {
+  if (!self || !*self)
+    return;
+
+  world_t *world = (*self);
+  itemsDestroy(&world->inventory);
+
+  size_t i;
+  bufEach(world->items, i) {
+    item_t *item = bufAt(world->items, i);
+    itemDestroy(&item);
+  }
+  itemsDestroy(&world->items);
+
+  bufEach(world->locations, i) {
+    location_t *location = bufAt(world->locations, i);
+    locationDestroy(&location);
+  }
+  locationsDestroy(&world->locations);
+
+  bufEach(world->endings, i) {
+    ending_t *ending = bufAt(world->endings, i);
+    endingDestory(&ending);
+  }
+  endingsDestroy(&world->endings);
+
+  deallocate(self);
+}
 
 static void worldAreRequirementsMet(world_t *self, requirements_t *requirements,
                                     requirements_result_t *result) {
@@ -54,11 +88,12 @@ static void worldAreRequirementsMet(world_t *self, requirements_t *requirements,
 
   if (requirements->inventory) {
     for (size_t i = 0; i < requirements->inventory->used; i++) {
-      item_t *required_item = bufAt(requirements->inventory, i);
-      int idx = itemsFind(self->inventory, required_item, itemHasSameId);
+      requirement_tuple_t tuple = bufAt(requirements->inventory, i);
+      int idx = itemsFindByName(self->inventory, tuple.name);
       if (idx > 0) {
         item_t *inventory_item = bufAt(self->inventory, (size_t)idx);
-        if (required_item->object.state != inventory_item->object.state) {
+        if (tuple.state != OBJECT_STATE_ANY &&
+            tuple.state != inventory_item->object.state) {
           done(REQUIREMENTS_RESULT_INVALID_INVENTORY_ITEM);
         }
       } else {
@@ -70,11 +105,12 @@ static void worldAreRequirementsMet(world_t *self, requirements_t *requirements,
 
   if (requirements->items) {
     for (size_t i = 0; i < requirements->items->used; i++) {
-      item_t *required_item = bufAt(requirements->items, i);
-      int idx = itemsFind(self->items, required_item, itemHasSameId);
+      requirement_tuple_t tuple = bufAt(requirements->inventory, i);
+      int idx = itemsFindByName(self->inventory, tuple.name);
       if (idx > 0) {
         item_t *world_item = bufAt(self->items, (size_t)idx);
-        if (required_item->object.state != world_item->object.state) {
+        if (tuple.state != OBJECT_STATE_ANY &&
+            tuple.state != world_item->object.state) {
           done(REQUIREMENTS_RESULT_INVALID_WORLD_ITEM);
         }
       } else {
@@ -86,13 +122,12 @@ static void worldAreRequirementsMet(world_t *self, requirements_t *requirements,
 
   if (requirements->locations) {
     for (size_t i = 0; i < requirements->locations->used; i++) {
-      location_t *required_location = bufAt(requirements->locations, i);
-      int idx =
-          locationsFind(self->locations, required_location, locationHasSameId);
+      requirement_tuple_t tuple = bufAt(requirements->inventory, i);
+      int idx = locationsFindByName(self->locations, tuple.name);
       panicif(idx < 0, "Requirements reference non-existing location");
-
       location_t *world_location = bufAt(self->locations, (size_t)idx);
-      if (required_location->object.state != world_location->object.state) {
+      if (tuple.state != OBJECT_STATE_ANY &&
+          tuple.state != world_location->object.state) {
         done(REQUIREMENTS_RESULT_INVALID_LOCATION);
       }
     }

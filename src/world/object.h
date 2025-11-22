@@ -1,12 +1,16 @@
 #pragma once
 
-#include <stdint.h>
-#include <string.h>
 #include "../buffers.h"
 #include "action.h"
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
 
-struct requirements_t;
+#include "../buffers.h"
+#include <stdint.h>
+
 typedef struct requirements_t requirements_t;
+static inline void requirementsDestroy(requirements_t **self);
 
 typedef enum {
   OBJECT_TYPE_UNKNOWN = -1,
@@ -29,9 +33,11 @@ static inline int objectNameEq(object_name_t self, object_name_t other) {
 // corresponds to the state n.
 typedef uint8_t object_state_t;
 
+static const object_state_t OBJECT_STATE_ANY = 255;
+
 // List of descriptions.
 // They will be used by the language model to describe objects or situations.
-typedef Buffer(const char *) descriptions_t;
+typedef Buffer(char *) descriptions_t;
 
 // When an object is affected by `trigger` its state changes from `from` to `to`
 typedef struct {
@@ -64,3 +70,70 @@ typedef enum {
   TRANSITION_RESULT_NO_TRANSITION,
   TRANSITION_RESULT_MISSING_ITEM,
 } transition_result_t;
+
+static inline void transitionDestroy(transition_t **self) {
+  if (!self || !*self)
+    return;
+
+  requirementsDestroy(&(*self)->requirements);
+  deallocate(self);
+}
+
+static inline void objectDestroyInner(object_t **self) {
+  if (!self || !*self)
+    return;
+
+  for (size_t i = 0; i < (*self)->descriptions->used; i++) {
+    char *description = bufAt((*self)->descriptions, i);
+    deallocate(&description);
+  }
+  deallocate(&(*self)->descriptions);
+
+  for (size_t i = 0; i < (*self)->transitions->used; i++) {
+    transition_t transition = bufAt((*self)->transitions, i);
+    requirementsDestroy(&transition.requirements);
+  }
+  deallocate(&(*self)->transitions);
+}
+
+typedef struct {
+  object_name_t name;
+  object_state_t state;
+} requirement_tuple_t;
+
+typedef Buffer(requirement_tuple_t) requirement_tuples_t;
+
+static inline requirement_tuples_t *requirementTuplesCreate(size_t length) {
+  requirement_tuples_t *tuples = NULL;
+  bufCreate(requirement_tuples_t, requirement_tuples_t, tuples, length);
+  return tuples;
+}
+
+typedef struct requirements_t {
+  requirement_tuples_t *inventory;
+  requirement_tuples_t *items;
+  requirement_tuples_t *locations;
+  uint16_t turns;
+} requirements_t;
+
+typedef enum {
+  REQUIREMENTS_RESULT_OK,
+  REQUIREMENTS_RESULT_NO_REQUIREMENTS,
+  REQUIREMENTS_RESULT_MISSING_INVENTORY_ITEM,
+  REQUIREMENTS_RESULT_INVALID_INVENTORY_ITEM,
+  REQUIREMENTS_RESULT_MISSING_WORLD_ITEM,
+  REQUIREMENTS_RESULT_INVALID_WORLD_ITEM,
+  REQUIREMENTS_RESULT_INVALID_LOCATION,
+  REQUIREMENTS_RESULT_NOT_ENOUGH_TURNS,
+} requirements_result_t;
+
+static inline void requirementsDestroy(requirements_t **self) {
+  if (!self || !*self)
+    return;
+
+  requirements_t *req = *self;
+  deallocate(&req->items);
+  deallocate(&req->inventory);
+  deallocate(&req->locations);
+  deallocate(self);
+}

@@ -35,9 +35,19 @@ int quit(string_t *response, ui_handle_t *loading) {
   return 0;
 }
 
-int main(void) {
-  world_t *world = loaderLoadWorld("assets/grayfen.json");
+void printUsage(const char *name) {
+  fprintf(stderr, "usage: %s <path-to-story.json>\n", name);
+  exit(1);
+}
 
+int main(int argc, char **argv) {
+
+  if (argc != 2) {
+    printUsage(argv[0]);
+  }
+  const char *story_path = argv[1];
+
+  world_t *world cleanup(worldDestroy) = worldCreateFromFile(story_path);
   string_t *input cleanup(strDestroy) = strCreate(512);
   string_t *response cleanup(strDestroy) = strCreate(4096);
   string_t *state cleanup(strDestroy) = strCreate(1024);

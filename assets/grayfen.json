@@ -103,16 +103,7 @@
       "state": "win",
       "reason": "You recovered the logbook and returned safely.",
       "requirements": {
-        "inventory": [
-          {
-            "name": "logbook",
-            "type": "item",
-            "descriptions": ["The outpost's final logbook."],
-            "transitions": [],
-            "collectible": true,
-            "readable": true
-          }
-        ],
+        "inventory": ["logbook"],
         "items": null,
         "locations": null,
         "turns": null
@@ -122,16 +113,7 @@
       "state": "win",
       "reason": "You discovered the squatter and brought back their message.",
       "requirements": {
-        "inventory": [
-          {
-            "name": "note",
-            "type": "item",
-            "descriptions": ["A note from the squatter asking for help."],
-            "transitions": [],
-            "collectible": true,
-            "readable": true
-          }
-        ],
+        "inventory": ["note.0"],
         "items": null,
         "locations": null,
         "turns": null

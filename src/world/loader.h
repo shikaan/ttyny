@@ -146,40 +146,55 @@ loaderParseEndingRequirements(const char *json, jsmntok_t *tokens,
   int locsIdx = loaderFindObjectKey(json, tokens, reqObjIndex, "locations");
   int turnsIdx = loaderFindObjectKey(json, tokens, reqObjIndex, "turns");
 
-  // Inventory
+  // Inventory (schema: array of "name" or "name.state" strings ->
+  // requirement_tuples_t)
   if (invIdx >= 0 && tokens[invIdx].type == JSMN_ARRAY) {
     jsmntok_t *arr = &tokens[invIdx];
     if (arr->size > 0) {
-      items_t *buf = itemsCreate((size_t)arr->size);
+      requirement_tuples_t *buf = requirementTuplesCreate((size_t)arr->size);
       if (!buf) {
         deallocate(&req);
         return NULL;
       }
       int idx = invIdx + 1;
+      size_t used = 0;
       for (int i = 0; i < arr->size; i++) {
         jsmntok_t *elem = &tokens[idx];
-        if (elem->type == JSMN_OBJECT) {
-          int nameTokIdx = loaderFindObjectKey(json, tokens, idx, "name");
-          if (nameTokIdx >= 0) {
-            jsmntok_t *nameTok = &tokens[nameTokIdx];
-            char *name = strndup(json + nameTok->start,
-                                       (size_t)(nameTok->end - nameTok->start));
-            if (name) {
-              item_t *worldItem = loaderFindItemByName(worldItems, name);
-              if (!worldItem) {
-                fprintf(stderr,
-                        "loader: requirement references unknown item '%s'\n",
-                        name);
-              } else {
-                bufPush(buf, worldItem);
+        if (elem->type == JSMN_STRING) {
+          size_t len = (size_t)(elem->end - elem->start);
+          char *raw = strndup(json + elem->start, len);
+          if (raw) {
+            // Parse optional ".state"
+            object_state_t desired_state = 0;
+            char *dot = strrchr(raw, '.');
+            if (dot) {
+              char *endptr = NULL;
+              long state_val = strtol(dot + 1, &endptr, 10);
+              if (endptr && *endptr == '\0' && state_val >= 0 &&
+                  state_val <= 255) {
+                *dot = '\0';
+                desired_state = (object_state_t)state_val;
               }
-              deallocate(&name);
+            }
+            item_t *worldItem = loaderFindItemByName(worldItems, raw);
+            if (!worldItem) {
+              fprintf(stderr,
+                      "loader: requirement references unknown item '%s'\n",
+                      raw);
+              deallocate(&raw);
+            } else {
+              // Reuse world item name pointer (stable, not freed here)
+              requirement_tuple_t tuple = {.name = worldItem->object.name,
+                                           .state = desired_state};
+              bufSet(buf, used, tuple);
+              used++;
+              deallocate(&raw);
             }
           }
         }
         idx = loaderSkipToken(tokens, idx);
       }
-      buf->used = buf->used; // ensure
+      buf->used = used;
       req->inventory = buf;
     }
   }
@@ -188,36 +203,49 @@ loaderParseEndingRequirements(const char *json, jsmntok_t *tokens,
   if (itemsIdx >= 0 && tokens[itemsIdx].type == JSMN_ARRAY) {
     jsmntok_t *arr = &tokens[itemsIdx];
     if (arr->size > 0) {
-      items_t *buf = itemsCreate((size_t)arr->size);
+      requirement_tuples_t *buf = requirementTuplesCreate((size_t)arr->size);
       if (!buf) {
         deallocate(&req);
         return NULL;
       }
       int idx = itemsIdx + 1;
+      size_t used = 0;
       for (int i = 0; i < arr->size; i++) {
         jsmntok_t *elem = &tokens[idx];
-        if (elem->type == JSMN_OBJECT) {
-          int nameTokIdx = loaderFindObjectKey(json, tokens, idx, "name");
-          if (nameTokIdx >= 0) {
-            jsmntok_t *nameTok = &tokens[nameTokIdx];
-            char *name = strndup(json + nameTok->start,
-                                       (size_t)(nameTok->end - nameTok->start));
-            if (name) {
-              item_t *worldItem = loaderFindItemByName(worldItems, name);
-              if (!worldItem) {
-                fprintf(
-                    stderr,
-                    "loader: requirement references unknown world item '%s'\n",
-                    name);
-              } else {
-                bufPush(buf, worldItem);
+        if (elem->type == JSMN_STRING) {
+          size_t len = (size_t)(elem->end - elem->start);
+          char *raw = strndup(json + elem->start, len);
+          if (raw) {
+            object_state_t desired_state = 0;
+            char *dot = strrchr(raw, '.');
+            if (dot) {
+              char *endptr = NULL;
+              long state_val = strtol(dot + 1, &endptr, 10);
+              if (endptr && *endptr == '\0' && state_val >= 0 &&
+                  state_val <= 255) {
+                *dot = '\0';
+                desired_state = (object_state_t)state_val;
               }
-              deallocate(&name);
+            }
+            item_t *worldItem = loaderFindItemByName(worldItems, raw);
+            if (!worldItem) {
+              fprintf(
+                  stderr,
+                  "loader: requirement references unknown world item '%s'\n",
+                  raw);
+              deallocate(&raw);
+            } else {
+              requirement_tuple_t tuple = {.name = worldItem->object.name,
+                                           .state = desired_state};
+              bufSet(buf, used, tuple);
+              used++;
+              deallocate(&raw);
             }
           }
         }
         idx = loaderSkipToken(tokens, idx);
       }
+      buf->used = used;
       req->items = buf;
     }
   }
@@ -226,37 +254,49 @@ loaderParseEndingRequirements(const char *json, jsmntok_t *tokens,
   if (locsIdx >= 0 && tokens[locsIdx].type == JSMN_ARRAY) {
     jsmntok_t *arr = &tokens[locsIdx];
     if (arr->size > 0) {
-      locations_t *buf = locationsCreate((size_t)arr->size);
+      requirement_tuples_t *buf = requirementTuplesCreate((size_t)arr->size);
       if (!buf) {
         deallocate(&req);
         return NULL;
       }
       int idx = locsIdx + 1;
+      size_t used = 0;
       for (int i = 0; i < arr->size; i++) {
         jsmntok_t *elem = &tokens[idx];
-        if (elem->type == JSMN_OBJECT) {
-          int nameTokIdx = loaderFindObjectKey(json, tokens, idx, "name");
-          if (nameTokIdx >= 0) {
-            jsmntok_t *nameTok = &tokens[nameTokIdx];
-            char *name = strndup(json + nameTok->start,
-                                       (size_t)(nameTok->end - nameTok->start));
-            if (name) {
-              location_t *worldLoc =
-                  loaderFindLocationByName(worldLocations, name);
-              if (!worldLoc) {
-                fprintf(
-                    stderr,
-                    "loader: requirement references unknown location '%s'\n",
-                    name);
-              } else {
-                bufPush(buf, worldLoc);
+        if (elem->type == JSMN_STRING) {
+          size_t len = (size_t)(elem->end - elem->start);
+          char *raw = strndup(json + elem->start, len);
+          if (raw) {
+            object_state_t desired_state = 0;
+            char *dot = strrchr(raw, '.');
+            if (dot) {
+              char *endptr = NULL;
+              long state_val = strtol(dot + 1, &endptr, 10);
+              if (endptr && *endptr == '\0' && state_val >= 0 &&
+                  state_val <= 255) {
+                *dot = '\0';
+                desired_state = (object_state_t)state_val;
               }
-              deallocate(&name);
+            }
+            location_t *worldLoc =
+                loaderFindLocationByName(worldLocations, raw);
+            if (!worldLoc) {
+              fprintf(stderr,
+                      "loader: requirement references unknown location '%s'\n",
+                      raw);
+              deallocate(&raw);
+            } else {
+              requirement_tuple_t tuple = {.name = worldLoc->object.name,
+                                           .state = desired_state};
+              bufSet(buf, used, tuple);
+              used++;
+              deallocate(&raw);
             }
           }
         }
         idx = loaderSkipToken(tokens, idx);
       }
+      buf->used = used;
       req->locations = buf;
     }
   }
@@ -368,8 +408,9 @@ loaderParseDescriptions(const char *json, jsmntok_t *tokens, int arrIndex) {
     // Create a single empty description to avoid NULL pointers.
     descriptions_t *d = NULL;
     bufCreate(descriptions_t, const char *, d, 1);
+    char *empty = {0};
     if (d) {
-      bufSet(d, 0, "");
+      bufSet(d, 0, empty);
       d->used = 1;
     }
     return d;
@@ -441,7 +482,7 @@ static items_t *loaderParseItems(const char *json, jsmntok_t *tokens,
 
       char *name =
           strndup(json + tokens[nameIdx].start,
-                        (size_t)(tokens[nameIdx].end - tokens[nameIdx].start));
+                  (size_t)(tokens[nameIdx].end - tokens[nameIdx].start));
       if (!name) {
         idx = loaderSkipToken(tokens, idx);
         break;
@@ -529,7 +570,7 @@ static locations_t *loaderParseLocations(const char *json, jsmntok_t *tokens,
 
       char *name =
           strndup(json + tokens[nameIdx].start,
-                        (size_t)(tokens[nameIdx].end - tokens[nameIdx].start));
+                  (size_t)(tokens[nameIdx].end - tokens[nameIdx].start));
       if (!name) {
         idx = loaderSkipToken(tokens, idx);
         break;
@@ -554,7 +595,7 @@ static locations_t *loaderParseLocations(const char *json, jsmntok_t *tokens,
           jsmntok_t *itmTok = &tokens[itIdx];
           if (itmTok->type == JSMN_STRING) {
             char *iname = strndup(json + itmTok->start,
-                                        (size_t)(itmTok->end - itmTok->start));
+                                  (size_t)(itmTok->end - itmTok->start));
             if (iname) {
               item_t *worldItem = loaderFindItemByName(worldItems, iname);
               if (!worldItem) {
@@ -586,7 +627,7 @@ static locations_t *loaderParseLocations(const char *json, jsmntok_t *tokens,
           if (locNameTok->type == JSMN_STRING) {
             char *lname =
                 strndup(json + locNameTok->start,
-                              (size_t)(locNameTok->end - locNameTok->start));
+                        (size_t)(locNameTok->end - locNameTok->start));
             if (lname) {
               // Temporarily store NULL; we'll resolve after all locations are
               // created.
@@ -689,9 +730,9 @@ static endings_t *loaderParseEndings(const char *json, jsmntok_t *tokens,
       }
 
       bool success = loaderStrEqTok(json, &tokens[stateIdx], "win");
-      char *reason = strndup(
-          json + tokens[reasonIdx].start,
-          (size_t)(tokens[reasonIdx].end - tokens[reasonIdx].start));
+      char *reason =
+          strndup(json + tokens[reasonIdx].start,
+                  (size_t)(tokens[reasonIdx].end - tokens[reasonIdx].start));
       if (!reason) {
         idx = loaderSkipToken(tokens, idx);
         continue;
@@ -818,8 +859,7 @@ static world_t *loaderParseJson(const char *json, size_t length) {
   while ((r = jsmn_parse(&parser, json, length, tokens, tokensCapacity)) ==
          JSMN_ERROR_NOMEM) {
     tokensCapacity *= 2;
-    jsmntok_t *newTokens =
-        allocate(sizeof(jsmntok_t) * (size_t)tokensCapacity);
+    jsmntok_t *newTokens = allocate(sizeof(jsmntok_t) * (size_t)tokensCapacity);
     if (!newTokens) {
       deallocate(&tokens);
       return NULL;
@@ -894,7 +934,7 @@ static world_t *loaderParseJson(const char *json, size_t length) {
 
 // ----------------------------- Public API -----------------------------------
 
-world_t *loaderLoadWorld(const char *path) {
+world_t *worldCreateFromFile(const char *path) {
   size_t len = 0;
   char *json = loaderReadFile(path, &len);
   if (!json)

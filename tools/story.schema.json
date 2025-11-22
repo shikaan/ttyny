@@ -45,21 +45,27 @@
       "type": "array",
       "items": { "$ref": "#/$defs/Location" }
     },
+    "RequirementTuple": {
+      "type": "string",
+      "items": [{ "type": "string", "pattern": "^.+\\.\\d+" }],
+      "minItems": 2,
+      "maxItems": 2
+    },
     "Requirements": {
       "type": "object",
       "description": "Requirements that must be satisfied to perform a transition or reach an ending. Each field may be null (no constraint) or a specific constraint object.",
       "properties": {
         "inventory": {
           "description": "Player inventory membership conditions.",
-          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/Items" }]
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/RequirementTuple" }]
         },
         "items": {
           "description": "Item state conditions (by name or name.state).",
-          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/Items" }]
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/RequirementTuple" }]
         },
         "locations": {
           "description": "Location state membership conditions (by name or name.state).",
-          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/Locations" }]
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/RequirementTuple" }]
         },
         "turns": {
           "description": "Turn count constraints.",
