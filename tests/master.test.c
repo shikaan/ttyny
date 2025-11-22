@@ -123,7 +123,7 @@ void describeEndgame(void) {
   };
 
   // end game always comes with a pre-described room
-  masterDescribeLocation(master, world->current_location, buffer);
+  masterDescribeLocation(master, world->location, buffer);
   strClear(buffer); // we don't really care about this description though
 
   size_t num_scenarios = arrLen(end_game);
@@ -132,7 +132,7 @@ void describeEndgame(void) {
 
   for (size_t i = 0; i < SAMPLE_SIZE; i++) {
     size_t scenario_idx = i % num_scenarios;
-    world->current_end_game = end_game[scenario_idx].ending;
+    world->end_game = end_game[scenario_idx].ending;
     game_state_t state = end_game[scenario_idx].state;
     strFmt(input, "%s", end_game[scenario_idx].input);
 
@@ -145,7 +145,7 @@ void describeEndgame(void) {
           (double)elapsed / (double)MICROSECONDS);
     samples[i] = elapsed;
     debug("RESPONSE (end: %s, input: %s, state: %s)\n > %s\n---\n",
-          world->current_end_game, end_game[scenario_idx].input,
+          world->end_game, end_game[scenario_idx].input,
           state == GAME_STATE_VICTORY ? "victory" : "dead", buffer->data);
 
     if (i != 0 && (i % 10) == 0) {

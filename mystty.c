@@ -1,4 +1,3 @@
-#include "assets/grayfen.h"
 #include "src/buffers.h"
 #include "src/master.h"
 #include "src/panic.h"
@@ -8,6 +7,7 @@
 #include "src/world/action.h"
 #include "src/world/command.h"
 #include "src/world/item.h"
+#include "src/world/loader.h"
 #include "src/world/world.h"
 #include <ggml.h>
 #include <linenoise.h>
@@ -36,6 +36,8 @@ int quit(string_t *response, ui_handle_t *loading) {
 }
 
 int main(void) {
+  world_t *world = loaderLoadWorld("assets/grayfen.json");
+
   string_t *input cleanup(strDestroy) = strCreate(512);
   string_t *response cleanup(strDestroy) = strCreate(4096);
   string_t *state cleanup(strDestroy) = strCreate(1024);
@@ -202,8 +204,8 @@ int main(void) {
       break;
     }
     case ACTION_TYPE_TAKE: {
-      parserExtractTarget(parser, input, locations,
-                          world->location->items, &location, &item);
+      parserExtractTarget(parser, input, locations, world->location->items,
+                          &location, &item);
 
       if (!item) {
         strFmt(response, "Take what? You need to be more specific than that.");
@@ -230,8 +232,8 @@ int main(void) {
       break;
     }
     case ACTION_TYPE_DROP: {
-      parserExtractTarget(parser, input, locations, world->inventory,
-                          &location, &item);
+      parserExtractTarget(parser, input, locations, world->inventory, &location,
+                          &item);
 
       if (!item) {
         strFmt(response, "You cannot drop something that you don't own.");
