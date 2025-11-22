@@ -4,7 +4,7 @@
 #include "buffers.h"
 #include "map.h"
 #include "utils.h"
-#include "world.h"
+#include "world/world.h"
 
 #include "configs/qwen.h"
 #include <stddef.h>
@@ -15,7 +15,7 @@ typedef Buffer(const char *) words_t;
 
 static inline words_t *wordsCreate(size_t len) {
   words_t *result;
-  makeBufCreate(words_t, const char *, result, len);
+  bufCreate(words_t, const char *, result, len);
   return result;
 }
 
@@ -23,8 +23,8 @@ static inline void wordsDestroy(words_t **self) { deallocate(self); }
 
 static words_t STOP_WORDS =
     bufConst(4, "inventory", "player", "player's", "location");
-static words_t STOP_WORDS_CASE =
-    bufConst(7, "EXITS", "EXIT", "ITEMS", "ACTION", "DESCRIPTION", "STATE", "TARGET");
+static words_t STOP_WORDS_CASE = bufConst(7, "EXITS", "EXIT", "ITEMS", "ACTION",
+                                          "DESCRIPTION", "STATE", "TARGET");
 static words_t ACTION_MUST_HAVES = bufConst(1, "you");
 
 typedef struct {
@@ -44,11 +44,9 @@ static action_desc_shot_t action_desc_shots[] = {
 static void summarizeLocation(const location_t *location, string_t *summary) {
   strFmt(summary,
          "LOCATION: %s\n"
-         "DESCRIPTION: %s\n"
-         "STATE: %s\n",
-         location->object.name, location->object.description,
-         bufAt(location->object.state_descriptions,
-               location->object.current_state));
+         "DESCRIPTION: %s\n",
+         location->object.name,
+         bufAt(location->object.descriptions, location->object.state));
 
   if (location->items->used) {
     strFmtAppend(summary, "\nITEMS: ");
@@ -241,8 +239,7 @@ void masterDescribeObject(master_t *self, const object_t *object,
   }
 
   if (objectIsReadable(object)) {
-    const char *state_desc =
-        bufAt(object->state_descriptions, object->current_state);
+    const char *state_desc = bufAt(object->descriptions, object->state);
     strFmt(description, "%s reads:\n\n%s", object->name, state_desc);
     char *copy = strdup(description->data);
     (void)mapSet(self->descriptions, cache_key, copy);
@@ -256,10 +253,8 @@ void masterDescribeObject(master_t *self, const object_t *object,
   strFmt(self->prompt, sys_prompt_tpl->data,
          MASTER_OBJECT_DESC_SYS_PROMPT.data);
 
-  strFmtAppend(self->prompt,
-               "\nITEM:\n name: %s\n description: %s\n state: %s\n",
-               object->name, object->description,
-               bufAt(object->state_descriptions, object->current_state));
+  strFmtAppend(self->prompt, "\nITEM:\n name: %s\n description: %s\n",
+               object->name, bufAt(object->descriptions, object->state));
 
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
@@ -281,7 +276,7 @@ void masterDescribeAction(master_t *self, const world_t *world,
 
   // Using a shot to provide some context
   strFmtAppend(self->prompt, usr_prompt_tpl->data, "look around");
-  masterDescribeLocation(self, world->current_location, self->summary);
+  masterDescribeLocation(self, world->location, self->summary);
   strFmtAppend(self->prompt, res_prompt_tpl->data, self->summary->data);
 
   // // Add few-shot examples
@@ -291,10 +286,8 @@ void masterDescribeAction(master_t *self, const world_t *world,
     strFmtAppend(self->prompt, res_prompt_tpl->data, shot.output);
   }
 
-  strFmt(self->summary,
-         "ACTION: %s\nTARGET:\n name: %s\n description: %s\n state: %s\n",
-         input->data, object->name, object->description,
-         bufAt(object->state_descriptions, object->current_state));
+  strFmt(self->summary, "ACTION: %s\nTARGET:\n name: %s\n description: %s\n",
+         input->data, object->name, bufAt(object->descriptions, object->state));
   strFmtAppend(self->prompt, usr_prompt_tpl->data, self->summary->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
@@ -318,12 +311,11 @@ void masterDescribeEndGame(master_t *self, const string_t *last_action,
 
   // Using a shot to provide some context
   strFmtAppend(self->prompt, usr_prompt_tpl->data, "look around");
-  masterDescribeLocation(self, world->current_location, self->summary);
+  masterDescribeLocation(self, world->location, self->summary);
   strFmtAppend(self->prompt, res_prompt_tpl->data, self->summary->data);
 
   strFmt(self->summary, "ACTION: %s\nENDING: %s\nREASON: %s", last_action->data,
-         state == GAME_STATE_VICTORY ? "victory" : "death",
-         world->current_end_game);
+         state == GAME_STATE_VICTORY ? "victory" : "death", world->end_game);
   strFmtAppend(self->prompt, usr_prompt_tpl->data, self->summary->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 

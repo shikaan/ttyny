@@ -5,7 +5,10 @@
 #include "src/parser.h"
 #include "src/screen.h"
 #include "src/utils.h"
-#include "src/world.h"
+#include "src/world/action.h"
+#include "src/world/command.h"
+#include "src/world/item.h"
+#include "src/world/world.h"
 #include <ggml.h>
 #include <linenoise.h>
 #include <stddef.h>
@@ -56,16 +59,17 @@ int main(void) {
 
   ui_handle_t *loading = loadingStart();
 
-  masterDescribeLocation(master, world->current_location, response);
+  masterDescribeLocation(master, world->location, response);
   loadingStop(&loading);
 
   printDescription(response);
 
-  formatLocationChange(response, world->current_location);
+  formatLocationChange(response, world->location);
   printStateUpdate(response);
 
   linenoiseHistorySetMaxLen(15);
   linenoiseSetCompletionCallback(completion);
+  game_state_t game_state;
 
   while (1) {
     char *line = linenoise("> ");
@@ -135,13 +139,13 @@ int main(void) {
     action_type_t action = operation.as.action;
 
     // Advance turn count only for actions, not for commands
-    world->state.turns++;
+    world->turns++;
 
     item_t *item = NULL;
     location_t *location = NULL;
 
-    itemsClear(items);
-    locationsClear(locations);
+    bufClear(items, NULL);
+    bufClear(locations, NULL);
     strClear(state);
 
     transition_result_t transition;
@@ -149,7 +153,7 @@ int main(void) {
 
     switch (action) {
     case ACTION_TYPE_MOVE: {
-      parserExtractTarget(parser, input, world->current_location->exits, items,
+      parserExtractTarget(parser, input, world->location->exits, items,
                           &location, &item);
 
       if (!location) {
@@ -158,40 +162,36 @@ int main(void) {
         break;
       }
 
-      objectTransition(&location->object, action, world->state.inventory,
-                       &transition);
-
+      worldTransitionObject(world, &location->object, action, &transition);
       if (transition == TRANSITION_RESULT_MISSING_ITEM) {
         strFmt(response, "You need an item or a key to go there...");
         printCallback = printError;
         break;
       }
 
-      world->current_location = location;
+      world->location = location;
       masterDescribeLocation(master, location, response);
       printCallback = printDescription;
-      formatLocationChange(state, world->current_location);
+      formatLocationChange(state, world->location);
       break;
     }
     case ACTION_TYPE_EXAMINE: {
-      itemsCat(items, world->current_location->items);
-      itemsCat(items, world->state.inventory);
-      parserExtractTarget(parser, input, world->current_location->exits, items,
+      itemsCat(items, world->location->items);
+      itemsCat(items, world->inventory);
+      parserExtractTarget(parser, input, world->location->exits, items,
                           &location, &item);
 
       if (item) {
-        // ignoring error: transitions always succeed only for USE
-        objectTransition(&item->object, action, world->state.inventory,
-                         &transition);
+        // TODO: distinguish examine vs read instead of transitioning here
+        // This is narrative transition (not functional). No need to check
+        // result
+        worldTransitionObject(world, &item->object, action, &transition);
         masterDescribeObject(master, &item->object, response);
         printCallback = printDescription;
         break;
       }
 
       if (location) {
-        // ignoring error: transitions always succeed only for USE
-        objectTransition(&location->object, action, world->state.inventory,
-                         &transition);
         masterDescribeObject(master, &location->object, response);
         printCallback = printDescription;
         break;
@@ -203,7 +203,7 @@ int main(void) {
     }
     case ACTION_TYPE_TAKE: {
       parserExtractTarget(parser, input, locations,
-                          world->current_location->items, &location, &item);
+                          world->location->items, &location, &item);
 
       if (!item) {
         strFmt(response, "Take what? You need to be more specific than that.");
@@ -217,21 +217,20 @@ int main(void) {
         break;
       }
 
-      itemsAdd(world->state.inventory, item);
-      itemsRemove(world->current_location->items, item);
+      bufPush(world->inventory, item);
+      itemsRemove(world->location->items, item);
 
       masterDescribeAction(master, world, input, &item->object, response);
 
       printCallback = printDescription;
       formatTake(state, item);
 
-      // ignoring error: transition are expected to always succeed only for USE
-      objectTransition(&item->object, action, world->state.inventory,
-                       &transition);
+      // This is narrative transition (not functional). No need to check result
+      worldTransitionObject(world, &item->object, action, &transition);
       break;
     }
     case ACTION_TYPE_DROP: {
-      parserExtractTarget(parser, input, locations, world->state.inventory,
+      parserExtractTarget(parser, input, locations, world->inventory,
                           &location, &item);
 
       if (!item) {
@@ -240,22 +239,21 @@ int main(void) {
         break;
       }
 
-      itemsAdd(world->current_location->items, item);
-      itemsRemove(world->state.inventory, item);
+      bufPush(world->location->items, item);
+      itemsRemove(world->inventory, item);
 
       masterDescribeAction(master, world, input, &item->object, response);
 
       printCallback = printDescription;
       formatDrop(state, item);
 
-      // ignoring error: transitions always succeed only for USE
-      objectTransition(&item->object, action, world->state.inventory,
-                       &transition);
+      // This is narrative transition (not functional). No need to check result
+      worldTransitionObject(world, &item->object, action, &transition);
       break;
     }
     case ACTION_TYPE_USE: {
-      itemsCat(items, world->state.inventory);
-      itemsCat(items, world->current_location->items);
+      itemsCat(items, world->inventory);
+      itemsCat(items, world->location->items);
       parserExtractTarget(parser, input, locations, items, &location, &item);
 
       if (!item) {
@@ -264,8 +262,7 @@ int main(void) {
         break;
       }
 
-      objectTransition(&item->object, action, world->state.inventory,
-                       &transition);
+      worldTransitionObject(world, &item->object, action, &transition);
 
       switch (transition) {
       case TRANSITION_RESULT_OK:
@@ -295,7 +292,7 @@ int main(void) {
       printCallback = printError;
     }
 
-    game_state_t game_state = world->digest(world);
+    worldDigest(world, &game_state);
     if (game_state != GAME_STATE_CONTINUE) {
       masterDescribeEndGame(master, input, world, game_state, response);
       loadingStop(&loading);

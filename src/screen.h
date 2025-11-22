@@ -1,6 +1,6 @@
 #pragma once
 #include "buffers.h"
-#include "world.h"
+#include "world/world.h"
 #include <pthread.h>
 #include <stdatomic.h>
 

@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/story.schema.json",
+  "title": "Interactive Story Definition",
+  "description": "Schema for defining items, locations, transitions, and endings for the story engine.",
+  "type": "object",
+  "required": ["items", "locations", "endings"],
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "type": "array",
+      "description": "All item definitions available in the story.",
+      "items": { "$ref": "#/$defs/Item" }
+    },
+    "locations": {
+      "type": "array",
+      "description": "All location definitions available in the story.",
+      "items": { "$ref": "#/$defs/Location" }
+    },
+    "endings": {
+      "type": "array",
+      "description": "Possible termination states of the story.",
+      "items": { "$ref": "#/$defs/Ending" }
+    }
+  },
+  "$defs": {
+    "NonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "StringArray": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/NonEmptyString" },
+      "minItems": 1
+    },
+    "ActionList": {
+      "type": "array",
+      "description": "List of action verb identifiers that can trigger a transition (e.g. use, inspect).",
+      "items": {
+        "enum": ["use", "move", "examine", "take", "drop"]
+      },
+      "minItems": 1
+    },
+    "Requirements": {
+      "type": "object",
+      "description": "Requirements that must be satisfied to perform a transition or reach an ending. Each field may be null (no constraint) or a specific constraint object.",
+      "properties": {
+        "inventory": {
+          "description": "Player inventory membership conditions.",
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/Requirement" }]
+        },
+        "items": {
+          "description": "Item state conditions (by name or name.state).",
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/Requirement" }]
+        },
+        "locations": {
+          "description": "Location state membership conditions (by name or name.state).",
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/Requirement" }]
+        },
+        "turns": {
+          "description": "Turn count constraints.",
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/Requirement" }]
+        }
+      },
+      "required": ["inventory", "items", "locations", "turns"],
+      "additionalProperties": false
+    },
+    "Transition": {
+      "type": "object",
+      "description": "State change triggered by performing one of the listed actions when requirements are met.",
+      "required": ["actions", "from", "to", "requirements"],
+      "additionalProperties": false,
+      "properties": {
+        "actions": { "$ref": "#/$defs/ActionList" },
+        "from": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Index of the originating description/state."
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Index of the target description/state."
+        },
+        "requirements": { "$ref": "#/$defs/Requirements" }
+      }
+    },
+    "Item": {
+      "type": "object",
+      "description": "Item definition with multiple description states and transitions.",
+      "required": [
+        "name",
+        "type",
+        "descriptions",
+        "transitions",
+        "collectible",
+        "readable"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "$ref": "#/$defs/NonEmptyString" },
+        "type": {
+          "const": "item",
+          "description": "Fixed discriminator to identify item objects."
+        },
+        "descriptions": {
+          "type": "array",
+          "description": "Ordered list of textual states for the item.",
+          "items": { "$ref": "#/$defs/NonEmptyString" },
+          "minItems": 1
+        },
+        "transitions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Transition" },
+          "description": "Possible state transitions for the item.",
+          "default": []
+        },
+        "collectible": {
+          "type": "boolean",
+          "description": "True if the item can be added to the player's inventory"
+        },
+        "readable": {
+          "type": "boolean",
+          "description": "True if upon inspection the item reveals its descriptions verbatim"
+        }
+      }
+    },
+    "Location": {
+      "type": "object",
+      "description": "Location definition with possible transitions (e.g. lighting a room).",
+      "required": [
+        "name",
+        "type",
+        "descriptions",
+        "transitions",
+        "items",
+        "exits"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "$ref": "#/$defs/NonEmptyString" },
+        "type": {
+          "const": "location",
+          "description": "Fixed discriminator to identify location objects."
+        },
+        "descriptions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/NonEmptyString" },
+          "minItems": 1
+        },
+        "transitions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Transition" },
+          "description": "Possible environmental state transitions for the location.",
+          "default": []
+        },
+        "items": {
+          "type": "array",
+          "description": "Names of items initially present at this location.",
+          "items": { "$ref": "#/$defs/NonEmptyString" },
+          "default": []
+        },
+        "exits": {
+          "type": "array",
+          "description": "Names of other locations reachable from here.",
+          "items": { "$ref": "#/$defs/NonEmptyString" },
+          "default": []
+        }
+      }
+    },
+    "Ending": {
+      "type": "object",
+      "description": "Terminal game state reached when requirements are satisfied.",
+      "required": ["state", "reason", "requirements"],
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": ["win", "lose"],
+          "description": "Outcome classification."
+        },
+        "reason": { "$ref": "#/$defs/NonEmptyString" },
+        "requirements": { "$ref": "#/$defs/Requirements" }
+      }
+    }
+  }
+}

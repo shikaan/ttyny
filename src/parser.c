@@ -1,7 +1,6 @@
 #include "parser.h"
 #include "configs/qwen.h"
 #include "panic.h"
-#include "world.h"
 
 static string_t ACTION_GRAMMAR = strConst(
     "root ::= \"move\" | \"use\" | \"take\" | \"drop\" | \"examine\"\n");

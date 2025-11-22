@@ -3,7 +3,7 @@
 #include "ai.h"
 #include "buffers.h"
 #include "map.h"
-#include "world.h"
+#include "world/world.h"
 
 #include <stddef.h>
 #include <stdio.h>

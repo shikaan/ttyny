@@ -50,7 +50,7 @@
     (BufferPtr)->used = 0;                                                     \
   }
 
-#define makeBufCreate(BufferType, ItemType, Result, Length)                    \
+#define bufCreate(BufferType, ItemType, Result, Length)                        \
   const size_t size = sizeof(BufferType);                                      \
   Result = allocate(size + ((unsigned)(Length) * sizeof(ItemType)));           \
   if (!Result) {                                                               \
@@ -71,7 +71,7 @@ typedef Buffer(char) string_t;
 
 static inline string_t *strCreate(size_t length) {
   string_t *result = NULL;
-  makeBufCreate(string_t, char, result, length + 1);
+  bufCreate(string_t, char, result, length + 1);
   result->length = length;
   result->data[length] = 0;
   return result;
