@@ -1,6 +1,18 @@
 #include "../src/buffers.h"
 #include "../src/utils.h"
 #include "test.h"
+#include <stddef.h>
+
+typedef Buffer(int) test_buffer_t;
+static test_buffer_t *testBufferCreate(size_t length) {
+  test_buffer_t *result;
+  bufCreate(test_buffer_t, int, result, length);
+  return result;
+}
+static void testBufferDestroy(test_buffer_t **self) { deallocate(self); }
+static int testBufferFind(test_buffer_t *self, int item) {
+  bufFind(self, item);
+}
 
 void stringCreate(void) {
   string_t *subject cleanup(strDestroy) = strCreate(3);
@@ -66,12 +78,63 @@ void stringTrim(void) {
   expectEqls(subject->data, "", length, "trims everything");
 }
 
+void buffer(void) {
+  // out of bounds are expected to panic, they cannot be tested
+
+  test_buffer_t *buf_1 cleanup(testBufferDestroy) = testBufferCreate(2);
+  test_buffer_t *buf_2 cleanup(testBufferDestroy) = testBufferCreate(1);
+  test_buffer_t *buf_empty cleanup(testBufferDestroy) = testBufferCreate(1);
+
+  case("bufCreate");
+  expectEqllu(buf_1->length, 2, "has correct length");
+  expectEqllu(buf_1->used, 0, "has correct used");
+
+  case("bufPush");
+  panicif(buf_2->used != 0, "unexpected filled buffer");
+  bufPush(buf_2, 1);
+  expectEqllu(buf_2->used, 1, "increments used");
+  bufPush(buf_1, 2);
+
+  case("bufCat");
+  bufCat(buf_1, buf_2);
+  expectEqllu(buf_1->used, 2, "increases used");
+  expectEqli(bufAt(buf_1, 1), 1, "concatenates correctly");
+  expectEqllu(buf_2->used, 1, "does not change other buffer");
+
+  bufCat(buf_2, buf_empty);
+  expectEqllu(buf_2->used, 1, "pushes an empty list");
+
+  bufCat(buf_empty, buf_2);
+  expectEqllu(buf_empty->used, buf_2->used, "pushes to an empty list");
+
+  case("bufRemove");
+  bufRemove(buf_empty, bufAt(buf_2, 0), 0);
+  expectEqllu(buf_empty->used, 0, "removes element if found");
+
+  bufRemove(buf_empty, bufAt(buf_2, 0), 0);
+  expectEqllu(buf_empty->used, 0, "does nothing on empty list");
+
+  size_t initial_len = buf_2->length;
+  bufRemove(buf_2, 99, 0);
+  expectEqllu(buf_2->used, initial_len, "doesn't change length if not found");
+
+  case("bufFind");
+  int idx = testBufferFind(buf_empty, 0);
+  expectEqli(idx, -1, "returns -1 on empty list");
+  idx = testBufferFind(buf_2, 1);
+  expectEqli(idx, 0, "returns index of found element");
+  idx = testBufferFind(buf_2, 23);
+  expectEqli(idx, -1, "returns -1 if element is not found");
+}
+
 int main(void) {
   suite(stringCreate);
   suite(stringFrom);
   suite(stringFormat);
   suite(stringClear);
   suite(stringTrim);
+
+  suite(buffer);
 
   return report();
 }

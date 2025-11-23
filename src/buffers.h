@@ -46,7 +46,7 @@
 
 #define bufClear(BufferPtr, NullValue)                                         \
   {                                                                            \
-    bufSet((BufferPtr), 0, (NullValue));                                       \
+    bufSet((BufferPtr), (size_t)0, (NullValue));                               \
     (BufferPtr)->used = 0;                                                     \
   }
 
@@ -60,6 +60,38 @@
   Result->used = 0;
 
 #define bufEach(BufferPtr, Index) for ((Index) = 0; i < (BufferPtr)->used; i++)
+
+#define bufCat(BufferPtr, OtherBufferPtr)                                      \
+  {                                                                            \
+    size_t i;                                                                  \
+    bufEach(OtherBufferPtr, i) {                                                    \
+      bufPush((BufferPtr), bufAt((OtherBufferPtr), i));                        \
+    }                                                                          \
+  }
+
+#define bufRemove(BufferPtr, Item, NullValue)                                             \
+  {                                                                            \
+    size_t i;                                                                  \
+    bufEach(BufferPtr, i) {                                                    \
+      if (bufAt(BufferPtr, i) == Item) {                                       \
+        bufSet(BufferPtr, i, bufAt(BufferPtr, (BufferPtr)->used - 1));           \
+        bufSet(BufferPtr, (BufferPtr)->used - 1, (NullValue));                          \
+        (BufferPtr)->used--;                                                     \
+        break;                                                                 \
+      }                                                                        \
+    }                                                                          \
+  }
+
+#define bufFind(BufferPtr, Item)                                               \
+  {                                                                            \
+    size_t i;                                                                  \
+    bufEach(BufferPtr, i) {                                                    \
+      if (bufAt(BufferPtr, i) == Item) {                                       \
+        return (int)i;                                                         \
+      }                                                                        \
+    }                                                                          \
+    return -1;                                                                 \
+  }
 
 // String
 typedef Buffer(char) string_t;
