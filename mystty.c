@@ -188,8 +188,8 @@ int main(int argc, char **argv) {
       break;
     }
     case ACTION_TYPE_EXAMINE: {
-      itemsCat(items, world->location->items);
-      itemsCat(items, world->inventory);
+      bufCat(items, world->location->items);
+      bufCat(items, world->inventory);
       parserExtractTarget(parser, input, world->location->exits, items,
                           &location, &item);
 
@@ -230,7 +230,7 @@ int main(int argc, char **argv) {
       }
 
       bufPush(world->inventory, item);
-      itemsRemove(world->location->items, item);
+      bufRemove(world->location->items, item, NULL);
 
       masterDescribeAction(master, world, input, &item->object, response);
 
@@ -252,7 +252,7 @@ int main(int argc, char **argv) {
       }
 
       bufPush(world->location->items, item);
-      itemsRemove(world->inventory, item);
+      bufRemove(world->inventory, item, NULL);
 
       masterDescribeAction(master, world, input, &item->object, response);
 
@@ -264,8 +264,8 @@ int main(int argc, char **argv) {
       break;
     }
     case ACTION_TYPE_USE: {
-      itemsCat(items, world->inventory);
-      itemsCat(items, world->location->items);
+      bufCat(items, world->inventory);
+      bufCat(items, world->location->items);
       parserExtractTarget(parser, input, locations, items, &location, &item);
 
       if (!item) {
