@@ -15,7 +15,7 @@
 #define failfmt fg_red
 #define descriptionfmt italic
 
-const char *NAME = fg_green(bold("mystty"));
+const char *NAME = fg_green(bold("ttyny"));
 
 static void sleep_ms(unsigned ms) {
   struct timespec ts;
