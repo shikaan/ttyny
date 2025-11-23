@@ -122,6 +122,10 @@ typedef struct requirements_t {
   uint16_t turns;
 } requirements_t;
 
+static inline requirements_t *requirementsCreate(void) {
+  return allocate(sizeof(requirements_t));
+}
+
 typedef enum {
   REQUIREMENTS_RESULT_OK,
   REQUIREMENTS_RESULT_NO_REQUIREMENTS,

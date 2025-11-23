@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include "../../vendor/jsmn.h"
+#include "action.h"
 #include "world.h"
 
 // ----------------------------- Configuration --------------------------------
@@ -74,20 +75,49 @@ static int loaderFindObjectKey(const char *json, jsmntok_t *tokens,
   return -1;
 }
 
+static char *loaderDupUnescaped(const char *src, size_t len) {
+  char *dst = allocate(len + 1);
+  if (!dst) return NULL;
+  size_t di = 0;
+  for (size_t si = 0; si < len; si++) {
+    if (src[si] == '\\' && si + 1 < len) {
+      char c = src[si + 1];
+      switch (c) {
+        case 'n': dst[di++] = '\n'; si++; continue;
+        case 't': dst[di++] = '\t'; si++; continue;
+        case 'r': dst[di++] = '\r'; si++; continue;
+        case '\\': dst[di++] = '\\'; si++; continue;
+        case '"': dst[di++] = '"'; si++; continue;
+        default:
+          // Unknown escape: keep the backslash literal
+          dst[di++] = src[si];
+          continue;
+      }
+    }
+    dst[di++] = src[si];
+  }
+  dst[di] = '\0';
+  return dst;
+}
+
 // ----------------------------- Action Mapping -------------------------------
 
 static action_type_t loaderActionFromString(const char *start, size_t len) {
-  if (len == 3 && strncmp(start, "use", 3) == 0)
+#define streq(Action)                                                          \
+  len == Action.used &&strncmp(start, Action.data, Action.used) == 0
+
+  if (streq(ACTION_USE))
     return ACTION_TYPE_USE;
-  if (len == 4 && strncmp(start, "move", 4) == 0)
+  if (streq(ACTION_MOVE))
     return ACTION_TYPE_MOVE;
-  if (len == 4 && strncmp(start, "take", 4) == 0)
+  if (streq(ACTION_TAKE))
     return ACTION_TYPE_TAKE;
-  if (len == 4 && strncmp(start, "drop", 4) == 0)
+  if (streq(ACTION_DROP))
     return ACTION_TYPE_DROP;
-  if (len == 7 && strncmp(start, "examine", 7) == 0)
+  if (streq(ACTION_EXAMINE))
     return ACTION_TYPE_EXAMINE;
   return ACTION_TYPE_UNKNOWN;
+#undef streq
 }
 
 // ----------------------------- Lookup Helpers -------------------------------
@@ -113,31 +143,20 @@ static location_t *loaderFindLocationByName(locations_t *locations,
 
 // ----------------------------- Requirements ---------------------------------
 
-static requirements_t *loaderCreateEmptyRequirements(void) {
-  requirements_t *r = allocate(sizeof(requirements_t));
-  if (!r)
-    return NULL;
-  r->inventory = NULL;
-  r->items = NULL;
-  r->locations = NULL;
-  r->turns = 0;
-  return r;
-}
-
 static requirements_t *
 loaderParseEndingRequirements(const char *json, jsmntok_t *tokens,
                               int reqObjIndex, items_t *worldItems,
                               locations_t *worldLocations) {
   if (reqObjIndex < 0) {
     // Create dummy (no requirements).
-    return loaderCreateEmptyRequirements();
+    return requirementsCreate();
   }
   jsmntok_t *reqObj = &tokens[reqObjIndex];
   if (reqObj->type != JSMN_OBJECT) {
-    return loaderCreateEmptyRequirements();
+    return requirementsCreate();
   }
 
-  requirements_t *req = loaderCreateEmptyRequirements();
+  requirements_t *req = requirementsCreate();
   if (!req)
     return NULL;
 
@@ -347,7 +366,7 @@ static transitions_t *loaderExpandTransitions(const char *json,
       int fromIdx = loaderFindObjectKey(json, tokens, idx, "from");
       int toIdx = loaderFindObjectKey(json, tokens, idx, "to");
       // requirements present but ignored -> create dummy
-      requirements_t *req = loaderCreateEmptyRequirements();
+      requirements_t *req = requirementsCreate();
       if (!req) {
         deallocate(&result);
         return NULL;
@@ -429,7 +448,7 @@ loaderParseDescriptions(const char *json, jsmntok_t *tokens, int arrIndex) {
     jsmntok_t *elem = &tokens[idx];
     if (elem->type == JSMN_STRING) {
       char *text =
-          strndup(json + elem->start, (size_t)(elem->end - elem->start));
+          loaderDupUnescaped(json + elem->start, (size_t)(elem->end - elem->start));
       if (!text) {
         deallocate(&d);
         return NULL;
