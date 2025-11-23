@@ -4,7 +4,7 @@ LOG_LEVEL := -1
 CFLAGS := $(CFLAGS) -DLOG_LEVEL=$(LOG_LEVEL)
 
 .PHONY: all
-all: mystty
+all: ttyny
 
 build/linenoise.o: CFLAGS = -Wall -W -Os
 build/linenoise.o: vendor/linenoise/linenoise.c
@@ -29,11 +29,11 @@ build/llama.cpp/src/libllama.a:
 		-DBUILD_SHARED_LIBS=OFF
 	cmake --build $(LLAMA_BUILD) -j --config Release
 
-mystty: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
+ttyny: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
 	-Ivendor/llama.cpp/ggml/include -Ivendor/linenoise
-mystty: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
+ttyny: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
 	-framework Foundation -framework Metal -framework MetalKit
-mystty: src/ai.o src/screen.o src/master.o src/parser.o build/linenoise.o $(LLAMA_STATIC_LIBS)
+ttyny: src/ai.o src/screen.o src/master.o src/parser.o build/linenoise.o $(LLAMA_STATIC_LIBS)
 
 tests/parser.test: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
 	-Ivendor/llama.cpp/ggml/include
@@ -48,15 +48,15 @@ tests/master.test: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerat
 tests/master.test: src/ai.o src/master.o $(LLAMA_STATIC_LIBS)
 
 .PHONY: test
-test: tests/buffers.test tests/parser.test tests/map.test tests/master.test
+test: tests/buffers.test tests/parser.test tests/map.test tests/world.test
 	tests/buffers.test
 	tests/map.test
 	tests/parser.test
-	tests/master.test
+	tests/world.test
 
 .PHONY: clean
 clean:
-	rm -f ./mystty
+	rm -f ./ttyny
 	rm -f tests/*.test
 	rm -rf **/*.dSYM **/*.plist *.plist **/*.o
 
@@ -66,8 +66,8 @@ deep-clean: clean
 
 .PHONY: start
 start: all
-	./mystty
+	./ttyny assets/psyche.json
 
 .PHONY: start-profile
 start-profile: all
-	ASAN_OPTIONS=detect_leaks=1 LSAN_OPTIONS=suppressions=asan.supp ./mystty
+	ASAN_OPTIONS=detect_leaks=1 LSAN_OPTIONS=suppressions=asan.supp ./ttyny assets/psyche.json

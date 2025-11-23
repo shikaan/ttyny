@@ -1,5 +1,5 @@
 #include "../src/master.h"
-#include "../assets/story_world.h"
+#include "../assets/grayfen.h"
 #include "../src/buffers.h"
 #include "../src/utils.h"
 #include "test.h"
@@ -30,9 +30,6 @@ double_t avg(size_t size, uint64_t samples[SAMPLE_SIZE]) {
 }
 
 void describeLocation(void) {
-  story_world_init(&story_world);
-  world_t *world = &story_world;
-
   string_t *buffer cleanup(strDestroy) = strCreate(1024);
   master_t *master cleanup(masterDestroy) = masterCreate(world);
 
@@ -61,9 +58,6 @@ void describeLocation(void) {
 }
 
 void describeEndgame(void) {
-  story_world_init(&story_world);
-  world_t *world = &story_world;
-
   string_t *buffer cleanup(strDestroy) = strCreate(1024);
   string_t *input cleanup(strDestroy) = strCreate(128);
   master_t *master cleanup(masterDestroy) = masterCreate(world);
@@ -129,7 +123,7 @@ void describeEndgame(void) {
   };
 
   // end game always comes with a pre-described room
-  masterDescribeLocation(master, world->current_location, buffer);
+  masterDescribeLocation(master, world->location, buffer);
   strClear(buffer); // we don't really care about this description though
 
   size_t num_scenarios = arrLen(end_game);
@@ -138,7 +132,7 @@ void describeEndgame(void) {
 
   for (size_t i = 0; i < SAMPLE_SIZE; i++) {
     size_t scenario_idx = i % num_scenarios;
-    world->current_end_game = end_game[scenario_idx].ending;
+    world->end_game = end_game[scenario_idx].ending;
     game_state_t state = end_game[scenario_idx].state;
     strFmt(input, "%s", end_game[scenario_idx].input);
 
@@ -151,7 +145,7 @@ void describeEndgame(void) {
           (double)elapsed / (double)MICROSECONDS);
     samples[i] = elapsed;
     debug("RESPONSE (end: %s, input: %s, state: %s)\n > %s\n---\n",
-          world->current_end_game, end_game[scenario_idx].input,
+          world->end_game, end_game[scenario_idx].input,
           state == GAME_STATE_VICTORY ? "victory" : "dead", buffer->data);
 
     if (i != 0 && (i % 10) == 0) {

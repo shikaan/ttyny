@@ -1,11 +1,14 @@
-#include "assets/story_world.h"
 #include "src/buffers.h"
 #include "src/master.h"
 #include "src/panic.h"
 #include "src/parser.h"
 #include "src/screen.h"
 #include "src/utils.h"
-#include "src/world.h"
+#include "src/world/action.h"
+#include "src/world/command.h"
+#include "src/world/item.h"
+#include "src/world/loader.h"
+#include "src/world/world.h"
 #include <ggml.h>
 #include <linenoise.h>
 #include <stddef.h>
@@ -32,10 +35,37 @@ int quit(string_t *response, ui_handle_t *loading) {
   return 0;
 }
 
-int main(void) {
-  story_world_init(&story_world);
-  world_t *world = &story_world;
+void usage(const char *name) {
+  fprintf(stderr,
+          "%s is a small-language-model-powered game engine to play text "
+          "adventure games in your terminal.\n"
+          "Usage:\n"
+          "  %s <path-to-story.json>\n"
+          "\n"
+          "Flags:\n"
+          "  -h, --help      show this help\n"
+          "  -v, --version   show version\n"
+          "\n"
+          "For more information https://github.com/shikaan/%s\n",
+          name, name, name);
+  exit(1);
+}
 
+int main(int argc, char **argv) {
+  const char *name = strrchr(argv[0], '/') + 1;
+  if (argc != 2) {
+    usage(name);
+  }
+  const char *story_path = argv[1];
+
+  string_t *json cleanup(strDestroy) = readFile(story_path);
+  if (!json) {
+    fprintf(stderr, "%s: ", name);
+    perror(story_path);
+    usage(name);
+  }
+
+  world_t *world cleanup(worldDestroy) = worldCreateFromJSONString(json);
   string_t *input cleanup(strDestroy) = strCreate(512);
   string_t *response cleanup(strDestroy) = strCreate(4096);
   string_t *state cleanup(strDestroy) = strCreate(1024);
@@ -59,16 +89,17 @@ int main(void) {
 
   ui_handle_t *loading = loadingStart();
 
-  masterDescribeLocation(master, world->current_location, response);
+  masterDescribeLocation(master, world->location, response);
   loadingStop(&loading);
 
   printDescription(response);
 
-  formatLocationChange(response, world->current_location);
+  formatLocationChange(response, world->location);
   printStateUpdate(response);
 
   linenoiseHistorySetMaxLen(15);
   linenoiseSetCompletionCallback(completion);
+  game_state_t game_state;
 
   while (1) {
     char *line = linenoise("> ");
@@ -138,13 +169,13 @@ int main(void) {
     action_type_t action = operation.as.action;
 
     // Advance turn count only for actions, not for commands
-    world->state.turns++;
+    world->turns++;
 
     item_t *item = NULL;
     location_t *location = NULL;
 
-    itemsClear(items);
-    locationsClear(locations);
+    bufClear(items, NULL);
+    bufClear(locations, NULL);
     strClear(state);
 
     transition_result_t transition;
@@ -152,7 +183,7 @@ int main(void) {
 
     switch (action) {
     case ACTION_TYPE_MOVE: {
-      parserExtractTarget(parser, input, world->current_location->exits, items,
+      parserExtractTarget(parser, input, world->location->exits, items,
                           &location, &item);
 
       if (!location) {
@@ -161,40 +192,36 @@ int main(void) {
         break;
       }
 
-      objectTransition(&location->object, action, world->state.inventory,
-                       &transition);
-
+      worldTransitionObject(world, &location->object, action, &transition);
       if (transition == TRANSITION_RESULT_MISSING_ITEM) {
         strFmt(response, "You need an item or a key to go there...");
         printCallback = printError;
         break;
       }
 
-      world->current_location = location;
+      world->location = location;
       masterDescribeLocation(master, location, response);
       printCallback = printDescription;
-      formatLocationChange(state, world->current_location);
+      formatLocationChange(state, world->location);
       break;
     }
     case ACTION_TYPE_EXAMINE: {
-      itemsCat(items, world->current_location->items);
-      itemsCat(items, world->state.inventory);
-      parserExtractTarget(parser, input, world->current_location->exits, items,
+      bufCat(items, world->location->items);
+      bufCat(items, world->inventory);
+      parserExtractTarget(parser, input, world->location->exits, items,
                           &location, &item);
 
       if (item) {
-        // ignoring error: transitions always succeed only for USE
-        objectTransition(&item->object, action, world->state.inventory,
-                         &transition);
+        // TODO: distinguish examine vs read instead of transitioning here
+        // This is narrative transition (not functional). No need to check
+        // result
+        worldTransitionObject(world, &item->object, action, &transition);
         masterDescribeObject(master, &item->object, response);
         printCallback = printDescription;
         break;
       }
 
       if (location) {
-        // ignoring error: transitions always succeed only for USE
-        objectTransition(&location->object, action, world->state.inventory,
-                         &transition);
         masterDescribeObject(master, &location->object, response);
         printCallback = printDescription;
         break;
@@ -205,8 +232,8 @@ int main(void) {
       break;
     }
     case ACTION_TYPE_TAKE: {
-      parserExtractTarget(parser, input, locations,
-                          world->current_location->items, &location, &item);
+      parserExtractTarget(parser, input, locations, world->location->items,
+                          &location, &item);
 
       if (!item) {
         strFmt(response, "Take what? You need to be more specific than that.");
@@ -220,22 +247,21 @@ int main(void) {
         break;
       }
 
-      itemsAdd(world->state.inventory, item);
-      itemsRemove(world->current_location->items, item);
+      bufPush(world->inventory, item);
+      bufRemove(world->location->items, item, NULL);
 
       masterDescribeAction(master, world, input, &item->object, response);
 
       printCallback = printDescription;
       formatTake(state, item);
 
-      // ignoring error: transition are expected to always succeed only for USE
-      objectTransition(&item->object, action, world->state.inventory,
-                       &transition);
+      // This is narrative transition (not functional). No need to check result
+      worldTransitionObject(world, &item->object, action, &transition);
       break;
     }
     case ACTION_TYPE_DROP: {
-      parserExtractTarget(parser, input, locations, world->state.inventory,
-                          &location, &item);
+      parserExtractTarget(parser, input, locations, world->inventory, &location,
+                          &item);
 
       if (!item) {
         strFmt(response, "You cannot drop something that you don't own.");
@@ -243,22 +269,21 @@ int main(void) {
         break;
       }
 
-      itemsAdd(world->current_location->items, item);
-      itemsRemove(world->state.inventory, item);
+      bufPush(world->location->items, item);
+      bufRemove(world->inventory, item, NULL);
 
       masterDescribeAction(master, world, input, &item->object, response);
 
       printCallback = printDescription;
       formatDrop(state, item);
 
-      // ignoring error: transitions always succeed only for USE
-      objectTransition(&item->object, action, world->state.inventory,
-                       &transition);
+      // This is narrative transition (not functional). No need to check result
+      worldTransitionObject(world, &item->object, action, &transition);
       break;
     }
     case ACTION_TYPE_USE: {
-      itemsCat(items, world->state.inventory);
-      itemsCat(items, world->current_location->items);
+      bufCat(items, world->inventory);
+      bufCat(items, world->location->items);
       parserExtractTarget(parser, input, locations, items, &location, &item);
 
       if (!item) {
@@ -267,8 +292,7 @@ int main(void) {
         break;
       }
 
-      objectTransition(&item->object, action, world->state.inventory,
-                       &transition);
+      worldTransitionObject(world, &item->object, action, &transition);
 
       switch (transition) {
       case TRANSITION_RESULT_OK:
@@ -298,7 +322,7 @@ int main(void) {
       printCallback = printError;
     }
 
-    game_state_t game_state = world->digest(world);
+    worldDigest(world, &game_state);
     if (game_state != GAME_STATE_CONTINUE) {
       masterDescribeEndGame(master, input, world, game_state, response);
       loadingStop(&loading);

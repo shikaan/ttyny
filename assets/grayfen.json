@@ -1,0 +1,133 @@
+{
+  "items": [
+    {
+      "name": "crowbar",
+      "type": "item",
+      "descriptions": ["A sturdy metal crowbar—useful for prying things open."],
+      "transitions": [],
+      "collectible": true,
+      "readable": false
+    },
+    {
+      "name": "rope",
+      "type": "item",
+      "descriptions": ["A coiled rope. Strong, dependable."],
+      "transitions": [],
+      "collectible": true,
+      "readable": false
+    },
+    {
+      "name": "logbook",
+      "type": "item",
+      "descriptions": ["The outpost's final logbook."],
+      "transitions": [],
+      "collectible": true,
+      "readable": true
+    },
+    {
+      "name": "note",
+      "type": "item",
+      "descriptions": ["A note from the squatter asking for help."],
+      "transitions": [],
+      "collectible": true,
+      "readable": true
+    }
+  ],
+  "locations": [
+    {
+      "name": "trailhead",
+      "type": "location",
+      "descriptions": ["The narrow path leading into Grayfen Valley."],
+      "transitions": [],
+      "items": [],
+      "exits": ["cabin", "bridge", "ridge"]
+    },
+    {
+      "name": "cabin",
+      "type": "location",
+      "descriptions": ["An old hunter's cabin with a broken window."],
+      "transitions": [],
+      "items": ["crowbar"],
+      "exits": ["trailhead"]
+    },
+    {
+      "name": "bridge",
+      "type": "location",
+      "descriptions": [
+        "The footbridge is collapsed, planks dangling over the ravine.",
+        "The bridge is repaired enough to cross safely."
+      ],
+      "transitions": [
+        {
+          "actions": ["use"],
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": null,
+            "items": null,
+            "locations": null,
+            "turns": null
+          }
+        }
+      ],
+      "items": [],
+      "exits": ["trailhead", "ridge"]
+    },
+    {
+      "name": "ridge",
+      "type": "location",
+      "descriptions": ["A narrow, unstable ridge path."],
+      "transitions": [],
+      "items": [],
+      "exits": ["trailhead", "outpost"]
+    },
+    {
+      "name": "outpost",
+      "type": "location",
+      "descriptions": ["The abandoned Grayfen Outpost."],
+      "transitions": [],
+      "items": ["logbook"],
+      "exits": ["ridge", "lookout"]
+    },
+    {
+      "name": "lookout",
+      "type": "location",
+      "descriptions": ["A small wooden lookout tower behind the outpost."],
+      "transitions": [],
+      "items": ["note"],
+      "exits": ["outpost"]
+    }
+  ],
+  "endings": [
+    {
+      "state": "win",
+      "reason": "You recovered the logbook and returned safely.",
+      "requirements": {
+        "inventory": ["logbook"],
+        "items": null,
+        "locations": null,
+        "turns": null
+      }
+    },
+    {
+      "state": "win",
+      "reason": "You discovered the squatter and brought back their message.",
+      "requirements": {
+        "inventory": ["note.0"],
+        "items": null,
+        "locations": null,
+        "turns": null
+      }
+    },
+    {
+      "state": "lose",
+      "reason": "Night falls and you are forced to retreat.",
+      "requirements": {
+        "inventory": null,
+        "items": null,
+        "locations": null,
+        "turns": 30
+      }
+    }
+  ]
+}

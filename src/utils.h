@@ -1,6 +1,11 @@
 #pragma once
 
+#include "alloc.h"
+#include "buffers.h"
 #include "tty.h"
+#include <stddef.h>
+#include <stdio.h>
+#include <sys/stat.h>
 
 #define cleanup(Callback) __attribute__((cleanup(Callback)))
 
@@ -45,3 +50,30 @@
 #else
 #define error(Fmt, ...)
 #endif
+
+static inline string_t *readFile(const char *path) {
+  struct stat st;
+  if (stat(path, &st) != 0) {
+    return NULL;
+  }
+
+  size_t size = (size_t)st.st_size;
+  FILE *fp = fopen(path, "rb");
+  if (!fp) {
+    return NULL;
+  }
+
+  string_t *buffer = strCreate(size);
+  if (!buffer) {
+    fclose(fp);
+    return NULL;
+  }
+
+  if (size > 0 && fread(buffer->data, 1, size, fp) != size) {
+    fclose(fp);
+    deallocate(&buffer);
+    return NULL;
+  }
+
+  return buffer;
+}

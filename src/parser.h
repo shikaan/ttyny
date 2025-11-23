@@ -2,7 +2,10 @@
 
 #include "ai.h"
 #include "buffers.h"
-#include "world.h"
+#include "world/action.h"
+#include "world/command.h"
+#include "world/item.h"
+#include "world/location.h"
 
 #include <stddef.h>
 

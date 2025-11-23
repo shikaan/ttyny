@@ -46,11 +46,11 @@
 
 #define bufClear(BufferPtr, NullValue)                                         \
   {                                                                            \
-    bufSet((BufferPtr), 0, (NullValue));                                       \
+    bufSet((BufferPtr), (size_t)0, (NullValue));                               \
     (BufferPtr)->used = 0;                                                     \
   }
 
-#define makeBufCreate(BufferType, ItemType, Result, Length)                    \
+#define bufCreate(BufferType, ItemType, Result, Length)                        \
   const size_t size = sizeof(BufferType);                                      \
   Result = allocate(size + ((unsigned)(Length) * sizeof(ItemType)));           \
   if (!Result) {                                                               \
@@ -58,6 +58,40 @@
   }                                                                            \
   Result->length = Length;                                                     \
   Result->used = 0;
+
+#define bufEach(BufferPtr, Index) for ((Index) = 0; i < (BufferPtr)->used; i++)
+
+#define bufCat(BufferPtr, OtherBufferPtr)                                      \
+  {                                                                            \
+    size_t i;                                                                  \
+    bufEach(OtherBufferPtr, i) {                                                    \
+      bufPush((BufferPtr), bufAt((OtherBufferPtr), i));                        \
+    }                                                                          \
+  }
+
+#define bufRemove(BufferPtr, Item, NullValue)                                             \
+  {                                                                            \
+    size_t i;                                                                  \
+    bufEach(BufferPtr, i) {                                                    \
+      if (bufAt(BufferPtr, i) == Item) {                                       \
+        bufSet(BufferPtr, i, bufAt(BufferPtr, (BufferPtr)->used - 1));           \
+        bufSet(BufferPtr, (BufferPtr)->used - 1, (NullValue));                          \
+        (BufferPtr)->used--;                                                     \
+        break;                                                                 \
+      }                                                                        \
+    }                                                                          \
+  }
+
+#define bufFind(BufferPtr, Item)                                               \
+  {                                                                            \
+    size_t i;                                                                  \
+    bufEach(BufferPtr, i) {                                                    \
+      if (bufAt(BufferPtr, i) == Item) {                                       \
+        return (int)i;                                                         \
+      }                                                                        \
+    }                                                                          \
+    return -1;                                                                 \
+  }
 
 // String
 typedef Buffer(char) string_t;
@@ -71,7 +105,7 @@ typedef Buffer(char) string_t;
 
 static inline string_t *strCreate(size_t length) {
   string_t *result = NULL;
-  makeBufCreate(string_t, char, result, length + 1);
+  bufCreate(string_t, char, result, length + 1);
   result->length = length;
   result->data[length] = 0;
   return result;
