@@ -7,6 +7,8 @@
 #include <string.h>
 
 void item(void) {
+  char *first_name = strdup("first");
+  char *last_name = strdup("last");
   case("itemsCreate");
   items_t *items cleanup(itemsDestroy) = itemsCreate(2);
   panicif(!items, "cannot create items");
@@ -19,19 +21,21 @@ void item(void) {
   item_t *item_2 cleanup(itemDestroy) = itemCreate();
   panicif(!item_2, "cannot create item");
 
-  item_1->object.name = "first";
-  item_2->object.name = "last";
+  item_1->object.name = first_name;
+  item_2->object.name = last_name;
 
   expectEqli(item_1->object.type, OBJECT_TYPE_ITEM, "type is correct");
   panicif(item_2->object.type != OBJECT_TYPE_ITEM, "unexpected unmatching type");
 
   case("itemsFindByName");
   bufPush(items, item_1);
-  expectEqli(itemsFindByName(items, "first"), 0, "finds item");
-  expectEqli(itemsFindByName(items, "last"), -1, "does not find missing item");
+  expectEqli(itemsFindByName(items, first_name), 0, "finds item");
+  expectEqli(itemsFindByName(items, last_name), -1, "does not find missing item");
 }
 
 void location(void) {
+  char *first_name = strdup("first");
+  char *last_name = strdup("last");
   case("locationsCreate");
   locations_t *locations cleanup(locationsDestroy) = locationsCreate(2);
   panicif(!locations, "cannot create locations");
@@ -44,16 +48,16 @@ void location(void) {
   location_t *location_2 cleanup(locationDestroy) = locationCreate();
   panicif(!location_2, "cannot create location");
 
-  location_1->object.name = "first";
-  location_2->object.name = "last";
+  location_1->object.name = first_name;
+  location_2->object.name = last_name;
 
   expectEqli(location_1->object.type, OBJECT_TYPE_LOCATION, "type is correct");
   panicif(location_2->object.type != OBJECT_TYPE_LOCATION, "unexpected unmatching type");
 
   case("locationsFindByName");
   bufPush(locations, location_1);
-  expectEqli(locationsFindByName(locations, "first"), 0, "finds location");
-  expectEqli(locationsFindByName(locations, "last"), -1, "does not find missing location");
+  expectEqli(locationsFindByName(locations, first_name), 0, "finds location");
+  expectEqli(locationsFindByName(locations, last_name), -1, "does not find missing location");
 }
 
 void digest(void) {
@@ -118,19 +122,21 @@ void digest(void) {
 }
 
 void transition(void) {
+  static char tool_name[] = "tool";
+  static char other_name[] = "other";
   static requirements_t no_reqs = {0};
   static const transition_t tr_1 = { ACTION_TYPE_USE, 0, 1, &no_reqs };
   static const transition_t tr_2 = { ACTION_TYPE_USE, 1, 2, &no_reqs };
   static char state[] = "state";
   static transitions_t transitions = bufConst(2, tr_1, tr_2);
   static descriptions_t descriptions = bufConst(3, state, state, state);
-  static item_t item_1 = {{"tool", OBJECT_TYPE_ITEM,0,&descriptions,&transitions}, false, false};
-  static item_t item_2 = {{"other", OBJECT_TYPE_ITEM,0,&descriptions,NULL}, false, false};
-  static requirement_tuples_t items_reqs = bufConst(1, {"tool", 0});
+  static item_t item_1 = {{tool_name, OBJECT_TYPE_ITEM,0,&descriptions,&transitions}, false, false};
+  static item_t item_2 = {{other_name, OBJECT_TYPE_ITEM,0,&descriptions,NULL}, false, false};
+  static requirement_tuples_t items_reqs = bufConst(1, {tool_name, 0});
   static requirements_t reqs = {&items_reqs, NULL, NULL, 0};
   static const transition_t tr_3 = { ACTION_TYPE_USE, 0, 1, &reqs };
   static transitions_t transitions_with_reqs = bufConst(1, tr_3);
-  static item_t item_3 = {{"other", OBJECT_TYPE_ITEM,0,&descriptions,&transitions_with_reqs}, false, false};
+  static item_t item_3 = {{other_name, OBJECT_TYPE_ITEM,0,&descriptions,&transitions_with_reqs}, false, false};
   static items_t items = bufConst(3, &item_1, &item_2, &item_3);
   static items_t inventory = bufConst(0);
   world_t w = {
@@ -170,10 +176,11 @@ void transition(void) {
 }
 
 void requirements(void) {
+  static char tool_name[] = "tool";
   requirements_result_t rr;
   static char description[] = "d";
   static descriptions_t descriptions = bufConst(1, description);
-  static item_t item_1 = {{"tool", OBJECT_TYPE_ITEM,0,&descriptions,NULL}, false, false};
+  static item_t item_1 = {{tool_name, OBJECT_TYPE_ITEM,0,&descriptions,NULL}, false, false};
   static items_t items = bufConst(1, &item_1);
   static items_t no_items = bufConst(0);
   world_t w = {
@@ -187,7 +194,7 @@ void requirements(void) {
   };
 
   case("inventory");
-  static requirement_tuples_t req_inv = bufConst(1, (requirement_tuple_t){ "tool", 0 });
+  static requirement_tuples_t req_inv = bufConst(1, (requirement_tuple_t){ tool_name, 0 });
   static requirements_t reqs_inv = {
       .inventory = &req_inv,
       .items = NULL,
@@ -209,7 +216,7 @@ void requirements(void) {
   w.inventory = &items; // restore
 
   case("items");
-  static requirement_tuples_t req_items = bufConst(1, (requirement_tuple_t){ "tool", 0 });
+  static requirement_tuples_t req_items = bufConst(1, (requirement_tuple_t){ tool_name, 0 });
   static requirements_t reqs_items = {
       .inventory = NULL,
       .items = &req_items,
@@ -227,19 +234,21 @@ void requirements(void) {
   item_1.object.state = 0; // restore
 
   // Missing world item name
-  req_items.data[0].name = "missing";
+  char missing_name[] ="missing";
+  req_items.data[0].name = missing_name;
   worldAreRequirementsMet(&w, &reqs_items, &rr);
   expectEqlu(rr, REQUIREMENTS_RESULT_MISSING_WORLD_ITEM, "items: missing");
-  req_items.data[0].name = "tool"; // restore
+  req_items.data[0].name = tool_name; // restore
 
   static char loc_desc_str[] = "loc";
   static descriptions_t loc_desc = bufConst(1, loc_desc_str);
-  static location_t loc_1 = {{"place", OBJECT_TYPE_LOCATION, 0, &loc_desc, NULL}, NULL, NULL};
+  static char place_desc_str[] = "place";
+  static location_t loc_1 = {{place_desc_str, OBJECT_TYPE_LOCATION, 0, &loc_desc, NULL}, NULL, NULL};
   static locations_t locations = bufConst(1, &loc_1);
   w.locations = &locations;
 
   case("locations");
-  static requirement_tuples_t req_locs = bufConst(1, (requirement_tuple_t){ "place", 0 });
+  static requirement_tuples_t req_locs = bufConst(1, (requirement_tuple_t){ place_desc_str, 0 });
   static requirements_t reqs_locs = {
       .inventory = NULL,
       .items = NULL,

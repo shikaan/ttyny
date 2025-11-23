@@ -66,20 +66,26 @@ void targets(void) {
 
   items_t *items cleanup(itemsDestroy) = itemsCreate(3);
   panicif(!items, "cannot initialize allowed buffer");
-  item_t key = {.object.name = "key"};
+  char key_name[] = "key";
+  item_t key = {.object.name = key_name};
   bufPush(items, &key);
-  item_t coin = {.object.name = "coin"};
+  char coin_name[] = "coin";
+  item_t coin = {.object.name = coin_name};
   bufPush(items, &coin);
-  item_t sword = {.object.name = "sword"};
+  char sword_name[] = "sword";
+  item_t sword = {.object.name = sword_name};
   bufPush(items, &sword);
 
   locations_t *locations cleanup(locationsDestroy) = locationsCreate(3);
   panicif(!locations, "cannot initialize allowed buffer");
-  location_t hall = {.object.name = "hall"};
+  char hall_name[] = "hall";
+  location_t hall = {.object.name = hall_name};
   bufPush(locations, (struct location_t *)&hall);
-  location_t kitchen = {.object.name = "kitchen"};
+  char kitchen_name[] = "kitchen";
+  location_t kitchen = {.object.name = kitchen_name};
   bufPush(locations, (struct location_t *)&kitchen);
-  location_t forest = {.object.name = "forest"};
+  char forest_name[] = "forest";
+  location_t forest = {.object.name = forest_name};
   bufPush(locations, (struct location_t *)&forest);
 
   // Just for testing, this room can exit to itself
