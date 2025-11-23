@@ -3,6 +3,7 @@
 #include "../buffers.h"
 #include "item.h"
 #include "object.h"
+#include <stddef.h>
 
 struct location_t;
 typedef struct location_t location_t;
@@ -19,6 +20,14 @@ struct location_t {
   // Exits from this location into other locations
   locations_t *exits;
 };
+
+static inline location_t *locationCreate(void) {
+  location_t *location = allocate(sizeof(location_t));
+  if (!location)
+    return NULL;
+  location->object.type = OBJECT_TYPE_LOCATION;
+  return location;
+}
 
 static inline void locationDestroy(location_t **self) {
   if (!self || !*self)
@@ -39,28 +48,16 @@ static inline locations_t *locationsCreate(size_t length) {
   return locations;
 }
 
-static inline int locationsFind(locations_t *self, location_t *location) {
-  for (size_t i = 0; i < self->used; i++) {
-    if (bufAt(self, i) == location) {
-      return (int)i;
-    }
-  }
-  return -1;
-}
-
 static inline int locationsFindByName(locations_t *self, object_name_t name) {
-  for (size_t i = 0; i < self->used; i++) {
+  panicif(!self, "locations cannot be null");
+
+  size_t i;
+  bufEach(self, i) {
     if (objectNameEq(bufAt(self, i)->object.name, name)) {
       return (int)i;
     }
   }
   return -1;
-}
-
-static inline void locationsCat(locations_t *self, locations_t *other) {
-  for (size_t i = 0; i < other->used; i++) {
-    bufPush(self, bufAt(other, i));
-  }
 }
 
 static inline void locationsDestroy(locations_t **self) { deallocate(self); }

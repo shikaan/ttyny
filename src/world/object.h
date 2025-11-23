@@ -83,17 +83,23 @@ static inline void objectDestroyInner(object_t **self) {
   if (!self || !*self)
     return;
 
-  for (size_t i = 0; i < (*self)->descriptions->used; i++) {
-    char *description = bufAt((*self)->descriptions, i);
-    deallocate(&description);
-  }
-  deallocate(&(*self)->descriptions);
+  object_t *obj = (*self);
 
-  for (size_t i = 0; i < (*self)->transitions->used; i++) {
-    transition_t transition = bufAt((*self)->transitions, i);
-    requirementsDestroy(&transition.requirements);
+  if (obj->descriptions) {
+    for (size_t i = 0; i < obj->descriptions->used; i++) {
+      char *description = bufAt(obj->descriptions, i);
+      deallocate(&description);
+    }
+    deallocate(&obj->descriptions);
   }
-  deallocate(&(*self)->transitions);
+
+  if (obj->transitions) {
+    for (size_t i = 0; i < obj->transitions->used; i++) {
+      transition_t transition = bufAt(obj->transitions, i);
+      requirementsDestroy(&transition.requirements);
+    }
+    deallocate(&obj->transitions);
+  }
 }
 
 typedef struct {

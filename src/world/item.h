@@ -2,6 +2,7 @@
 
 #include "object.h"
 #include <stdbool.h>
+#include <stddef.h>
 
 typedef struct item_t item_t;
 typedef Buffer(struct item_t *) items_t;
@@ -15,6 +16,14 @@ typedef struct item_t {
   // True if EXAMINE/USE should present: "<name> reads: \"<state description>\""
   bool readable;
 } item_t;
+
+static inline item_t *itemCreate(void) {
+  item_t *item = allocate(sizeof(item_t));
+  if (!item)
+    return NULL;
+  item->object.type = OBJECT_TYPE_ITEM;
+  return item;
+}
 
 static inline void itemDestroy(item_t **self) {
   if (!self || !*self)
@@ -32,37 +41,15 @@ static inline items_t *itemsCreate(size_t length) {
   return items;
 }
 
-static inline void itemsCat(items_t *self, items_t *other) {
-  for (size_t i = 0; i < other->used; i++) {
-    bufPush(self, bufAt(other, i));
-  }
-}
-
-static inline void itemsRemove(items_t *self, item_t *item) {
-  for (size_t i = 0; i < self->used; i++) {
-    if (bufAt(self, i) == item) {
-      item_t *last = bufAt(self, self->used - 1);
-      bufSet(self, i, last);
-      bufSet(self, self->used - 1, NULL);
-      self->used--;
-      break;
-    }
-  }
-}
-
-typedef bool (*item_cmp_t)(item_t *self, item_t *other);
-
 static inline int itemsFind(items_t *self, item_t *item) {
-  for (size_t i = 0; i < self->used; i++) {
-    if (bufAt(self, i) == item) {
-      return (int)i;
-    }
-  }
-  return -1;
+  panicif(!self, "items cannot be null");
+  bufFind(self, item);
 }
 
 static inline int itemsFindByName(items_t *self, object_name_t name) {
-  for (size_t i = 0; i < self->used; i++) {
+  panicif(!self, "items cannot be null");
+  size_t i;
+  bufEach(self, i) {
     if (objectNameEq(bufAt(self, i)->object.name, name)) {
       return (int)i;
     }

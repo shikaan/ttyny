@@ -48,11 +48,11 @@ tests/master.test: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerat
 tests/master.test: src/ai.o src/master.o $(LLAMA_STATIC_LIBS)
 
 .PHONY: test
-test: tests/buffers.test tests/parser.test tests/map.test tests/master.test
+test: tests/buffers.test tests/parser.test tests/map.test tests/world.test
 	tests/buffers.test
 	tests/map.test
 	tests/parser.test
-	tests/master.test
+	tests/world.test
 
 .PHONY: clean
 clean:

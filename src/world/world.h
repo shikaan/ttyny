@@ -86,11 +86,12 @@ static void worldAreRequirementsMet(world_t *self, requirements_t *requirements,
     done(REQUIREMENTS_RESULT_NOT_ENOUGH_TURNS);
   }
 
+  size_t i;
   if (requirements->inventory) {
-    for (size_t i = 0; i < requirements->inventory->used; i++) {
+    bufEach(requirements->inventory, i) {
       requirement_tuple_t tuple = bufAt(requirements->inventory, i);
       int idx = itemsFindByName(self->inventory, tuple.name);
-      if (idx > 0) {
+      if (idx >= 0) {
         item_t *inventory_item = bufAt(self->inventory, (size_t)idx);
         if (tuple.state != OBJECT_STATE_ANY &&
             tuple.state != inventory_item->object.state) {
@@ -104,10 +105,10 @@ static void worldAreRequirementsMet(world_t *self, requirements_t *requirements,
   }
 
   if (requirements->items) {
-    for (size_t i = 0; i < requirements->items->used; i++) {
-      requirement_tuple_t tuple = bufAt(requirements->inventory, i);
-      int idx = itemsFindByName(self->inventory, tuple.name);
-      if (idx > 0) {
+    bufEach(requirements->items, i) {
+      requirement_tuple_t tuple = bufAt(requirements->items, i);
+      int idx = itemsFindByName(self->items, tuple.name);
+      if (idx >= 0) {
         item_t *world_item = bufAt(self->items, (size_t)idx);
         if (tuple.state != OBJECT_STATE_ANY &&
             tuple.state != world_item->object.state) {
@@ -121,8 +122,8 @@ static void worldAreRequirementsMet(world_t *self, requirements_t *requirements,
   }
 
   if (requirements->locations) {
-    for (size_t i = 0; i < requirements->locations->used; i++) {
-      requirement_tuple_t tuple = bufAt(requirements->inventory, i);
+    bufEach(requirements->locations, i) {
+      requirement_tuple_t tuple = bufAt(requirements->locations, i);
       int idx = locationsFindByName(self->locations, tuple.name);
       panicif(idx < 0, "Requirements reference non-existing location");
       location_t *world_location = bufAt(self->locations, (size_t)idx);
@@ -165,11 +166,10 @@ static inline void worldTransitionObject(world_t *self, object_t *object,
         return;
       case REQUIREMENTS_RESULT_OK:
       case REQUIREMENTS_RESULT_NO_REQUIREMENTS:
+      default:
         object->state = transition.to;
         *result = TRANSITION_RESULT_OK;
         return;
-      default:
-        panic("unreacheable");
       }
     }
   }
