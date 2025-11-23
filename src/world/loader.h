@@ -365,12 +365,7 @@ static transitions_t *loaderExpandTransitions(const char *json,
       int actionsIdx = loaderFindObjectKey(json, tokens, idx, "actions");
       int fromIdx = loaderFindObjectKey(json, tokens, idx, "from");
       int toIdx = loaderFindObjectKey(json, tokens, idx, "to");
-      // requirements present but ignored -> create dummy
-      requirements_t *req = requirementsCreate();
-      if (!req) {
-        deallocate(&result);
-        return NULL;
-      }
+      // requirements present but ignored -> create dummy per transition (allocated below)
 
       long fromVal =
           (fromIdx >= 0) ? loaderParseLong(json, &tokens[fromIdx]) : 0;
@@ -386,6 +381,11 @@ static transitions_t *loaderExpandTransitions(const char *json,
                 json + actionTok->start,
                 (size_t)(actionTok->end - actionTok->start));
             if (at != ACTION_TYPE_UNKNOWN) {
+              requirements_t *req = requirementsCreate();
+              if (!req) {
+                aIdx = loaderSkipToken(tokens, aIdx);
+                continue;
+              }
               transition_t t = {
                   .action = at,
                   .from = (object_state_t)fromVal,
@@ -403,14 +403,17 @@ static transitions_t *loaderExpandTransitions(const char *json,
       } else {
         // No actions -> still create a single transition with UNKNOWN (ignored
         // by world)
-        transition_t t = {
-            .action = ACTION_TYPE_UNKNOWN,
-            .from = (object_state_t)fromVal,
-            .to = (object_state_t)toVal,
-            .requirements = req,
-        };
-        bufSet(result, used, t);
-        used++;
+        requirements_t *req = requirementsCreate();
+        if (req) {
+          transition_t t = {
+              .action = ACTION_TYPE_UNKNOWN,
+              .from = (object_state_t)fromVal,
+              .to = (object_state_t)toVal,
+              .requirements = req,
+          };
+          bufSet(result, used, t);
+          used++;
+        }
       }
     }
     idx = loaderSkipToken(tokens, idx);
