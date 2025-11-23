@@ -66,8 +66,8 @@ deep-clean: clean
 
 .PHONY: start
 start: all
-	./mystty assets/grayfen.json
+	./mystty assets/psyche.json
 
 .PHONY: start-profile
 start-profile: all
-	ASAN_OPTIONS=detect_leaks=1 LSAN_OPTIONS=suppressions=asan.supp ./mystty
+	ASAN_OPTIONS=detect_leaks=1 LSAN_OPTIONS=suppressions=asan.supp ./mystty assets/psyche.json

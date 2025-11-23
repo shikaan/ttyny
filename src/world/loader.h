@@ -14,7 +14,9 @@
 #include <string.h>
 
 #include "../../vendor/jsmn.h"
+#include "../utils.h"
 #include "action.h"
+#include "location.h"
 #include "world.h"
 
 // ----------------------------- Configuration --------------------------------
@@ -77,21 +79,37 @@ static int loaderFindObjectKey(const char *json, jsmntok_t *tokens,
 
 static char *loaderDupUnescaped(const char *src, size_t len) {
   char *dst = allocate(len + 1);
-  if (!dst) return NULL;
+  if (!dst)
+    return NULL;
   size_t di = 0;
   for (size_t si = 0; si < len; si++) {
     if (src[si] == '\\' && si + 1 < len) {
       char c = src[si + 1];
       switch (c) {
-        case 'n': dst[di++] = '\n'; si++; continue;
-        case 't': dst[di++] = '\t'; si++; continue;
-        case 'r': dst[di++] = '\r'; si++; continue;
-        case '\\': dst[di++] = '\\'; si++; continue;
-        case '"': dst[di++] = '"'; si++; continue;
-        default:
-          // Unknown escape: keep the backslash literal
-          dst[di++] = src[si];
-          continue;
+      case 'n':
+        dst[di++] = '\n';
+        si++;
+        continue;
+      case 't':
+        dst[di++] = '\t';
+        si++;
+        continue;
+      case 'r':
+        dst[di++] = '\r';
+        si++;
+        continue;
+      case '\\':
+        dst[di++] = '\\';
+        si++;
+        continue;
+      case '"':
+        dst[di++] = '"';
+        si++;
+        continue;
+      default:
+        // Unknown escape: keep the backslash literal
+        dst[di++] = src[si];
+        continue;
       }
     }
     dst[di++] = src[si];
@@ -365,7 +383,8 @@ static transitions_t *loaderExpandTransitions(const char *json,
       int actionsIdx = loaderFindObjectKey(json, tokens, idx, "actions");
       int fromIdx = loaderFindObjectKey(json, tokens, idx, "from");
       int toIdx = loaderFindObjectKey(json, tokens, idx, "to");
-      // requirements present but ignored -> create dummy per transition (allocated below)
+      // requirements present but ignored -> create dummy per transition
+      // (allocated below)
 
       long fromVal =
           (fromIdx >= 0) ? loaderParseLong(json, &tokens[fromIdx]) : 0;
@@ -450,8 +469,8 @@ loaderParseDescriptions(const char *json, jsmntok_t *tokens, int arrIndex) {
   for (int i = 0; i < arr->size; i++) {
     jsmntok_t *elem = &tokens[idx];
     if (elem->type == JSMN_STRING) {
-      char *text =
-          loaderDupUnescaped(json + elem->start, (size_t)(elem->end - elem->start));
+      char *text = loaderDupUnescaped(json + elem->start,
+                                      (size_t)(elem->end - elem->start));
       if (!text) {
         deallocate(&d);
         return NULL;
@@ -492,14 +511,14 @@ static items_t *loaderParseItems(const char *json, jsmntok_t *tokens,
       int readableIdx = loaderFindObjectKey(json, tokens, idx, "readable");
 
       if (nameIdx < 0 || typeIdx < 0) {
-        fprintf(stderr, "loader: item missing mandatory fields\n");
+        error("item missing mandatory fields\n");
         idx = loaderSkipToken(tokens, idx);
         continue;
       }
 
       // Validate type == "item"
       if (!loaderStrEqTok(json, &tokens[typeIdx], "item")) {
-        fprintf(stderr, "loader: item type must be 'item'\n");
+        error("item type must be 'item'\n");
       }
 
       char *name =
@@ -581,13 +600,13 @@ static locations_t *loaderParseLocations(const char *json, jsmntok_t *tokens,
       int exitsIdx = loaderFindObjectKey(json, tokens, idx, "exits");
 
       if (nameIdx < 0 || typeIdx < 0) {
-        fprintf(stderr, "loader: location missing mandatory fields\n");
+        error("location missing mandatory fields\n");
         idx = loaderSkipToken(tokens, idx);
         continue;
       }
 
       if (!loaderStrEqTok(json, &tokens[typeIdx], "location")) {
-        fprintf(stderr, "loader: location type must be 'location'\n");
+        error("location type must be 'location'\n");
       }
 
       char *name =
@@ -621,9 +640,7 @@ static locations_t *loaderParseLocations(const char *json, jsmntok_t *tokens,
             if (iname) {
               item_t *worldItem = loaderFindItemByName(worldItems, iname);
               if (!worldItem) {
-                fprintf(stderr,
-                        "loader: location '%s' references unknown item '%s'\n",
-                        name, iname);
+                error("'%s' references unknown item '%s'\n", name, iname);
               } else {
                 bufPush(locItems, worldItem);
               }
@@ -653,18 +670,11 @@ static locations_t *loaderParseLocations(const char *json, jsmntok_t *tokens,
             if (lname) {
               // Temporarily store NULL; we'll resolve after all locations are
               // created.
-              location_t *dummy = allocate(sizeof(location_t));
+              location_t *dummy = locationCreate();
               if (!dummy) {
                 deallocate(&lname);
               } else {
-                dummy->object.name =
-                    lname; // Use name only for later resolution.
-                dummy->object.type = OBJECT_TYPE_LOCATION;
-                dummy->object.state = 0;
-                dummy->object.descriptions = NULL;
-                dummy->object.transitions = NULL;
-                dummy->items = NULL;
-                dummy->exits = NULL;
+                dummy->object.name = lname;
                 bufPush(exits, dummy);
               }
             }
@@ -673,15 +683,13 @@ static locations_t *loaderParseLocations(const char *json, jsmntok_t *tokens,
         }
       }
 
-      location_t *location = allocate(sizeof(location_t));
+      location_t *location = locationCreate();
       if (!location) {
         deallocate(&name);
         idx = loaderSkipToken(tokens, idx);
         continue;
       }
       location->object.name = name;
-      location->object.type = OBJECT_TYPE_LOCATION;
-      location->object.state = 0;
       location->object.descriptions = descriptions;
       location->object.transitions = transitions;
       location->items = locItems;
@@ -702,14 +710,12 @@ static locations_t *loaderParseLocations(const char *json, jsmntok_t *tokens,
       const char *name = dummy->object.name;
       location_t *real = loaderFindLocationByName(locations, name);
       if (!real) {
-        fprintf(stderr, "loader: unresolved exit '%s' in location '%s'\n", name,
-                loc->object.name);
+        error("unresolved exit '%s' in location '%s'\n", name,
+              loc->object.name);
       }
       // Replace pointer
       bufSet(exits, j, real);
-      // Free dummy name only (struct & name)
-      // deallocate(&dummy->object.name);
-      deallocate(&dummy);
+      locationDestroy(&dummy);
     }
   }
 
@@ -746,7 +752,7 @@ static endings_t *loaderParseEndings(const char *json, jsmntok_t *tokens,
       int reqIdx = loaderFindObjectKey(json, tokens, idx, "requirements");
 
       if (stateIdx < 0 || reasonIdx < 0 || reqIdx < 0) {
-        fprintf(stderr, "loader: ending missing mandatory fields\n");
+        error("ending missing mandatory fields\n");
         idx = loaderSkipToken(tokens, idx);
         continue;
       }
@@ -832,18 +838,18 @@ static void loaderDestroyWorld(world_t **worldPtr) {
 static char *loaderReadFile(const char *path, size_t *outLen) {
   FILE *fp = fopen(path, "rb");
   if (!fp) {
-    fprintf(stderr, "loader: cannot open file '%s'\n", path);
+    error("cannot open file '%s'\n", path);
     return NULL;
   }
   if (fseek(fp, 0, SEEK_END) != 0) {
     fclose(fp);
-    fprintf(stderr, "loader: fseek failed\n");
+    error("fseek failed\n");
     return NULL;
   }
   long size = ftell(fp);
   if (size < 0) {
     fclose(fp);
-    fprintf(stderr, "loader: ftell failed\n");
+    error("ftell failed\n");
     return NULL;
   }
   rewind(fp);
@@ -855,7 +861,7 @@ static char *loaderReadFile(const char *path, size_t *outLen) {
   size_t read = fread(data, 1, (size_t)size, fp);
   fclose(fp);
   if (read != (size_t)size) {
-    fprintf(stderr, "loader: fread truncated\n");
+    error("fread truncated\n");
     deallocate(&data);
     return NULL;
   }
@@ -893,14 +899,14 @@ static world_t *loaderParseJson(const char *json, size_t length) {
   }
 
   if (r < 0) {
-    fprintf(stderr, "loader: JSON parse error %d\n", r);
+    error("JSON parse error %d\n", r);
     deallocate(&tokens);
     return NULL;
   }
 
   int tokenCount = r;
   if (tokenCount < 1 || tokens[0].type != JSMN_OBJECT) {
-    fprintf(stderr, "loader: root JSON must be an object\n");
+    error("root JSON must be an object\n");
     deallocate(&tokens);
     return NULL;
   }

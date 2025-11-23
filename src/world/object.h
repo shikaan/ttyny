@@ -22,7 +22,7 @@ typedef enum {
 
 // Unique identifier of the object in the world
 // must be human readable, because it will be displayed to the user
-typedef const char *object_name_t;
+typedef char *object_name_t;
 
 static inline int objectNameEq(object_name_t self, object_name_t other) {
   return strcmp(self, other) == 0;
@@ -84,6 +84,8 @@ static inline void objectDestroyInner(object_t **self) {
     return;
 
   object_t *obj = (*self);
+
+  deallocate(&obj->name);
 
   if (obj->descriptions) {
     for (size_t i = 0; i < obj->descriptions->used; i++) {

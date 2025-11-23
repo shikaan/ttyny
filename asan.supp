@@ -1,3 +1,6 @@
 leak:dyld4::APIs::runAllInitializersForMain
 leak:start_wqthread
 leak:ggml_backend_reg_count
+leak:ggml_backend_metal_device_init
+leak:load_images
+leak:MachOAnalyzer
