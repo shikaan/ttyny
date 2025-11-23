@@ -42,7 +42,7 @@ struct world_t {
 };
 
 // forward declared from loader.h
-world_t *worldCreateFromFile(const char *path);
+world_t *worldCreateFromJSONString(string_t* json);
 
 static inline void worldDestroy(world_t **self) {
   if (!self || !*self)

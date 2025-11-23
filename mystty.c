@@ -35,19 +35,37 @@ int quit(string_t *response, ui_handle_t *loading) {
   return 0;
 }
 
-void printUsage(const char *name) {
-  fprintf(stderr, "usage: %s <path-to-story.json>\n", name);
+void usage(const char *name) {
+  fprintf(stderr,
+          "%s is a small-language-model-powered game engine to play text "
+          "adventure games in your terminal.\n"
+          "Usage:\n"
+          "  %s <path-to-story.json>\n"
+          "\n"
+          "Flags:\n"
+          "  -h, --help      show this help\n"
+          "  -v, --version   show version\n"
+          "\n"
+          "For more information https://github.com/shikaan/%s\n",
+          name, name, name);
   exit(1);
 }
 
 int main(int argc, char **argv) {
-
+  const char *name = strrchr(argv[0], '/') + 1;
   if (argc != 2) {
-    printUsage(argv[0]);
+    usage(name);
   }
   const char *story_path = argv[1];
 
-  world_t *world cleanup(worldDestroy) = worldCreateFromFile(story_path);
+  string_t *json cleanup(strDestroy) = readFile(story_path);
+  if (!json) {
+    fprintf(stderr, "%s: ", name);
+    perror(story_path);
+    usage(name);
+  }
+
+  world_t *world cleanup(worldDestroy) = worldCreateFromJSONString(json);
   string_t *input cleanup(strDestroy) = strCreate(512);
   string_t *response cleanup(strDestroy) = strCreate(4096);
   string_t *state cleanup(strDestroy) = strCreate(1024);

@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include "../../vendor/jsmn.h"
 #include "../utils.h"
@@ -820,60 +821,9 @@ static world_t *loaderBuildWorld(items_t *items, locations_t *locations,
   return world;
 }
 
-// ----------------------------- Cleanup (failure only) -----------------------
-
-// Minimal cleanup to avoid leaking on fatal error.
-// We don't export a destructor per instructions; used internally on failure.
-static void loaderDestroyWorld(world_t **worldPtr) {
-  if (!worldPtr || !*worldPtr)
-    return;
-  world_t *w = *worldPtr;
-
-  deallocate(&w);
-  *worldPtr = NULL;
-}
-
-// ----------------------------- File Reading ---------------------------------
-
-static char *loaderReadFile(const char *path, size_t *outLen) {
-  FILE *fp = fopen(path, "rb");
-  if (!fp) {
-    error("cannot open file '%s'\n", path);
-    return NULL;
-  }
-  if (fseek(fp, 0, SEEK_END) != 0) {
-    fclose(fp);
-    error("fseek failed\n");
-    return NULL;
-  }
-  long size = ftell(fp);
-  if (size < 0) {
-    fclose(fp);
-    error("ftell failed\n");
-    return NULL;
-  }
-  rewind(fp);
-  char *data = allocate((size_t)size + 1);
-  if (!data) {
-    fclose(fp);
-    return NULL;
-  }
-  size_t read = fread(data, 1, (size_t)size, fp);
-  fclose(fp);
-  if (read != (size_t)size) {
-    error("fread truncated\n");
-    deallocate(&data);
-    return NULL;
-  }
-  data[size] = '\0';
-  if (outLen)
-    *outLen = (size_t)size;
-  return data;
-}
-
 // ----------------------------- Parsing Root ---------------------------------
 
-static world_t *loaderParseJson(const char *json, size_t length) {
+world_t *worldCreateFromJSONString(string_t* json) {
   // Tokenization (grow tokens until success)
   jsmn_parser parser;
   jsmn_init(&parser);
@@ -884,7 +834,7 @@ static world_t *loaderParseJson(const char *json, size_t length) {
     return NULL;
 
   int r;
-  while ((r = jsmn_parse(&parser, json, length, tokens, tokensCapacity)) ==
+  while ((r = jsmn_parse(&parser, json->data, json->length, tokens, tokensCapacity)) ==
          JSMN_ERROR_NOMEM) {
     tokensCapacity *= 2;
     jsmntok_t *newTokens = allocate(sizeof(jsmntok_t) * (size_t)tokensCapacity);
@@ -912,38 +862,37 @@ static world_t *loaderParseJson(const char *json, size_t length) {
   }
 
   int root = 0;
-  int itemsIdx = loaderFindObjectKey(json, tokens, root, "items");
-  int locationsIdx = loaderFindObjectKey(json, tokens, root, "locations");
-  int endingsIdx = loaderFindObjectKey(json, tokens, root, "endings");
+  int itemsIdx = loaderFindObjectKey(json->data, tokens, root, "items");
+  int locationsIdx = loaderFindObjectKey(json->data, tokens, root, "locations");
+  int endingsIdx = loaderFindObjectKey(json->data, tokens, root, "endings");
 
   if (itemsIdx < 0 || locationsIdx < 0 || endingsIdx < 0) {
-    fprintf(stderr,
-            "loader: missing top-level fields (items/locations/endings)\n");
+    error("missing top-level fields (items/locations/endings)");
     deallocate(&tokens);
     return NULL;
   }
 
-  items_t *items = loaderParseItems(json, tokens, itemsIdx);
+  items_t *items = loaderParseItems(json->data, tokens, itemsIdx);
   if (!items) {
     deallocate(&tokens);
     return NULL;
   }
 
   locations_t *locations =
-      loaderParseLocations(json, tokens, locationsIdx, items);
+      loaderParseLocations(json->data, tokens, locationsIdx, items);
   if (!locations) {
     // free items
     world_t *tmp = loaderBuildWorld(items, NULL, NULL);
-    loaderDestroyWorld(&tmp);
+    worldDestroy(&tmp);
     deallocate(&tokens);
     return NULL;
   }
 
   endings_t *endings =
-      loaderParseEndings(json, tokens, endingsIdx, items, locations);
+      loaderParseEndings(json->data, tokens, endingsIdx, items, locations);
   if (!endings) {
     world_t *tmp = loaderBuildWorld(items, locations, NULL);
-    loaderDestroyWorld(&tmp);
+    worldDestroy(&tmp);
     deallocate(&tokens);
     return NULL;
   }
@@ -951,25 +900,11 @@ static world_t *loaderParseJson(const char *json, size_t length) {
   world_t *world = loaderBuildWorld(items, locations, endings);
   if (!world) {
     world_t *tmp = loaderBuildWorld(items, locations, endings);
-    loaderDestroyWorld(&tmp);
+    worldDestroy(&tmp);
     deallocate(&tokens);
     return NULL;
   }
 
   deallocate(&tokens);
-  return world;
-}
-
-// ----------------------------- Public API -----------------------------------
-
-world_t *worldCreateFromFile(const char *path) {
-  size_t len = 0;
-  char *json = loaderReadFile(path, &len);
-  if (!json)
-    return NULL;
-
-  world_t *world = loaderParseJson(json, len);
-
-  deallocate(&json);
   return world;
 }
