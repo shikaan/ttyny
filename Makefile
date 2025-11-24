@@ -53,6 +53,12 @@ tests/master.snap: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerat
 	-framework Foundation -framework Metal -framework MetalKit
 tests/master.snap: src/ai.o src/master.o $(LLAMA_STATIC_LIBS)
 
+tests/master.test: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
+	-Ivendor/llama.cpp/ggml/include
+tests/master.test: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
+	-framework Foundation -framework Metal -framework MetalKit
+tests/master.test: src/ai.o src/master.o $(LLAMA_STATIC_LIBS)
+
 .PHONY: snap
 snap: tests/master.snap
 	tests/master.snap

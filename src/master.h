@@ -39,3 +39,10 @@ void masterForget(master_t *, const object_t *);
 
 // Destroys master and all associated resources
 void masterDestroy(master_t **);
+
+// This is only exposed to speed up unit tests.
+// Else to test this functionality we would need to depend on ai instantiation
+typedef Buffer(const char *) words_t;
+words_t *wordsCreate(size_t len);
+void wordsDestroy(words_t **self);
+int masterIsValidResponse(string_t*, words_t *);

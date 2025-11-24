@@ -11,15 +11,13 @@
 #include <stdio.h>
 #include <string.h>
 
-typedef Buffer(const char *) words_t;
-
-static inline words_t *wordsCreate(size_t len) {
+words_t *wordsCreate(size_t len) {
   words_t *result;
   bufCreate(words_t, const char *, result, len);
   return result;
 }
 
-static inline void wordsDestroy(words_t **self) { deallocate(self); }
+void wordsDestroy(words_t **self) { deallocate(self); }
 
 static words_t STOP_WORDS =
     bufConst(4, "inventory", "player", "player's", "location");
@@ -108,9 +106,10 @@ master_t *masterCreate(world_t *world) {
   return master;
 }
 
+static const char *WORD_BREAK = " \t\r\n:-*'.,";
+
 static int hasStopWords(string_t *response) {
   panicif(!response, "missing response");
-  static const char *WORD_BREAK = " \t\r\n:-*'";
 
   string_t *input cleanup(strDestroy) = strDup(response);
   if (!input)
@@ -148,13 +147,24 @@ static int hasAllMustHaves(string_t *response, words_t *must_haves) {
 
   for (size_t i = 0; i < must_haves->used; i++) {
     const char *word = bufAt(must_haves, i);
-    if (!strcasestr(response->data, word)) {
+    char *word_position = strcasestr(response->data, word);
+    if (!word_position) {
       info("Invalid: Missing must have %s", word);
+      return 0;
+    }
+
+    // if the next char at the end of the string is not a break return false
+    size_t len = strlen(word);
+    if (!strchr(WORD_BREAK, word_position[len])) {
       return 0;
     }
   }
 
   return 1;
+}
+
+int masterIsValidResponse(string_t *response, words_t *must_haves) {
+  return !hasStopWords(response) && hasAllMustHaves(response, must_haves);
 }
 
 static void generateAndValidate(ai_t *ai, const string_t *prompt,
@@ -171,7 +181,7 @@ static void generateAndValidate(ai_t *ai, const string_t *prompt,
       valid = 0;
       continue;
     }
-    valid = !hasStopWords(response) && hasAllMustHaves(response, must_haves);
+    valid = masterIsValidResponse(response, must_haves);
 
     if (!valid)
       debug("Rejected:\n%s\n", response->data);
