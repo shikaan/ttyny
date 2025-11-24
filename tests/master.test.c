@@ -1,7 +1,7 @@
 #include "../src/master.h"
-#include "../assets/grayfen.h"
 #include "../src/buffers.h"
 #include "../src/utils.h"
+#include "fixtures/world.h"
 #include "test.h"
 #include "timers.h"
 #include <math.h>
@@ -132,7 +132,7 @@ void describeEndgame(void) {
 
   for (size_t i = 0; i < SAMPLE_SIZE; i++) {
     size_t scenario_idx = i % num_scenarios;
-    world->end_game = end_game[scenario_idx].ending;
+    world->end_game = strdup(end_game[scenario_idx].ending);
     game_state_t state = end_game[scenario_idx].state;
     strFmt(input, "%s", end_game[scenario_idx].input);
 
@@ -151,6 +151,7 @@ void describeEndgame(void) {
     if (i != 0 && (i % 10) == 0) {
       info("current average: %fs\n", avg(i, samples) / (double)MICROSECONDS);
     }
+    deallocate(&world->end_game);
   }
 
   expectLtf(avg(SAMPLE_SIZE, samples) / (double)MICROSECONDS, 5.0,
