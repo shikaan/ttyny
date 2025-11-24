@@ -7,6 +7,8 @@ compile_commands.json
 build
 **/*.o
 **/*.test
+**/*.time
+**/*.snap
 **/*.dSYM
 *.plist
 .cache

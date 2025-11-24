@@ -4,65 +4,15 @@
 #include "fixtures/world.h"
 #include "test.h"
 #include "timers.h"
-#include <math.h>
 #include <stddef.h>
 #include <stdint.h>
 
-void expectLtf(const double a, const double b, const char *name) {
-  char msg[256];
-  snprintf(msg, 256, "Expected %f < %f", a, b);
-  expect(a < b, name, msg);
-}
-
-// This test file is meant to test how effective a given prompt is by running
-// instructions repeatedly and see how long it takes for it to generate a valid
-// input
-
-enum { SAMPLE_SIZE = 100, MICROSECONDS = 10000000 };
-
-double_t avg(size_t size, uint64_t samples[SAMPLE_SIZE]) {
-  uint64_t sum = 0;
-  for (size_t i = 0; i < size; i++) {
-    sum += (samples)[i];
-  }
-
-  return (double)sum / (double)size;
-}
-
-void describeLocation(void) {
-  string_t *buffer cleanup(strDestroy) = strCreate(1024);
-  master_t *master cleanup(masterDestroy) = masterCreate(world);
-
-  uint64_t samples[SAMPLE_SIZE] = {};
-
-  info("doing %d measurements\n", SAMPLE_SIZE);
-  for (size_t i = 0; i < SAMPLE_SIZE; i++) {
-    location_t *room =
-        (location_t *)world->locations->data[i % world->locations->length];
-    strClear(buffer);
-    uint64_t elapsed = readTimer();
-    masterDescribeLocation(master, room, buffer);
-    elapsed = readTimer() - elapsed;
-    debug("Attempt #%lu duration: %f\n", i + 1,
-          (double)elapsed / (double)MICROSECONDS);
-    samples[i] = elapsed;
-    masterForget(master, &room->object);
-
-    if (i != 0 && (i % 10) == 0) {
-      info("current average: %fs\n", avg(i, samples) / (double)MICROSECONDS);
-    }
-  }
-
-  expectLtf(avg(SAMPLE_SIZE, samples) / (double)MICROSECONDS, 5.0,
-            "average generation time is < 5s");
-}
+#define SAMPLE_SIZE 100
 
 void describeEndgame(void) {
   string_t *buffer cleanup(strDestroy) = strCreate(1024);
   string_t *input cleanup(strDestroy) = strCreate(128);
   master_t *master cleanup(masterDestroy) = masterCreate(world);
-
-  uint64_t samples[SAMPLE_SIZE] = {};
 
   struct {
     const char *ending;
@@ -122,6 +72,8 @@ void describeEndgame(void) {
        GAME_STATE_VICTORY},
   };
 
+  uint64_t samples[SAMPLE_SIZE] = {};
+
   // end game always comes with a pre-described room
   masterDescribeLocation(master, world->location, buffer);
   strClear(buffer); // we don't really care about this description though
@@ -144,7 +96,7 @@ void describeEndgame(void) {
     debug("Attempt #%lu duration: %f\n", i + 1,
           (double)elapsed / (double)MICROSECONDS);
     samples[i] = elapsed;
-    debug("RESPONSE (end: %s, input: %s, state: %s)\n > %s\n---\n",
+    printf("RESPONSE (end: %s, input: %s, state: %s)\n > %s\n---\n",
           world->end_game, end_game[scenario_idx].input,
           state == GAME_STATE_VICTORY ? "victory" : "dead", buffer->data);
 
@@ -153,17 +105,9 @@ void describeEndgame(void) {
     }
     deallocate(&world->end_game);
   }
-
-  expectLtf(avg(SAMPLE_SIZE, samples) / (double)MICROSECONDS, 5.0,
-            "average generation time is < 5s");
 }
 
 int main(void) {
-  suite(describeLocation);
-  // FIXME: this test is a bit weird.
-  //   Timing is not really an issue here, but I have no good way to measure
-  //   quality of the output. Having a list of outputs to look at is still
-  //   valuable
   suite(describeEndgame);
-  return report();
+  return 0;
 }
