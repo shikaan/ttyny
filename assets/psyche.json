@@ -24,7 +24,7 @@
       "name": "Honey Cakes",
       "type": "item",
       "descriptions": [
-        "Two small cakes dripping with golden honey. They would surely please any creature with a appetite. You recall stories of using such treats to soothe guard beasts."
+        "Two small cakes dripping with golden honey. They would surely please any creature with a appetite. Use them to soothe guard beasts."
       ],
       "transitions": [],
       "collectible": true,
@@ -46,7 +46,8 @@
             "inventory": null,
             "items": null,
             "locations": ["The Cliff Edge"],
-            "turns": null
+            "turns": null,
+            "current_location": null
           }
         }
       ],
@@ -89,7 +90,8 @@
             "inventory": ["Garden Shears"],
             "items": null,
             "locations": null,
-            "turns": null
+            "turns": null,
+            "current_location": null
           }
         }
       ],
@@ -100,7 +102,8 @@
       "name": "Sacred Rose",
       "type": "item",
       "descriptions": [
-        "A single perfect rose with petals that shimmer like mother-of-pearl. It radiates a faint divine light and carries the sweet scent of Venus's favor. This is proof that you have restored her Sacred Garden. The rose will never wilt or fade."
+        "A rose that radiates a faint light and carries the scent of Venus's favor. It's blocked by vines.",
+        "A single perfect rose with petals that shimmer like mother-of-pearl. The rose will never wilt or fade."
       ],
       "transitions": [
         {
@@ -111,7 +114,8 @@
             "inventory": null,
             "items": ["Overgrown Vines.1"],
             "locations": null,
-            "turns": null
+            "turns": null,
+            "current_location": null
           }
         }
       ],
@@ -144,7 +148,8 @@
             "inventory": null,
             "items": null,
             "locations": null,
-            "turns": null
+            "turns": null,
+            "current_location": null
           }
         }
       ],
@@ -167,7 +172,8 @@
             "inventory": ["Sacred Rose"],
             "items": null,
             "locations": null,
-            "turns": null
+            "turns": null,
+            "current_location": null
           }
         }
       ],
@@ -190,7 +196,8 @@
             "inventory": ["Golden Pelt"],
             "items": null,
             "locations": null,
-            "turns": null
+            "turns": null,
+            "current_location": null
           }
         }
       ],
@@ -213,7 +220,8 @@
             "inventory": ["Crystal Vessel.1"],
             "items": null,
             "locations": null,
-            "turns": null
+            "turns": null,
+            "current_location": null
           }
         }
       ],
@@ -236,7 +244,8 @@
             "inventory": ["Sealed Box"],
             "items": null,
             "locations": null,
-            "turns": null
+            "turns": null,
+            "current_location": null
           }
         }
       ],
@@ -247,7 +256,7 @@
       "name": "Signpost",
       "type": "item",
       "descriptions": [
-        "A weathered wooden signpost points in multiple directions:\n\n→ NORTH: Venus's Courtyard - 'Where the goddess judges mortals'\n→ EAST: The Riverside - 'Follow the water's song'\n→ SOUTH: The Mountain Path - 'Climb toward the heavens'\n→ WEST: The Cave Entrance - 'Descent into darkness'\n→ PALACE: Cupid's Palace - 'The path of love (currently sealed)'\n\nYou stand at the center of your journey. Choose your path wisely."
+        "→ Venus's Courtyard - 'Where the goddess judges mortals'\n→ The Riverside - 'Follow the water's song'\n→ The Mountain Path - 'Climb toward the heavens'\n→ The Cave Entrance - 'Descent into darkness'\n→ Cupid's Palace - 'The path of love'"
       ],
       "transitions": [],
       "collectible": false,
@@ -299,7 +308,8 @@
             "inventory": ["Bronze Coins"],
             "items": null,
             "locations": null,
-            "turns": null
+            "turns": null,
+            "current_location": null
           }
         }
       ],
@@ -322,7 +332,8 @@
             "inventory": ["Honey Cakes"],
             "items": null,
             "locations": null,
-            "turns": null
+            "turns": null,
+            "current_location": null
           }
         }
       ],
@@ -419,7 +430,8 @@
             "inventory": ["Music Box"],
             "items": null,
             "locations": null,
-            "turns": null
+            "turns": null,
+            "current_location": null
           }
         }
       ],
@@ -512,7 +524,8 @@
               "Box Altar.1"
             ],
             "locations": null,
-            "turns": null
+            "turns": null,
+            "current_location": null
           }
         }
       ],
@@ -528,7 +541,8 @@
         "inventory": null,
         "items": null,
         "locations": ["Cupid's Palace.1"],
-        "turns": null
+        "turns": null,
+        "current_location": null
       }
     },
     {
@@ -538,7 +552,8 @@
         "inventory": null,
         "items": null,
         "locations": null,
-        "turns": 30
+        "turns": 30,
+        "current_location": null
       }
     },
     {
@@ -548,7 +563,8 @@
         "inventory": ["Golden Pelt"],
         "items": null,
         "locations": ["The Meadow.0"],
-        "turns": null
+        "turns": null,
+        "current_location": null
       }
     },
     {
@@ -558,7 +574,8 @@
         "inventory": null,
         "items": ["Sealed Box.1"],
         "locations": null,
-        "turns": null
+        "turns": null,
+        "current_location": null
       }
     }
   ]

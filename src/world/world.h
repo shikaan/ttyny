@@ -42,7 +42,7 @@ struct world_t {
 };
 
 world_t *worldFromJSONString(string_t *);
-world_t *worldFromJSONFile(const char*);
+world_t *worldFromJSONFile(const char *);
 
 void worldDestroy(world_t **);
 

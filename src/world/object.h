@@ -123,6 +123,7 @@ typedef struct requirements_t {
   requirement_tuples_t *inventory;
   requirement_tuples_t *items;
   requirement_tuples_t *locations;
+  requirement_tuple_t *current_location;
   uint16_t turns;
 } requirements_t;
 
@@ -138,6 +139,8 @@ typedef enum {
   REQUIREMENTS_RESULT_MISSING_WORLD_ITEM,
   REQUIREMENTS_RESULT_INVALID_WORLD_ITEM,
   REQUIREMENTS_RESULT_INVALID_LOCATION,
+  REQUIREMENTS_RESULT_INVALID_CURRENT_LOCATION,
+  REQUIREMENTS_RESULT_CURRENT_LOCATION_MISMATCH,
   REQUIREMENTS_RESULT_NOT_ENOUGH_TURNS,
 } requirements_result_t;
 
@@ -149,5 +152,6 @@ static inline void requirementsDestroy(requirements_t **self) {
   deallocate(&req->items);
   deallocate(&req->inventory);
   deallocate(&req->locations);
+  deallocate(&req->current_location);
   deallocate(self);
 }

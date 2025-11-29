@@ -51,6 +51,17 @@ static bool requirementsEquals(requirements_t *a, requirements_t *b) {
     return false;
   if (!requirementTuplesEquals(a->locations, b->locations))
     return false;
+  // Compare single current_location tuple (may be NULL)
+  if (a->current_location == NULL && b->current_location == NULL) {
+    // both absent OK
+  } else if (a->current_location == NULL || b->current_location == NULL) {
+    return false;
+  } else {
+    if (strcmp(a->current_location->name, b->current_location->name) != 0)
+      return false;
+    if (a->current_location->state != b->current_location->state)
+      return false;
+  }
   return true;
 }
 
@@ -297,6 +308,7 @@ void endings(void) {
       .inventory = NULL,
       .items = &box_items,
       .locations = NULL,
+      .current_location = NULL,
       .turns = 2,
   };
   static char persephone_reason[] = "You opened Persephone's box.";
@@ -328,6 +340,7 @@ void endings(void) {
       .inventory = &inv_items,
       .items = NULL,
       .locations = NULL,
+      .current_location = NULL,
       .turns = 5,
   };
   static char victory_reason[] = "Victory!";
@@ -356,6 +369,7 @@ void endings(void) {
       .inventory = NULL,
       .items = NULL,
       .locations = &dungeon_locs,
+      .current_location = NULL,
       .turns = 0,
   };
   static char trapped_reason[] = "You are trapped!";
@@ -380,6 +394,7 @@ void endings(void) {
       .inventory = NULL,
       .items = NULL,
       .locations = NULL,
+      .current_location = NULL,
       .turns = 50,
   };
   static char timeout_reason[] = "Time ran out!";
@@ -405,6 +420,7 @@ void endings(void) {
       .inventory = NULL,
       .items = NULL,
       .locations = NULL,
+      .current_location = NULL,
       .turns = 0,
   };
   static ending_t escape_ending = {
@@ -417,6 +433,7 @@ void endings(void) {
       .inventory = NULL,
       .items = NULL,
       .locations = NULL,
+      .current_location = NULL,
       .turns = 100,
   };
   static ending_t death_ending = {
@@ -452,6 +469,7 @@ void endings(void) {
       .inventory = &complex_inv,
       .items = &complex_items,
       .locations = NULL,
+      .current_location = NULL,
       .turns = 10,
   };
   static char ritual_reason[] = "The ritual is complete!";
@@ -471,6 +489,36 @@ void endings(void) {
       .end_game = NULL,
   };
 
+  // Build expected world 7: current location requirement
+  static char throne_name[] = "throne";
+  static requirement_tuple_t current_loc_tuple = {
+      .name = throne_name,
+      .state = OBJECT_STATE_ANY,
+  };
+  static requirements_t current_loc_reqs = {
+      .inventory = NULL,
+      .items = NULL,
+      .locations = NULL,
+      .turns = 0,
+      .current_location = &current_loc_tuple,
+  };
+  static char throne_reason[] = "You sit upon the throne.";
+  static ending_t throne_ending = {
+      .success = true,
+      .reason = throne_reason,
+      .requirements = &current_loc_reqs,
+  };
+  static endings_t throne_endings = bufConst(1, &throne_ending);
+  static world_t throne_world = {
+      .items = &empty_items,
+      .locations = &start_locations,
+      .endings = &throne_endings,
+      .inventory = &empty_inventory,
+      .turns = 0,
+      .location = &start_location,
+      .end_game = NULL,
+  };
+
   parser_test_t tests[] = {
       {
           .name = "lose with item requirement",
@@ -479,7 +527,7 @@ void endings(void) {
                   "\"reason\": \"You opened Persephone's box.\","
                   "\"requirements\": {\"inventory\": null, \"items\": "
                   "[\"Sealed Box.1\"],"
-                  "\"locations\": null, \"turns\": 2}}]}",
+                  "\"locations\": null, \"turns\": 2, \"current_location\": null}}]}",
           .expected = &persephone_world,
       },
       {
@@ -488,7 +536,7 @@ void endings(void) {
                   "\"win\","
                   "\"reason\": \"Victory!\","
                   "\"requirements\": {\"inventory\": [\"key\", \"sword\"],"
-                  "\"items\": null, \"locations\": null, \"turns\": 5}}]}",
+                  "\"items\": null, \"locations\": null, \"turns\": 5, \"current_location\": null}}]}",
           .expected = &victory_world,
       },
       {
@@ -497,7 +545,7 @@ void endings(void) {
                   "\"lose\","
                   "\"reason\": \"You are trapped!\","
                   "\"requirements\": {\"inventory\": null, \"items\": null,"
-                  "\"locations\": [\"dungeon.0\"], \"turns\": 0}}]}",
+                  "\"locations\": [\"dungeon.0\"], \"turns\": 0, \"current_location\": null}}]}",
           .expected = &trapped_world,
       },
       {
@@ -507,7 +555,7 @@ void endings(void) {
               "\"lose\","
               "\"reason\": \"Time ran out!\","
               "\"requirements\": {\"inventory\": null, \"items\": null,"
-              "\"locations\": null, \"turns\": 50}}]}",
+              "\"locations\": null, \"turns\": 50, \"current_location\": null}}]}",
           .expected = &timeout_world,
       },
       {
@@ -516,11 +564,11 @@ void endings(void) {
                   "{\"state\": \"win\","
                   "\"reason\": \"You escaped!\","
                   "\"requirements\": {\"inventory\": null, \"items\": null,"
-                  "\"locations\": null, \"turns\": 0}},"
+                  "\"locations\": null, \"turns\": 0, \"current_location\": null}},"
                   "{\"state\": \"lose\","
                   "\"reason\": \"You died!\","
                   "\"requirements\": {\"inventory\": null, \"items\": null,"
-                  "\"locations\": null, \"turns\": 100}}"
+                  "\"locations\": null, \"turns\": 100, \"current_location\": null}}"
                   "]}",
           .expected = &multiple_world,
       },
@@ -532,8 +580,13 @@ void endings(void) {
               "\"reason\": \"The ritual is complete!\","
               "\"requirements\": {\"inventory\": [\"torch.2\"], \"items\": "
               "[\"altar.1\"],"
-              "\"locations\": null, \"turns\": 10}}]}",
+              "\"locations\": null, \"turns\": 10, \"current_location\": null}}]}",
           .expected = &ritual_world,
+      },
+      {
+          .name = "win with current_location requirement",
+          .json = "{\"locations\": [{\"name\": \"start\", \"type\": \"location\", \"descriptions\": [\"Start\"], \"transitions\": [], \"items\": [], \"exits\": []}], \"items\": [], \"endings\": [{\"state\": \"win\",\"reason\": \"You sit upon the throne.\",\"requirements\": {\"inventory\": null, \"items\": null, \"locations\": null, \"turns\": 0, \"current_location\": \"throne\"}}]}",
+          .expected = &throne_world,
       },
   };
 
@@ -611,6 +664,7 @@ void items(void) {
   static requirements_t box_reqs = {
       .inventory = NULL,
       .items = NULL,
+      .current_location = NULL,
       .locations = NULL,
       .turns = 0,
   };
@@ -846,7 +900,7 @@ void items(void) {
           .json = "{\"items\": [{\"name\": \"box\", \"type\": \"item\","
                   "\"descriptions\": [\"A sealed box\", \"An open box\"],"
                   "\"transitions\": [{\"actions\": [\"use\"], \"from\": 0, "
-                  "\"to\": 1}],"
+                  "\"to\": 1, \"requirements\": {\"inventory\": null, \"items\": null, \"locations\": null, \"turns\": 0, \"current_location\": null}}],"
                   "\"collectible\": true, \"readable\": false}],"
                   "\"locations\": [{\"name\": \"start\", \"type\": \"location\", \"descriptions\": [\"Start\"], \"transitions\": [], \"items\": [], \"exits\": []}], \"endings\": []}",
           .expected = &box_world,
@@ -903,8 +957,8 @@ void items(void) {
               "{\"items\": [{\"name\": \"device\", \"type\": \"item\","
               "\"descriptions\": [\"A dormant device\", \"An active device\"],"
               "\"transitions\": ["
-              "{\"actions\": [\"use\"], \"from\": 0, \"to\": 1},"
-              "{\"actions\": [\"examine\"], \"from\": 1, \"to\": 1}"
+              "{\"actions\": [\"use\"], \"from\": 0, \"to\": 1, \"requirements\": {\"inventory\": null, \"items\": null, \"locations\": null, \"turns\": 0, \"current_location\": null}},"
+              "{\"actions\": [\"examine\"], \"from\": 1, \"to\": 1, \"requirements\": {\"inventory\": null, \"items\": null, \"locations\": null, \"turns\": 0, \"current_location\": null}}"
               "],"
               "\"collectible\": false, \"readable\": false}],"
               "\"locations\": [{\"name\": \"start\", \"type\": \"location\", \"descriptions\": [\"Start\"], \"transitions\": [], \"items\": [], \"exits\": []}], \"endings\": []}",
@@ -1163,7 +1217,7 @@ void locations(void) {
                 "{\"items\": [], \"locations\": [{\"name\": \"lab\", "
                 "\"type\": \"location\", \"descriptions\": [\"A dark lab\", "
                 "\"A lit lab\"], \"transitions\": [{\"actions\": [\"use\", "
-                "\"examine\"], \"from\": 0, \"to\": 1}], \"items\": [], "
+                "\"examine\"], \"from\": 0, \"to\": 1, \"requirements\": {\"inventory\": null, \"items\": null, \"locations\": null, \"turns\": 0, \"current_location\": null}}], \"items\": [], "
                 "\"exits\": []}], \"endings\": []}",
             .expected = &lab_world,
         },

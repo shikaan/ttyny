@@ -90,7 +90,8 @@ test: tests/buffers.test tests/parser.test tests/map.test tests/world.test \
 clean:
 	rm -f ./ttyny
 	rm -f tests/*.test
-	rm -rf **/*.dSYM **/*.plist *.plist **/*.o
+	rm -rf **/*.dSYM **/*.plist *.plist
+	find . -type f -name '*.o' -not -path './build/*' -delete
 
 .PHONY: deep-clean
 deep-clean: clean

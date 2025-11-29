@@ -98,12 +98,25 @@ void worldAreRequirementsMet(world_t *self, requirements_t *requirements,
     bufEach(requirements->locations, i) {
       requirement_tuple_t tuple = bufAt(requirements->locations, i);
       int idx = locationsFindByName(self->locations, tuple.name);
-      panicif(idx < 0, "Requirements reference non-existing location");
+      panicif(idx < 0, "location requirement references non-existing location");
       location_t *world_location = bufAt(self->locations, (size_t)idx);
       if (tuple.state != OBJECT_STATE_ANY &&
           tuple.state != world_location->object.state) {
         done(REQUIREMENTS_RESULT_INVALID_LOCATION);
       }
+    }
+    done(REQUIREMENTS_RESULT_OK);
+  }
+
+  if (requirements->current_location) {
+    panicif(!self->location, "current location cannot be null");
+    requirement_tuple_t *tuple = requirements->current_location;
+    if (!objectNameEq(tuple->name, self->location->object.name)) {
+      done(REQUIREMENTS_RESULT_CURRENT_LOCATION_MISMATCH);
+    }
+    if (tuple->state != OBJECT_STATE_ANY &&
+        tuple->state != self->location->object.state) {
+      done(REQUIREMENTS_RESULT_INVALID_CURRENT_LOCATION);
     }
     done(REQUIREMENTS_RESULT_OK);
   }
@@ -138,6 +151,8 @@ void worldTransitionObject(world_t *self, object_t *object,
         *result = TRANSITION_RESULT_INVALID_TARGET;
         return;
       case REQUIREMENTS_RESULT_NOT_ENOUGH_TURNS:
+      case REQUIREMENTS_RESULT_INVALID_CURRENT_LOCATION:
+      case REQUIREMENTS_RESULT_CURRENT_LOCATION_MISMATCH:
         *result = TRANSITION_RESULT_NO_TRANSITION;
         return;
       case REQUIREMENTS_RESULT_OK:
@@ -170,35 +185,45 @@ void worldDigest(world_t *self, game_state_t *result) {
   *result = GAME_STATE_CONTINUE;
 }
 
+static void parseRequirementTupleFromJSONVal(yyjson_val *raw,
+                                             requirement_tuple_t *tuple) {
+  if (!yyjson_is_str(raw)) {
+    error("current_location tuple is not a string");
+    return;
+  }
+
+  const char *raw_tuple = yyjson_get_str(raw);
+
+  char *c = strchr(raw_tuple, '.');
+  if (c) {
+    tuple->name = strndup(raw_tuple, (unsigned)(c - raw_tuple));
+    c++;
+    tuple->state =
+        (unsigned char)strtol(c, NULL, 10); // TODO: unverified casting!
+  } else {
+    tuple->name = strdup(raw_tuple);
+    tuple->state = OBJECT_STATE_ANY;
+  }
+}
+
 static requirement_tuples_t *requirementTuplesFromJSONVal(yyjson_val *raw) {
   if (!yyjson_is_arr(raw)) {
     error("requirements is not an array");
     return NULL;
   }
 
-  yyjson_val *val;
-  size_t idx, max = yyjson_arr_size(raw);
+  yyjson_val *requirement_val;
+  size_t i, requirements_len = yyjson_arr_size(raw);
 
-  requirement_tuples_t *tuples = requirementTuplesCreate(max);
+  requirement_tuples_t *tuples = requirementTuplesCreate(requirements_len);
   if (!tuples) {
     error("cannot allocate tuples");
     return NULL;
   }
 
-  yyjson_arr_foreach(raw, idx, max, val) {
+  yyjson_arr_foreach(raw, i, requirements_len, requirement_val) {
     requirement_tuple_t tuple;
-    const char *raw_tuple = yyjson_get_str(val);
-
-    char *c = strchr(raw_tuple, '.');
-    if (c) {
-      tuple.name = strndup(raw_tuple, (unsigned)(c - raw_tuple));
-      c++;
-      tuple.state =
-          (unsigned char)strtol(c, NULL, 10); // TODO: unverified casting!
-    } else {
-      tuple.name = strdup(raw_tuple);
-      tuple.state = OBJECT_STATE_ANY;
-    }
+    parseRequirementTupleFromJSONVal(requirement_val, &tuple);
     bufPush(tuples, tuple);
   }
 
@@ -219,6 +244,15 @@ static requirements_t *requirementsFromJSONVal(yyjson_val *raw) {
 
   yyjson_val *turns = yyjson_obj_get(raw, "turns");
   result->turns = (uint16_t)yyjson_get_uint(turns); // TODO: unverified casting!
+
+  yyjson_val *current_location = yyjson_obj_get(raw, "current_location");
+  if (yyjson_is_null(current_location)) {
+    result->current_location = NULL;
+  } else {
+    requirement_tuple_t *tuple = allocate(sizeof(requirement_tuple_t));
+    parseRequirementTupleFromJSONVal(current_location, tuple);
+    result->current_location = tuple;
+  }
 
   return result;
 }

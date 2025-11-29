@@ -63,6 +63,10 @@ void location(void) {
 void digest(void) {
   static char win[] = "win";
   static char lose[] = "lose";
+  static char location_name[] = "location";
+  static location_t some_location = { .object.name = win};
+  static location_t lose_location = {.object.name = location_name};
+  static requirement_tuple_t tuple = {.name = location_name, .state = OBJECT_STATE_ANY};
   static requirements_t REQ_WIN_TURNS = {
       .inventory = NULL,
       .items = NULL,
@@ -80,19 +84,31 @@ void digest(void) {
       .locations = NULL,
       .turns = 12,
   };
+  static requirements_t REQ_CURRENT_LOCATION = {
+      .inventory = NULL,
+      .items = NULL,
+      .locations = NULL,
+      .turns = 0,
+      .current_location = &tuple,
+  };
   static ending_t ENDING_LOSE = {
       .success = false,
       .reason = lose,
       .requirements = &REQ_LOSE_TURNS,
   };
-  static endings_t ENDINGS = bufInit(2, 2, &ENDING_WIN, &ENDING_LOSE);
+  static ending_t ENDING_LOSE_CURRENT_LOCATION = {
+      .success = false,
+      .reason = lose,
+      .requirements = &REQ_CURRENT_LOCATION,
+  };
+  static endings_t ENDINGS = bufConst(3, &ENDING_WIN, &ENDING_LOSE, &ENDING_LOSE_CURRENT_LOCATION);
   world_t w = {
       .items = NULL,
       .locations = NULL,
       .endings = &ENDINGS,
       .turns = 0,
       .inventory = NULL,
-      .location = NULL,
+      .location = &some_location,
       .end_game = NULL,
   };
 
@@ -119,6 +135,13 @@ void digest(void) {
   worldDigest(&w, &state);
   expectEqlu(state, GAME_STATE_DEAD, "digest yields death at turn 12");
   expectEqls(w.end_game, lose, sizeof(lose), "death reason matches");
+
+  w.turns = 1;
+  w.location = &lose_location;
+  w.end_game = NULL;
+  worldDigest(&w, &state);
+  expectEqlu(state, GAME_STATE_DEAD, "triggers death when current location is met");
+  expectEqls(w.end_game, lose, sizeof(lose), "death reason matches");
 }
 
 void transition(void) {
@@ -133,7 +156,7 @@ void transition(void) {
   static item_t item_1 = {{tool_name, OBJECT_TYPE_ITEM,0,&descriptions,&transitions}, false, false};
   static item_t item_2 = {{other_name, OBJECT_TYPE_ITEM,0,&descriptions,NULL}, false, false};
   static requirement_tuples_t items_reqs = bufConst(1, {tool_name, 0});
-  static requirements_t reqs = {&items_reqs, NULL, NULL, 0};
+  static requirements_t reqs = {&items_reqs, NULL, NULL, NULL, 0};
   static const transition_t tr_3 = { ACTION_TYPE_USE, 0, 1, &reqs };
   static transitions_t transitions_with_reqs = bufConst(1, tr_3);
   static item_t item_3 = {{other_name, OBJECT_TYPE_ITEM,0,&descriptions,&transitions_with_reqs}, false, false};
@@ -242,13 +265,13 @@ void requirements(void) {
 
   static char loc_desc_str[] = "loc";
   static descriptions_t loc_desc = bufConst(1, loc_desc_str);
-  static char place_desc_str[] = "place";
-  static location_t loc_1 = {{place_desc_str, OBJECT_TYPE_LOCATION, 0, &loc_desc, NULL}, NULL, NULL};
+  static char loc_1_name[] = "place";
+  static location_t loc_1 = {{loc_1_name, OBJECT_TYPE_LOCATION, 0, &loc_desc, NULL}, NULL, NULL};
   static locations_t locations = bufConst(1, &loc_1);
   w.locations = &locations;
 
   case("locations");
-  static requirement_tuples_t req_locs = bufConst(1, (requirement_tuple_t){ place_desc_str, 0 });
+  static requirement_tuples_t req_locs = bufConst(1, (requirement_tuple_t){ loc_1_name, 0 });
   static requirements_t reqs_locs = {
       .inventory = NULL,
       .items = NULL,
@@ -278,6 +301,31 @@ void requirements(void) {
   w.turns = 3;
   worldAreRequirementsMet(&w, &reqs_turns, &rr);
   expectEqlu(rr, REQUIREMENTS_RESULT_OK, "turns enough");
+
+  case("current_location");
+  w.location = &loc_1;
+  w.location->object.state = 0;
+  static requirement_tuple_t tuple = { loc_1_name, 0 };
+  static requirements_t reqs_current_loc = {
+      .inventory = NULL,
+      .items = NULL,
+      .current_location = &tuple,
+      .turns = 0,
+  };
+  worldAreRequirementsMet(&w, &reqs_current_loc, &rr);
+  expectEqlu(rr, REQUIREMENTS_RESULT_OK, "current_location: ok");
+
+  w.location->object.state = 1;
+  worldAreRequirementsMet(&w, &reqs_current_loc, &rr);
+  expectEqlu(rr, REQUIREMENTS_RESULT_INVALID_CURRENT_LOCATION, "current_location: invalid");
+  w.location->object.state = 0;
+
+  static char other_place_desc_str[] = "other_place";
+  static location_t loc_2 = {{other_place_desc_str, OBJECT_TYPE_LOCATION, 0, &loc_desc, NULL}, NULL, NULL};
+  w.location = &loc_2;
+  worldAreRequirementsMet(&w, &reqs_current_loc, &rr);
+  expectEqlu(rr, REQUIREMENTS_RESULT_CURRENT_LOCATION_MISMATCH, "current_location: mismatch");
+  w.location = &loc_1; // restore
 
   case("no requirements");
   static requirements_t reqs_none = {

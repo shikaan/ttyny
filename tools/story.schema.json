@@ -45,13 +45,14 @@
       "type": "array",
       "items": { "$ref": "#/$defs/Location" }
     },
-    "RequirementTuple": {
+    "ObjectSpecifier": {
       "type": "string",
+      "description": "Identify an object by its name or name.state_index. If no state index is provided, object in any state will be matched.",
       "pattern": "^.+(\\.\\d+){0,1}"
     },
     "RequirementTuples": {
       "type": "array",
-      "items": { "$ref": "#/$defs/RequirementTuple" },
+      "items": { "$ref": "#/$defs/ObjectSpecifier" },
       "minItems": 1
     },
     "Requirements": {
@@ -59,23 +60,33 @@
       "description": "Requirements that must be satisfied to perform a transition or reach an ending. Each field may be null (no constraint) or a specific constraint object.",
       "properties": {
         "inventory": {
-          "description": "Player inventory membership conditions.",
+          "description": "Met when the specified items are in the inventory.",
           "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/RequirementTuples" }]
         },
         "items": {
-          "description": "Item state conditions (by name or name.state).",
+          "description": "Met when the specified items in the world are in the given state.",
           "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/RequirementTuples" }]
         },
         "locations": {
-          "description": "Location state membership conditions (by name or name.state).",
+          "description": "Met when the specified locations in the world are in the given state.",
           "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/RequirementTuples" }]
         },
         "turns": {
-          "description": "Turn count constraints.",
+          "description": "Met when the number of turns is greater than specified amount.",
           "oneOf": [{ "type": "null" }, { "type": "number", "minimum": 1 }]
+        },
+        "current_location": {
+          "description": "Met if current location is the specified one",
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/ObjectSpecifier" }]
         }
       },
-      "required": ["inventory", "items", "locations", "turns"],
+      "required": [
+        "inventory",
+        "items",
+        "locations",
+        "turns",
+        "current_location"
+      ],
       "additionalProperties": false
     },
     "Transition": {

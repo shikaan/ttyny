@@ -66,7 +66,8 @@
             "inventory": null,
             "items": null,
             "locations": null,
-            "turns": null
+            "turns": null,
+            "current_location": null
           }
         }
       ],
@@ -106,7 +107,8 @@
         "inventory": ["logbook"],
         "items": null,
         "locations": null,
-        "turns": null
+        "turns": null,
+        "current_location": null
       }
     },
     {
@@ -116,7 +118,8 @@
         "inventory": ["note.0"],
         "items": null,
         "locations": null,
-        "turns": null
+        "turns": null,
+        "current_location": null
       }
     },
     {
@@ -126,7 +129,8 @@
         "inventory": null,
         "items": null,
         "locations": null,
-        "turns": 30
+        "turns": 30,
+        "current_location": null
       }
     }
   ]
