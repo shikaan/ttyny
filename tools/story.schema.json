@@ -15,7 +15,7 @@
     },
     "endings": {
       "type": "array",
-      "description": "Possible endings of the story. They are evaluated in order, from first to last. The first one to have all requirements satisfied, will trigger.",
+      "description": "Possible endings of the story. They are evaluated in order, from first to last. The first one to have all requirements satisfied will trigger.",
       "items": { "$ref": "#/$defs/Ending" }
     }
   },
@@ -26,7 +26,7 @@
     },
     "ActionList": {
       "type": "array",
-      "description": "Each user input in `ttyny` gets labeles as one of these actions. They are used to identify transition triggers.",
+      "description": "Each user input in `ttyny` gets labeled as one of these actions. They are used to identify transition triggers.",
       "items": {
         "enum": ["use", "move", "examine", "take", "drop"]
       },
@@ -42,7 +42,7 @@
     },
     "ObjectSpecifier": {
       "type": "string",
-      "description": "Identify an object by its name or name.state_index. If no state index is provided, object in any state will be matched.",
+      "description": "Identifies an object by its name or name.state_index. If no state index is provided, an object in any state will be matched.",
       "pattern": "^.+(\\.\\d+){0,1}"
     },
     "RequirementTuples": {
@@ -71,7 +71,7 @@
           "oneOf": [{ "type": "null" }, { "type": "number", "minimum": 1 }]
         },
         "current_location": {
-          "description": "Met if current location is the specified one",
+          "description": "Met if the current location is the specified one.",
           "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/ObjectSpecifier" }]
         }
       },
@@ -86,7 +86,7 @@
     },
     "Transition": {
       "type": "object",
-      "description": "State change triggered by performing one of the listed actions when requirements are met.",
+      "description": "A state change triggered by performing one of the listed actions when requirements are met.",
       "required": ["actions", "from", "to", "requirements"],
       "additionalProperties": false,
       "properties": {
@@ -106,7 +106,7 @@
     },
     "Item": {
       "type": "object",
-      "description": "An item is an object the player can interact with. It represents a physical thing like a lamp or an apple.",
+      "description": "An item is an object the player can interact with. It represents a physical object like a lamp or an apple.",
       "required": [
         "name",
         "type",
@@ -118,7 +118,7 @@
       "additionalProperties": false,
       "properties": {
         "name": {
-          "description": "Unique identifier of the item. It must be human readable, as it will be shown to the users.",
+          "description": "Unique identifier of the item. It must be human-readable, as it will be shown to the users.",
           "$ref": "#/$defs/NonEmptyString"
         },
         "type": {
@@ -134,16 +134,16 @@
         "transitions": {
           "type": "array",
           "items": { "$ref": "#/$defs/Transition" },
-          "description": "Possible state transitions for the item. Set to empty if the item does not change state (you should have only one item in descriptions in that case)",
+          "description": "Possible state transitions for the item. Set to empty if the item does not change state (you should have only one item in descriptions in that case).",
           "default": []
         },
         "collectible": {
           "type": "boolean",
-          "description": "True if the item can be added to the player's inventory"
+          "description": "True if the item can be added to the player's inventory."
         },
         "readable": {
           "type": "boolean",
-          "description": "True if upon inspection the item reveals its descriptions verbatim"
+          "description": "True if upon inspection the item reveals its description verbatim."
         }
       }
     },
@@ -161,7 +161,7 @@
       "additionalProperties": false,
       "properties": {
         "name": {
-          "description": "Unique identifier of the location. It must be human readable, as it will be shown to the users.",
+          "description": "Unique identifier of the location. It must be human-readable, as it will be shown to the users.",
           "$ref": "#/$defs/NonEmptyString"
         },
         "type": {
@@ -177,7 +177,7 @@
         "transitions": {
           "type": "array",
           "items": { "$ref": "#/$defs/Transition" },
-          "description": "Possible state transitions for the location. Set to empty if the item does not change state (you should have only one item in descriptions in that case)",
+          "description": "Possible state transitions for the location. Set to empty if the location does not change state (you should have only one item in descriptions in that case).",
           "default": []
         },
         "items": {
