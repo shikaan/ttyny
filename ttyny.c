@@ -196,6 +196,10 @@ int main(int argc, char **argv) {
         strFmt(response, "You need an item or a key to go there...");
         printCallback = printError;
         break;
+      } else if (transition == TRANSITION_RESULT_INVALID_TARGET) {
+        strFmt(response, "This way is locked by some contraption.");
+        printCallback = printError;
+        break;
       }
 
       world->location = location;
@@ -241,7 +245,15 @@ int main(int argc, char **argv) {
       }
 
       if (!item->collectible) {
-        strFmt(response, "You cannot pick that %s up.", item->object.name);
+        strFmt(response, "You cannot pick that up.");
+        printCallback = printError;
+        break;
+      }
+
+      worldTransitionObject(world, &item->object, action, &transition);
+      if (transition != TRANSITION_RESULT_OK &&
+          transition != TRANSITION_RESULT_NO_TRANSITION) {
+        strFmt(response, "You cannot take that.");
         printCallback = printError;
         break;
       }
@@ -253,9 +265,6 @@ int main(int argc, char **argv) {
 
       printCallback = printDescription;
       formatTake(state, item);
-
-      // This is narrative transition (not functional). No need to check result
-      worldTransitionObject(world, &item->object, action, &transition);
       break;
     }
     case ACTION_TYPE_DROP: {
@@ -268,6 +277,14 @@ int main(int argc, char **argv) {
         break;
       }
 
+      worldTransitionObject(world, &item->object, action, &transition);
+      if (transition != TRANSITION_RESULT_OK &&
+          transition != TRANSITION_RESULT_NO_TRANSITION) {
+        strFmt(response, "You cannot drop that.");
+        printCallback = printError;
+        break;
+      }
+
       bufPush(world->location->items, item);
       bufRemove(world->inventory, item, NULL);
 
@@ -276,8 +293,6 @@ int main(int argc, char **argv) {
       printCallback = printDescription;
       formatDrop(state, item);
 
-      // This is narrative transition (not functional). No need to check result
-      worldTransitionObject(world, &item->object, action, &transition);
       break;
     }
     case ACTION_TYPE_USE: {
@@ -302,7 +317,11 @@ int main(int argc, char **argv) {
         formatUse(state, item);
         break;
       case TRANSITION_RESULT_MISSING_ITEM:
-        strFmt(response, "You need a utensil for that");
+        strFmt(response, "You need a utensil for that.");
+        printCallback = printError;
+        break;
+      case TRANSITION_RESULT_INVALID_TARGET:
+        strFmt(response, "Something isn't quite right for that.");
         printCallback = printError;
         break;
       case TRANSITION_RESULT_NO_TRANSITION:

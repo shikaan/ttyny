@@ -171,7 +171,7 @@ void transition(void) {
   expectEqli(item_2.object.state, 0, "state unchanged without transitions");
 
   worldTransitionObject(&w, &item_3.object, ACTION_TYPE_USE, &tr);
-  expectEqlu(tr, TRANSITION_RESULT_NO_TRANSITION, "transition blocked (missing item)");
+  expectEqlu(tr, TRANSITION_RESULT_MISSING_ITEM, "transition blocked (missing item)");
   expectEqli(item_3.object.state, 0, "state unchanged with unmet requirement");
 }
 

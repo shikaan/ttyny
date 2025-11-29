@@ -70,6 +70,7 @@ typedef enum {
   TRANSITION_RESULT_OK,
   TRANSITION_RESULT_NO_TRANSITION,
   TRANSITION_RESULT_MISSING_ITEM,
+  TRANSITION_RESULT_INVALID_TARGET,
 } transition_result_t;
 
 static inline void transitionDestroy(transition_t **self) {
