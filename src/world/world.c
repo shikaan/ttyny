@@ -489,7 +489,7 @@ static location_t *locationFromJSONVal(yyjson_val *raw, items_t *world_items) {
   if (yyjson_is_arr(items)) {
     size_t i, length = yyjson_arr_size(items);
     yyjson_val *raw_item;
-    location->items = itemsCreate(length);
+    location->items = itemsCreate(world_items->length);
 
     yyjson_arr_foreach(items, i, length, raw_item) {
       if (!yyjson_is_str(raw_item)) {

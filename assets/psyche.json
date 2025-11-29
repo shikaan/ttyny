@@ -45,9 +45,9 @@
           "requirements": {
             "inventory": null,
             "items": null,
-            "locations": ["The Cliff Edge"],
+            "locations": null,
             "turns": null,
-            "current_location": null
+            "current_location": "The Cliff Edge"
           }
         }
       ],
