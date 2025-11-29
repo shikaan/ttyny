@@ -8,11 +8,30 @@
 An AI-powered game engine to play text adventures in your terminal.
 </p>
 
+`ttyny` is a lightweight engine for playing text adventures, inspired by 
+classics like Infocom's [Zork](https://en.wikipedia.org/wiki/Zork).
+
+Powered by language models, `ttyny` understands natural language input and 
+generates dynamic responses, making every adventure a unique experience.
+
+> [!IMPORTANT]
+> This is heavily in developement and far from its final form. 
+> Ideas and contributions are welcome!
+
 ## Usage
 
 ```sh
 ttyny ./my-story.json
 ```
+
+Check out [`assets`](./assets) for some example stories.
+
+## Writing a story
+
+Writing a story is as simple as creating a JSON file that represents the world
+in which the adventure takes place.
+
+See [`stories.md`](./docs/stories.md) for further details.
 
 ## Development
 

@@ -1,6 +1,6 @@
 {
-  "title": "Interactive Story Definition",
-  "description": "Schema for defining items, locations, transitions, and endings for the story engine.",
+  "title": "ttyny",
+  "description": "Schema to define stories for the `ttyny` game engine.",
   "type": "object",
   "required": ["items", "locations", "endings"],
   "additionalProperties": false,
@@ -15,7 +15,7 @@
     },
     "endings": {
       "type": "array",
-      "description": "Possible termination states of the story.",
+      "description": "Possible endings of the story. They are evaluated in order, from first to last. The first one to have all requirements satisfied, will trigger.",
       "items": { "$ref": "#/$defs/Ending" }
     }
   },
@@ -24,14 +24,9 @@
       "type": "string",
       "minLength": 1
     },
-    "StringArray": {
-      "type": "array",
-      "items": { "$ref": "#/$defs/NonEmptyString" },
-      "minItems": 1
-    },
     "ActionList": {
       "type": "array",
-      "description": "List of action verb identifiers that can trigger a transition (e.g. use, inspect).",
+      "description": "Each user input in `ttyny` gets labeles as one of these actions. They are used to identify transition triggers.",
       "items": {
         "enum": ["use", "move", "examine", "take", "drop"]
       },
@@ -111,7 +106,7 @@
     },
     "Item": {
       "type": "object",
-      "description": "Item definition with multiple description states and transitions.",
+      "description": "An item is an object the player can interact with. It represents a physical thing like a lamp or an apple.",
       "required": [
         "name",
         "type",
@@ -122,21 +117,24 @@
       ],
       "additionalProperties": false,
       "properties": {
-        "name": { "$ref": "#/$defs/NonEmptyString" },
+        "name": {
+          "description": "Unique identifier of the item. It must be human readable, as it will be shown to the users.",
+          "$ref": "#/$defs/NonEmptyString"
+        },
         "type": {
           "const": "item",
-          "description": "Fixed discriminator to identify item objects."
+          "description": "Fixed discriminator to identify items from locations."
         },
         "descriptions": {
           "type": "array",
-          "description": "Ordered list of textual states for the item.",
+          "description": "Descriptions of the possible states of this item. There are as many descriptions as states. They should provide enough context for the language model to craft a story around them.",
           "items": { "$ref": "#/$defs/NonEmptyString" },
           "minItems": 1
         },
         "transitions": {
           "type": "array",
           "items": { "$ref": "#/$defs/Transition" },
-          "description": "Possible state transitions for the item.",
+          "description": "Possible state transitions for the item. Set to empty if the item does not change state (you should have only one item in descriptions in that case)",
           "default": []
         },
         "collectible": {
@@ -151,7 +149,7 @@
     },
     "Location": {
       "type": "object",
-      "description": "Location definition with possible transitions (e.g. lighting a room).",
+      "description": "A location is a game object representing a place the user can visit.",
       "required": [
         "name",
         "type",
@@ -162,20 +160,24 @@
       ],
       "additionalProperties": false,
       "properties": {
-        "name": { "$ref": "#/$defs/NonEmptyString" },
+        "name": {
+          "description": "Unique identifier of the location. It must be human readable, as it will be shown to the users.",
+          "$ref": "#/$defs/NonEmptyString"
+        },
         "type": {
           "const": "location",
-          "description": "Fixed discriminator to identify location objects."
+          "description": "Fixed discriminator to identify items from locations."
         },
         "descriptions": {
           "type": "array",
+          "description": "Descriptions of the possible states of this location. There are as many descriptions as states. They should provide enough context for the language model to craft a story around them.",
           "items": { "$ref": "#/$defs/NonEmptyString" },
           "minItems": 1
         },
         "transitions": {
           "type": "array",
           "items": { "$ref": "#/$defs/Transition" },
-          "description": "Possible environmental state transitions for the location.",
+          "description": "Possible state transitions for the location. Set to empty if the item does not change state (you should have only one item in descriptions in that case)",
           "default": []
         },
         "items": {
@@ -203,7 +205,10 @@
           "enum": ["win", "lose"],
           "description": "Outcome classification."
         },
-        "reason": { "$ref": "#/$defs/NonEmptyString" },
+        "reason": {
+          "description": "Context provided to the language model to narrate the end of the story.",
+          "$ref": "#/$defs/NonEmptyString"
+        },
         "requirements": { "$ref": "#/$defs/Requirements" }
       }
     }
