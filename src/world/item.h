@@ -46,7 +46,7 @@ static inline int itemsFind(items_t *self, item_t *item) {
   bufFind(self, item);
 }
 
-static inline int itemsFindByName(items_t *self, object_name_t name) {
+static inline int itemsFindByName(items_t *self, const_object_name_t name) {
   panicif(!self, "items cannot be null");
   size_t i;
   bufEach(self, i) {

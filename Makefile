@@ -10,6 +10,10 @@ build/linenoise.o: CFLAGS = -Wall -W -Os
 build/linenoise.o: vendor/linenoise/linenoise.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+build/yyjson.o: CFLAGS = -Wall -W -Os
+build/yyjson.o: vendor/yyjson/src/yyjson.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
 LLAMA_BUILD := build/llama.cpp
 LLAMA_STATIC_LIBS := $(LLAMA_BUILD)/src/libllama.a \
 	$(LLAMA_BUILD)/ggml/src/libggml.a \
@@ -29,11 +33,14 @@ build/llama.cpp/src/libllama.a:
 		-DBUILD_SHARED_LIBS=OFF
 	cmake --build $(LLAMA_BUILD) -j --config Release
 
+src/world/world.o: CFLAGS := $(CFLAGS) -Ivendor/yyjson/src
+src/world/world.o: build/yyjson.o
+
 ttyny: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
-	-Ivendor/llama.cpp/ggml/include -Ivendor/linenoise
+	-Ivendor/llama.cpp/ggml/include -Ivendor/linenoise -Ivendor/yyjson/src
 ttyny: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
 	-framework Foundation -framework Metal -framework MetalKit
-ttyny: src/ai.o src/screen.o src/master.o src/parser.o build/linenoise.o $(LLAMA_STATIC_LIBS)
+ttyny: src/ai.o src/screen.o src/master.o src/parser.o src/world/world.o build/linenoise.o build/yyjson.o $(LLAMA_STATIC_LIBS)
 
 tests/parser.test: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
 	-Ivendor/llama.cpp/ggml/include
@@ -54,10 +61,13 @@ tests/master.snap: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerat
 tests/master.snap: src/ai.o src/master.o $(LLAMA_STATIC_LIBS)
 
 tests/master.test: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
-	-Ivendor/llama.cpp/ggml/include
+	-Ivendor/llama.cpp/ggml/include -Ivendor/yyjson/src
 tests/master.test: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
 	-framework Foundation -framework Metal -framework MetalKit
 tests/master.test: src/ai.o src/master.o $(LLAMA_STATIC_LIBS)
+
+tests/json.test: src/world/world.o build/yyjson.o
+tests/world.test: src/world/world.o build/yyjson.o
 
 .PHONY: snap
 snap: tests/master.snap
@@ -68,11 +78,13 @@ time: tests/master.time
 	tests/master.time
 
 .PHONY: test
-test: tests/buffers.test tests/parser.test tests/map.test tests/world.test
+test: tests/buffers.test tests/parser.test tests/map.test tests/world.test \
+	tests/json.test
 	tests/buffers.test
 	tests/map.test
 	tests/parser.test
 	tests/world.test
+	tests/json.test
 
 .PHONY: clean
 clean:

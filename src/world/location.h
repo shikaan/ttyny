@@ -48,7 +48,7 @@ static inline locations_t *locationsCreate(size_t length) {
   return locations;
 }
 
-static inline int locationsFindByName(locations_t *self, object_name_t name) {
+static inline int locationsFindByName(locations_t *self, const_object_name_t name) {
   panicif(!self, "locations cannot be null");
 
   size_t i;

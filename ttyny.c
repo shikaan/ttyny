@@ -7,7 +7,7 @@
 #include "src/world/action.h"
 #include "src/world/command.h"
 #include "src/world/item.h"
-#include "src/world/loader.h"
+#include "src/world/object.h"
 #include "src/world/world.h"
 #include <ggml.h>
 #include <linenoise.h>
@@ -58,14 +58,13 @@ int main(int argc, char **argv) {
   }
   const char *story_path = argv[1];
 
-  string_t *json cleanup(strDestroy) = readFile(story_path);
-  if (!json) {
+  world_t *world cleanup(worldDestroy) = worldFromJSONFile(story_path);
+  if (!world) {
     fprintf(stderr, "%s: ", name);
     perror(story_path);
     usage(name);
   }
 
-  world_t *world cleanup(worldDestroy) = worldCreateFromJSONString(json);
   string_t *input cleanup(strDestroy) = strCreate(512);
   string_t *response cleanup(strDestroy) = strCreate(4096);
   string_t *state cleanup(strDestroy) = strCreate(1024);
