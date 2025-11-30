@@ -113,9 +113,7 @@ void printError(string_t *response) {
 
 void printStateUpdate(string_t *response) { printResponse(response, "\n ~> "); }
 
-void printCommandOutput(string_t *response) {
-  printResponse(response, " ~  ");
-}
+void printCommandOutput(string_t *response) { printResponse(response, " ~  "); }
 
 void printDescription(string_t *response) { printResponse(response, " |  "); }
 
@@ -224,10 +222,7 @@ void formatStatus(string_t *response, const world_t *world) {
   } else {
     for (size_t i = 0; i < inventory->used; i++) {
       item_t *inv_item = bufAt(inventory, i);
-      strFmtAppend(
-          response, "\n  • " itemfmt("%s") descriptionfmt("\n    %s"),
-          inv_item->object.name,
-          bufAt(inv_item->object.descriptions, inv_item->object.state));
+      strFmtAppend(response, "\n  • " itemfmt("%s"), inv_item->object.name);
     }
   }
 }
