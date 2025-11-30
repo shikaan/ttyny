@@ -61,6 +61,7 @@ void loadingStop(ui_handle_t **handle) {
   deallocate(handle);
 }
 
+static const int max_line_len = 80;
 static void printResponse(string_t *response, const char *prefix) {
   const char *s = response->data;
   size_t col = 0;
@@ -72,6 +73,7 @@ static void printResponse(string_t *response, const char *prefix) {
 
   while (*s) {
     if (*s == '\n') {
+      fwrite(ESC_RESET, 1, sizeof(ESC_RESET), stdout);
       putchar('\n');
       fwrite(prefix, 1, prefix_len, stdout);
       col = prefix_len;
@@ -84,7 +86,8 @@ static void printResponse(string_t *response, const char *prefix) {
       word++;
     size_t word_len = (size_t)(word - s);
     // If the word doesn't fit, break line
-    if (col > prefix_len && col + word_len > 80) {
+    if (col > prefix_len && col + word_len > max_line_len) {
+      fwrite(ESC_RESET, 1, sizeof(ESC_RESET), stdout);
       putchar('\n');
       fwrite(prefix, 1, prefix_len, stdout);
       col = prefix_len;
@@ -100,6 +103,7 @@ static void printResponse(string_t *response, const char *prefix) {
       s++;
     }
   }
+  fwrite(ESC_RESET, 1, sizeof(ESC_RESET), stdout);
   putchar('\n');
 }
 
@@ -110,10 +114,14 @@ void printError(string_t *response) {
 void printStateUpdate(string_t *response) { printResponse(response, "\n ~> "); }
 
 void printCommandOutput(string_t *response) {
-  printResponse(response, " ~   ");
+  printResponse(response, " ~  ");
 }
 
 void printDescription(string_t *response) { printResponse(response, " |  "); }
+
+void printReadable(string_t *response) {
+  printResponse(response, "    " ESC_ITALIC);
+}
 
 void printEndGame(string_t *response, game_state_t state) {
   if (state == GAME_STATE_VICTORY) {

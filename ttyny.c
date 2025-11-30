@@ -215,12 +215,16 @@ int main(int argc, char **argv) {
                           &location, &item);
 
       if (item) {
-        // TODO: distinguish examine vs read instead of transitioning here
-        // This is narrative transition (not functional). No need to check
-        // result
+        // This is non-functional transition. No need to check result
         worldTransitionObject(world, &item->object, action, &transition);
-        masterDescribeObject(master, &item->object, response);
-        printCallback = printDescription;
+
+        if (item->readable) {
+          masterReadItem(master, item, response);
+          printCallback = printReadable;
+        } else {
+          masterDescribeObject(master, &item->object, response);
+          printCallback = printDescription;
+        }
         break;
       }
 

@@ -4,6 +4,8 @@
 #include "buffers.h"
 #include "map.h"
 #include "utils.h"
+#include "world/item.h"
+#include "world/object.h"
 #include "world/world.h"
 
 #include "configs/qwen.h"
@@ -191,13 +193,6 @@ static void generateAndValidate(ai_t *ai, const string_t *prompt,
   }
 }
 
-static int objectIsReadable(const object_t *object) {
-  if (!object || object->type != OBJECT_TYPE_ITEM)
-    return 0;
-  const item_t *item = (const item_t *)object;
-  return item->readable;
-}
-
 void masterDescribeLocation(master_t *self, const location_t *location,
                             string_t *description) {
   key_t cache_key = location->object.name;
@@ -239,20 +234,22 @@ void masterDescribeLocation(master_t *self, const location_t *location,
   (void)mapSet(self->descriptions, cache_key, copy);
 }
 
+void masterReadItem(master_t *self, const item_t *item, string_t *description) {
+  const object_t object = item->object;
+  key_t cache_key = object.name;
+  const char *state_desc = bufAt(object.descriptions, object.state);
+  strFmt(description, "%s", state_desc);
+  char *copy = strdup(description->data);
+  (void)mapSet(self->descriptions, cache_key, copy);
+  return;
+}
+
 void masterDescribeObject(master_t *self, const object_t *object,
                           string_t *description) {
   key_t cache_key = object->name;
   char *cached = mapGet(self->descriptions, cache_key);
   if (cached) {
     strFmt(description, "%s", cached);
-    return;
-  }
-
-  if (objectIsReadable(object)) {
-    const char *state_desc = bufAt(object->descriptions, object->state);
-    strFmt(description, "%s reads:\n\n%s", object->name, state_desc);
-    char *copy = strdup(description->data);
-    (void)mapSet(self->descriptions, cache_key, copy);
     return;
   }
 
