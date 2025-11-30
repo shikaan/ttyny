@@ -1,7 +1,5 @@
 #pragma once
 
-#include "alloc.h"
-#include "buffers.h"
 #include "tty.h"
 #include <stddef.h>
 #include <stdio.h>
