@@ -1,7 +1,7 @@
 {
   "items": [
     {
-      "name": "Cupids's Letter",
+      "name": "Cupid's Letter",
       "type": "item",
       "descriptions": [
         "My dearest Psyche,\n\nI cannot bear to see you, but know that I still love you. You have angered my mother, Venus, by your mortal beauty that rivals her own. She will not allow our reunion until you prove yourself worthy.\n\nSeek her at her Courtyard. She will set tasks for you - four impossible trials. Only by completing all four can we be together again.\n\nBe brave, my love. Look for help in unexpected places.\n\nForever yours,\nCupid\n\nP.S. Gather what you can from the cottage. You will need supplies for a long journey."
@@ -14,7 +14,7 @@
       "name": "Garden Shears",
       "type": "item",
       "descriptions": [
-        "Sturdy iron shears with well-worn wooden handles. The blades are designed for cutting through thick vines and branches."
+        "Iron shears with wooden handles. Used to cut vines and branches."
       ],
       "transitions": [],
       "collectible": true,
@@ -24,7 +24,7 @@
       "name": "Honey Cakes",
       "type": "item",
       "descriptions": [
-        "Two small cakes dripping with golden honey. They would surely please any creature with a appetite. Use them to soothe guard beasts."
+        "Two honey cakes. Animals like to eat them. Use them to calm guard beasts."
       ],
       "transitions": [],
       "collectible": true,
@@ -34,8 +34,8 @@
       "name": "Crystal Vessel",
       "type": "item",
       "descriptions": [
-        "An empty crystal vessel, perfectly clear and beautifully crafted. It could hold water or any other liquid.",
-        "The crystal vessel now contains water from the River Styx. This is water from the boundary between life and death itself."
+        "An empty crystal vessel. It can hold water or any other liquid.",
+        "The vessel now has water from the River Styx. This water comes from the boundary between life and death."
       ],
       "transitions": [
         {
@@ -58,7 +58,7 @@
       "name": "Bronze Coins",
       "type": "item",
       "descriptions": [
-        "Ancient bronze coins, worn smooth with age. Each bears the face of a forgotten ruler. These coins are used to pay passage across the River Styx - you'll need them to enter and exit the underworld."
+        "Bronze coins. Used to pay the ferryman to cross the River Styx to the underworld."
       ],
       "transitions": [],
       "collectible": true,
@@ -68,7 +68,7 @@
       "name": "Music Box",
       "type": "item",
       "descriptions": [
-        "A silver music box engraved with images of sleeping animals. When wound, it plays a haunting lullaby that seems to reach into the very soul.\n\nAn inscription on the base reads:\n'This melody soothes the savage heart,\nCalms the beast that's set apart,\nIn meadows where fierce guardians dwell,\nPlay this tune and break their spell.'\n\nYou sense this could calm aggressive creatures if played in the right place."
+        "A music box engraved with images of sleeping animals. When wound, it plays a haunting lullaby that could calm aggressive creatures if played in the right place."
       ],
       "transitions": [],
       "collectible": true,
@@ -78,8 +78,8 @@
       "name": "Overgrown Vines",
       "type": "item",
       "descriptions": [
-        "Thick, thorny vines choke this once-beautiful garden. They wind around ancient statues and cover the ground in an impenetrable tangle. Among the thorns, you can glimpse a single perfect rose, but the vines are far too thick to pull by hand. You would need sharp garden shears to cut through them.",
-        "The vines lie cut and scattered across the garden floor. Where they once blocked your path, you can now clearly see a beautiful Sacred Rose growing in the center of the garden, free at last and ready to be collected."
+        "Thick thorny vines block the garden. A rose grows among them. You need garden shears to cut them.",
+        "The vines are cut. The Sacred Rose can now be taken."
       ],
       "transitions": [
         {
@@ -102,8 +102,8 @@
       "name": "Sacred Rose",
       "type": "item",
       "descriptions": [
-        "A rose that radiates a faint light and carries the scent of Venus's favor. It's blocked by vines.",
-        "A single perfect rose with petals that shimmer like mother-of-pearl. The rose will never wilt or fade."
+        "A glowing rose that carries the scent of Venus's favor. It's blocked by vines.",
+        "A perfect rose with petals that shimmer like mother-of-pearl. The rose will never wilt or fade."
       ],
       "transitions": [
         {
@@ -126,7 +126,7 @@
       "name": "Golden Pelt",
       "type": "item",
       "descriptions": [
-        "A magnificent pelt of golden fur that seems to capture and hold sunlight. It's surprisingly light yet radiates warmth. The fur is so fine it feels like silk between your fingers. This treasure was guarded by the wolves for good reason - it must be a sacred relic of great value."
+        "A golden fur pelt that glows like sunlight. It is warm and light. A sacred treasure."
       ],
       "transitions": [],
       "collectible": true,
@@ -136,8 +136,8 @@
       "name": "Sealed Box",
       "type": "item",
       "descriptions": [
-        "A small ornate box sealed with wax bearing Persephone's mark. It is said to contain a fragment of divine beauty itself. The box is warm to the touch and seems to pulse with an inner light.\n\nPersephone's warning echoes in your mind: 'This beauty is not meant for mortal eyes. Deliver it sealed to Venus, or face eternal sleep.' The temptation to open it is strong, but the consequences would be dire.",
-        "You have opened the box. A glittering mist escapes and surrounds you. Your eyelids grow impossibly heavy. The world blurs and darkens. You sink to the ground, overwhelmed by an irresistible sleep from which there is no waking. The beauty of the gods was never meant for mortal eyes."
+        "A sealed box with Persephone's mark. It holds divine beauty. Do not open it or you will suffer.",
+        "You opened the box. A mist surrounds you. Your eyes grow heavy. You fall into eternal sleep. The gods' beauty was not for you."
       ],
       "transitions": [
         {
@@ -160,8 +160,8 @@
       "name": "Rose Altar",
       "type": "item",
       "descriptions": [
-        "A marble pedestal carved with images of blooming roses. At its center is a shallow bowl, currently empty. An inscription reads: 'The First Trial - Restore the Sacred Garden and bring forth the Rose of Venus.' This altar awaits proof of your first task.",
-        "The Sacred Rose rests in the bowl, radiating soft light. The marble pedestal glows warmly. The inscription now reads: 'The First Trial is complete. Venus acknowledges your dedication to beauty and order.'"
+        "The First Trial - Restore the Sacred Garden and bring forth the Rose of Venus.",
+        "The First Trial is complete. Venus acknowledges your dedication to beauty and order."
       ],
       "transitions": [
         {
@@ -184,8 +184,8 @@
       "name": "Pelt Altar",
       "type": "item",
       "descriptions": [
-        "A marble pedestal carved with images of wild beasts. At its center is a shallow bowl, currently empty. An inscription reads: 'The Second Trial - Calm the savage guardians and claim the Golden Pelt they protect.' This altar awaits proof of your second task.",
-        "The Golden Pelt lies draped across the bowl, gleaming in the light. The marble pedestal glows warmly. The inscription now reads: 'The Second Trial is complete. Venus acknowledges your courage and cunning.'"
+        "The Second Trial - Calm the savage guardians and claim the Golden Pelt they protect.",
+        "The Second Trial is complete. Venus acknowledges your courage and cunning."
       ],
       "transitions": [
         {
@@ -208,8 +208,8 @@
       "name": "Vessel Altar",
       "type": "item",
       "descriptions": [
-        "A marble pedestal carved with images of flowing water and mountain eagles. At its center is a shallow bowl, currently empty. An inscription reads: 'The Third Trial - Bring water from the River Styx that flows beyond mortal reach.' This altar awaits proof of your third task.",
-        "The crystal vessel sits in the bowl, its ethereal contents glowing softly. The marble pedestal glows warmly. The inscription now reads: 'The Third Trial is complete. Venus acknowledges your resourcefulness and faith.'"
+        "The Third Trial - Bring water from the River Styx that flows beyond mortal reach.",
+        "The Third Trial is complete. Venus acknowledges your resourcefulness and faith."
       ],
       "transitions": [
         {
@@ -232,8 +232,8 @@
       "name": "Box Altar",
       "type": "item",
       "descriptions": [
-        "A marble pedestal carved with images of the underworld - skulls, pomegranates, and the three-headed dog Cerberus. At its center is a shallow bowl, currently empty. An inscription reads: 'The Fourth Trial - Journey to the depths of Hades and return with Persephone's sealed gift. DO NOT OPEN IT.' This altar awaits proof of your fourth and final task.",
-        "The sealed box rests in the bowl, still warm and pulsing with inner light. The marble pedestal glows warmly. The inscription now reads: 'The Fourth Trial is complete. Venus acknowledges your perseverance and self-control. All trials are finished. You have proven yourself worthy. Cupid's Palace now welcomes you.'"
+        "The Fourth Trial - Journey to the depths of Hades and return with Persephone's sealed gift. DO NOT OPEN IT.",
+        "The Fourth Trial is complete. Venus acknowledges your perseverance and self-control. All trials are finished. You have proven yourself worthy. Cupid's Palace now welcomes you."
       ],
       "transitions": [
         {
@@ -256,7 +256,7 @@
       "name": "Signpost",
       "type": "item",
       "descriptions": [
-        "→ Venus's Courtyard - 'Where the goddess judges mortals'\n→ The Riverside - 'Follow the water's song'\n→ The Mountain Path - 'Climb toward the heavens'\n→ The Cave Entrance - 'Descent into darkness'\n→ Cupid's Palace - 'The path of love'"
+        "→ Venus's Courtyard - 'Where the goddess judges mortals'\n→ The Lakeside - 'Follow the water's song'\n→ The Mountain Path - 'Climb toward the heavens'\n→ The Cave Entrance - 'Descent into darkness'\n→ Cupid's Palace - 'The path of love'"
       ],
       "transitions": [],
       "collectible": false,
@@ -266,17 +266,17 @@
       "name": "Whispering Reeds",
       "type": "item",
       "descriptions": [
-        "Tall reeds grow along the riverbank, swaying gently in the breeze. As you listen closely, they seem to whisper ancient wisdom:\n\n'Beware the meadow where fierce wolves guard their treasure... Do not approach with force or theft in your heart... Seek instead the silver music box that rests nearby... Its melody can soothe even the most savage beast... Play it where the wolves dwell, and they will sleep... Only then can you claim what they protect...'\n\nThe reeds fall silent, their message delivered."
+        "Beware the meadow where fierce wolves guard their treasure... Do not approach with force or theft in your heart... Seek instead the silver music box that rests nearby... Its melody can soothe even the most savage beast... Play it where the wolves dwell, and they will sleep... Only then can you claim what they protect..."
       ],
       "transitions": [],
       "collectible": false,
       "readable": true
     },
     {
-      "name": "Eagle's Nest",
+      "name": "Styx Shrine",
       "type": "item",
       "descriptions": [
-        "A massive nest made of branches sits at the cliff's edge. You can see the gleam of a great eagle's eye watching you from above.\n\nThe River Styx flows far below, completely unreachable by mortal hands. The cliff is too sheer, the distance too great.\n\nBut eagles... eagles can go where mortals cannot.\n\nIf you were to leave your vessel here - to drop it at the cliff's edge - perhaps the noble eagle would take pity on you and fill it from the sacred waters below. The great birds have always been friends to those who show humility and trust."
+        "Offer a vessel of flawless crystal to the depths below. Only such purity may withstand the river’s touch. Cast it from the ledge, and the Styx will return it—filled with what you dared request."
       ],
       "transitions": [],
       "collectible": false,
@@ -286,42 +286,28 @@
       "name": "Ancient Tower",
       "type": "item",
       "descriptions": [
-        "An ancient stone structure stands at the cave entrance, covered in carved warnings and instructions. The text is worn but still legible:\n\n'HEED THIS WISDOM, MORTAL:\n\nTo enter the underworld alive and return, you must prepare:\n\n- Bring COINS for Charon the ferryman (one to enter, one to return)\n- Bring CAKES for Cerberus the three-headed guardian (one to enter, one to return)\n- Take NOTHING that belongs to the dead\n- Speak to NO shades who beg for your help\n- Above all: If Persephone grants you a sealed gift, DO NOT OPEN IT\n\nMany have entered. Few have returned. Those who opened Persephone's gift sleep forever in the halls of Hades.'\n\nYou shiver as you read the final warning."
+        "To walk among the dead and return to light, bring gifts:\n\n- Coins of bronze for the silent ferryman\n- Sweet cakes for the guardian with three mouths\n- Take nothing from those who dwell below\n- If the Queen offers a sealed gift, guard your curiosity well\n\nMany descend. Few return. The curious sleep eternal in shadowed halls."
       ],
       "transitions": [],
       "collectible": false,
       "readable": true
     },
     {
-      "name": "Charon's Ferry",
+      "name": "Obol Basin",
       "type": "item",
       "descriptions": [
-        "A weathered boat rocks gently at the shore of the River Styx. The silent ferryman, Charon, stands motionless, his hand outstretched. His hollow eyes expect payment - a bronze coin for passage. Without payment, you cannot cross into the realm of the dead.",
-        "Charon nods slowly as you pay the coin. He gestures for you to board the ferry. The boat glides silently across the dark waters of the Styx, carrying you deeper into the underworld. You will need another coin for the return journey."
+        "Cast your coin into the vessel, that the Ferryman may grant you passage."
       ],
-      "transitions": [
-        {
-          "actions": ["use", "examine"],
-          "from": 0,
-          "to": 1,
-          "requirements": {
-            "inventory": ["Bronze Coins"],
-            "items": null,
-            "locations": null,
-            "turns": null,
-            "current_location": null
-          }
-        }
-      ],
+      "transitions": [],
       "collectible": false,
-      "readable": false
+      "readable": true
     },
     {
       "name": "Cerberus",
       "type": "item",
       "descriptions": [
-        "The three-headed dog Cerberus blocks the gates, each head snarling and snapping. His massive form fills the passage completely. Saliva drips from his fangs. He will not let you pass... unless you offer him something he desires. The honey cakes in your possession might satisfy his hunger.",
-        "Cerberus devours the honey cake eagerly, all three heads fighting over the sweet treat. As he eats, his aggression fades. He settles down with a satisfied rumble, allowing you to pass into Persephone's domain. You'll need another cake for your return journey."
+        "The three-headed dog Cerberus blocks the gate. All three heads snarl. He will not let you pass unless you give him what he wants. Honey cakes might work.",
+        "Cerberus eats the honey cake. All three heads fight over it. He calms down and lets you pass."
       ],
       "transitions": [
         {
@@ -341,44 +327,83 @@
       "readable": false
     },
     {
-      "name": "Persephone's Throne",
+      "name": "Persephone's Answering Machine",
       "type": "item",
       "descriptions": [
-        "Persephone sits upon her throne of black marble, a crown of pomegranate flowers upon her head. Despite the darkness of this realm, she radiates a strange beauty.\n\nShe regards you with knowing eyes: 'So, Venus sends another mortal to fetch what she desires. Very well. I will give you this gift - a box containing a fragment of divine beauty.'\n\nShe hands you an ornate sealed box.\n\n'But heed my warning, mortal: This beauty is not for your eyes. The curiosity that led you to look upon Cupid's face must not be repeated here. Deliver this box to Venus SEALED, or you will sleep forever in my halls. Do you understand?'\n\nYou take the box carefully. The final trial is in your hands."
+        "—beep—\nAhem. Hello? Is this thing on?\nRight. If you’re here for the box, take it, but do not open it.\nSeriously. Don’t.\n—beep—",
+        "—beep—\nLast one, I promise.\nIf you do open the box—\nWell. There’ll be consequences. Cosmic ones. Messy ones.\nMostly for you. So… just don’t.\nAlright?\n—beep—",
+        "—beep—\n[muffled footsteps… distant humming…]\nOh Tartarus, is this thing still recording?\n—beep—"
       ],
-      "transitions": [],
+      "transitions": [
+        {
+          "actions": ["use"],
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": null,
+            "items": null,
+            "locations": null,
+            "turns": null,
+            "current_location": null
+          }
+        },
+        {
+          "actions": ["use"],
+          "from": 1,
+          "to": 2,
+          "requirements": {
+            "inventory": null,
+            "items": null,
+            "locations": null,
+            "turns": null,
+            "current_location": null
+          }
+        },
+        {
+          "actions": ["use"],
+          "from": 2,
+          "to": 0,
+          "requirements": {
+            "inventory": null,
+            "items": null,
+            "locations": null,
+            "turns": null,
+            "current_location": null
+          }
+        }
+      ],
       "collectible": false,
       "readable": true
     }
   ],
   "locations": [
     {
-      "name": "Psyche's Cottage",
+      "name": "Cottage",
       "type": "location",
       "descriptions": [
-        "A humble cottage where you have been living in exile since angering Venus. Feels empty and lonely without Cupid's presence."
+        "A humble cottage where you, Psyche, have been living in exile since angering Venus. Empty and lonely without Cupid's presence."
       ],
       "transitions": [],
       "items": [
-        "Cupids's Letter",
+        "Cupid's Letter",
         "Garden Shears",
         "Honey Cakes",
         "Crystal Vessel"
       ],
-      "exits": ["The Crossroads", "The Sacred Garden"]
+      "exits": ["The Crossroads"]
     },
     {
       "name": "The Crossroads",
       "type": "location",
       "descriptions": [
-        "You stand at a junction where multiple paths diverge. This is the heart of your journey - all roads lead from here. A weathered signpost points in different directions, and ancient bronze coins lie scattered on the ground (some previous traveler's misfortune, now your fortune).\n\nThe air here feels charged with possibility. North leads to Venus's domain. East follows a river. South climbs into mountains. West descends into darkness."
+        "A junction where multiple paths diverge. This is the heart of your journey - all roads lead from here."
       ],
       "transitions": [],
       "items": ["Bronze Coins", "Signpost"],
       "exits": [
-        "Psyche's Cottage",
+        "Cottage",
         "Venus's Courtyard",
-        "The Riverside",
+        "The Lakeside",
         "The Mountain Path",
         "The Cave Entrance",
         "Cupid's Palace"
@@ -388,7 +413,7 @@
       "name": "Venus's Courtyard",
       "type": "location",
       "descriptions": [
-        "A grand courtyard of white marble, beautiful and intimidating in equal measure. Statues of Venus in various poses line the walls, each carved with perfect beauty. The air smells of roses and incense.\n\nFour marble pedestals stand in a semicircle - altars where you must prove you have completed the trials. Each altar is carved with different symbols and bears an inscription describing what it requires."
+        "A white marble courtyard that smells of roses and incense. Four marble altars stand in a semi circle. You must prove you completed the trials here. Each altar shows what it needs."
       ],
       "transitions": [],
       "items": ["Rose Altar", "Pelt Altar", "Vessel Altar", "Box Altar"],
@@ -397,18 +422,16 @@
     {
       "name": "The Sacred Garden",
       "type": "location",
-      "descriptions": [
-        "Venus's once-beautiful sacred garden has been choked by thick, thorny vines. They cover everything - the ground, the statues, the ancient stone benches. This is clearly the result of neglect... or perhaps a test.\n\nThrough gaps in the vines, you can see a single perfect rose still growing in the center of the garden, somehow untouched by the decay around it. The vines are far too thick to clear by hand."
-      ],
+      "descriptions": ["Venus's sacred garden."],
       "transitions": [],
       "items": ["Overgrown Vines", "Sacred Rose"],
-      "exits": ["Psyche's Cottage", "Venus's Courtyard"]
+      "exits": ["Venus's Courtyard"]
     },
     {
-      "name": "The Riverside",
+      "name": "The Lakeside",
       "type": "location",
       "descriptions": [
-        "A peaceful riverbank where clear water flows over smooth stones. Tall reeds grow along the water's edge, swaying in the breeze. They seem to whisper secrets to those who listen carefully.\n\nA delicate silver music box rests on a flat rock near the water, as if left here by someone who knew you would need it. The path east continues to a meadow."
+        "A lake with clear water. Tall reeds grow at the edge and sway. They whisper secrets."
       ],
       "transitions": [],
       "items": ["Music Box", "Whispering Reeds"],
@@ -418,8 +441,8 @@
       "name": "The Meadow",
       "type": "location",
       "descriptions": [
-        "A wide meadow of tall grass and wildflowers. The scene would be beautiful if not for the pack of fierce wolves that patrol this area. They growl menacingly, their eyes tracking your every movement. In the center of the meadow, you can see something golden glinting in the sunlight - their treasure.\n\nThe wolves block your path. They will attack if you try to take what they guard. You need a way to calm them first.",
-        "The meadow is peaceful now. The wolves lie sleeping in the grass, lulled by the music box's enchanting melody. Their breathing is slow and steady. You can safely approach the golden pelt they were guarding - it lies in the center of the meadow, free for the taking."
+        "A meadow with tall grass and wildflowers. Fierce wolves patrol here. They growl and watch you. In the center the Golden Pelt. You need to calm them first.",
+        "The meadow is peaceful. The wolves sleep in the grass. The music box made them sleep. You can take the golden pelt from the center now."
       ],
       "transitions": [
         {
@@ -436,13 +459,13 @@
         }
       ],
       "items": ["Golden Pelt"],
-      "exits": ["The Riverside", "The Mountain Path"]
+      "exits": ["The Lakeside", "The Mountain Path"]
     },
     {
       "name": "The Mountain Path",
       "type": "location",
       "descriptions": [
-        "A narrow path winds up the mountainside, offering stunning views of the landscape below. The air grows thinner here. Rocky outcroppings provide shelter from the wind.\n\nThe path continues upward to a cliff edge to the south, or descends back to the meadow to the north. You can also see a dark cave entrance to the west."
+        "A narrow path up the mountain, offering stunning views of the landscape. The air is thin. Rocks give shelter from wind."
       ],
       "transitions": [],
       "items": [],
@@ -457,17 +480,17 @@
       "name": "The Cliff Edge",
       "type": "location",
       "descriptions": [
-        "You stand at the edge of a sheer cliff. Far, far below, you can see the glittering waters of a river - the River Styx, boundary between the living and the dead. The drop is impossibly steep. No mortal could climb down and return.\n\nA massive eagle's nest sits on a rocky outcropping nearby. The great bird watches you with intelligent eyes. Perhaps it could reach what you cannot..."
+        "An ancient offering site for the Styx. Far below, you see its glittering waters, boundary between the living and the dead."
       ],
       "transitions": [],
-      "items": ["Eagle's Nest"],
-      "exits": ["The Mountain Path", "The Riverside"]
+      "items": ["Styx Shrine"],
+      "exits": ["The Mountain Path", "The Lakeside"]
     },
     {
       "name": "The Cave Entrance",
       "type": "location",
       "descriptions": [
-        "The mouth of a dark cave yawns before you. Cold air flows out from the depths, carrying the scent of earth and ancient stone. This is a gateway to the underworld itself - few mortals who enter ever return.\n\nAn ancient stone tower stands beside the entrance, covered in carved warnings and advice. Three honey cakes sit on a small stone shelf - left here by some previous traveler, or perhaps placed by helpful spirits."
+        "A dark cave opens before you. Cold air flows out. It smells of earth and old stone. This is the gateway to the underworld. Few mortals who enter return."
       ],
       "transitions": [],
       "items": ["Ancient Tower"],
@@ -477,19 +500,46 @@
       "name": "The River Styx",
       "type": "location",
       "descriptions": [
-        "The River Styx flows black and silent through the underworld. The water seems to absorb all light and sound. On the near shore, Charon's ferry waits - a weathered boat that has carried countless souls to their final rest.\n\nThe ferryman himself stands motionless, neither living nor dead, his hand outstretched for payment. Beyond the river, you can see the Gates of Hades."
+        "The River Styx flows black and silent. The water absorbs light and sound. On the shore Charon stands still pointing to the basin payment.",
+        "Charon, content with the payment, will now carry your soul to the underworld."
       ],
-      "transitions": [],
-      "items": ["Charon's Ferry"],
+      "transitions": [
+        {
+          "actions": ["drop"],
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": null,
+            "items": ["Bronze Coins"],
+            "locations": null,
+            "turns": null,
+            "current_location": null
+          }
+        }
+      ],
+      "items": ["Obol Basin"],
       "exits": ["The Cave Entrance", "The Gates of Hades"]
     },
     {
       "name": "The Gates of Hades",
       "type": "location",
       "descriptions": [
-        "Massive black iron gates block the passage into the deepest parts of the underworld. Before them stands Cerberus, the three-headed guardian dog of Hades. Each of his heads snarls at you, teeth bared. His eyes glow red in the dim light.\n\nBeyond him lies Persephone's Hall. You must get past this fearsome guardian to complete your final task."
+        "Cerberus the three-headed dog blocks the passage. He guards Hades. Each of his heads snarls at you, teeth bared. You need to bait him to pass through."
       ],
-      "transitions": [],
+      "transitions": [
+        {
+          "actions": ["move"],
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": null,
+            "items": null,
+            "locations": ["The River Styx.1"],
+            "turns": null,
+            "current_location": null
+          }
+        }
+      ],
       "items": ["Cerberus"],
       "exits": ["The River Styx", "Persephone's Hall"]
     },
@@ -497,18 +547,31 @@
       "name": "Persephone's Hall",
       "type": "location",
       "descriptions": [
-        "The throne room of Persephone, Queen of the Underworld. Despite being in the realm of the dead, strange flowers bloom here - ghostly white asphodels and blood-red pomegranates. The air is cool but not unpleasant.\n\nPersephone's throne dominates the chamber, carved from a single piece of black marble. The queen herself awaits, ready to give you what you seek... if you have made it this far."
+        "Persephone's room. Queen of the Underworld. Strange flowers bloom here. The room is empty, with a blinking light on the side."
       ],
-      "transitions": [],
-      "items": ["Persephone's Throne", "Sealed Box"],
+      "transitions": [
+        {
+          "actions": ["move"],
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": null,
+            "items": ["Cerberus.1"],
+            "locations": null,
+            "turns": null,
+            "current_location": null
+          }
+        }
+      ],
+      "items": ["Persephone's Answering Machine", "Sealed Box"],
       "exits": ["The Gates of Hades"]
     },
     {
       "name": "Cupid's Palace",
       "type": "location",
       "descriptions": [
-        "The grand doors to Cupid's Palace stand before you, carved with images of hearts and wings. They are sealed tight, bound by divine magic. A plaque reads: 'Love cannot be claimed until worthiness is proven. Complete all trials set by Venus, and these doors shall open.' The magic will not yield until all four altars in Venus's Courtyard acknowledge your success.",
-        "You step through the doors into a palace of breathtaking beauty. Golden light fills every corner. Flowers bloom in impossible colors. The air itself seems to shimmer with joy and love.\n\nAnd there, waiting for you with tears of happiness in his eyes, is Cupid.\n\nHe rushes forward and embraces you. 'You did it, my love. You completed every impossible task. Venus cannot deny us now. We are finally free to be together.'\n\nYour trials are over. Your love has been proven. This is your happy ending."
+        "Grand doors to Cupid's Palace, carved with hearts and wings. Sealed by magic. A plaque says: 'Love cannot be claimed until worthiness is proven. Complete all trials set by Venus and these doors will open.'",
+        "You enter the palace. Golden light fills it. Flowers bloom in bright colors. The air shimmers with joy and love. Cupid waits for you with happy tears."
       ],
       "transitions": [
         {
@@ -536,23 +599,23 @@
   "endings": [
     {
       "state": "win",
-      "reason": "You step into Cupid's Palace and are reunited with your true love. After completing all four impossible trials, Venus can no longer keep you apart. Your perseverance, courage, and wisdom have proven you worthy. Together at last, you and Cupid embrace as the palace fills with golden light. Love has triumphed over all obstacles.",
-      "requirements": {
-        "inventory": null,
-        "items": null,
-        "locations": ["Cupid's Palace.1"],
-        "turns": null,
-        "current_location": null
-      }
-    },
-    {
-      "state": "lose",
-      "reason": "Time has run out. You wandered too long without completing the trials. Venus's patience has expired, and the tasks have failed. The magic that bound your quest dissipates. You will never see Cupid again. Your love story ends in eternal separation.",
+      "reason": "You enter Cupid's Palace and find your true love. You completed all four trials. Venus cannot keep you apart. You proved yourself worthy. You and Cupid embrace. The palace fills with golden light. Love wins.",
       "requirements": {
         "inventory": null,
         "items": null,
         "locations": null,
-        "turns": 30,
+        "turns": null,
+        "current_location": "Cupid's Palace.1"
+      }
+    },
+    {
+      "state": "lose",
+      "reason": "Time ran out. You took too long. Cupid waited and waited but you never came. He believed you died attempting the impossible trials. Heartbroken, he left. Now you will never find him. Your love story ends in separation.",
+      "requirements": {
+        "inventory": null,
+        "items": null,
+        "locations": null,
+        "turns": 80,
         "current_location": null
       }
     },
