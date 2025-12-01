@@ -47,7 +47,7 @@
             "items": null,
             "locations": null,
             "turns": null,
-            "current_location": "The Cliff Edge"
+            "current_location": "Cliff Edge"
           }
         }
       ],
@@ -233,7 +233,7 @@
       "type": "item",
       "descriptions": [
         "The Fourth Trial - Journey to the depths of Hades and return with Persephone's sealed gift. DO NOT OPEN IT.",
-        "The Fourth Trial is complete. Venus acknowledges your perseverance and self-control. All trials are finished. You have proven yourself worthy. Cupid's Palace now welcomes you."
+        "The Fourth Trial is complete. Venus acknowledges your perseverance and self-control."
       ],
       "transitions": [
         {
@@ -256,7 +256,7 @@
       "name": "Signpost",
       "type": "item",
       "descriptions": [
-        "→ Venus's Courtyard - 'Where the goddess judges mortals'\n→ The Lakeside - 'Follow the water's song'\n→ The Mountain Path - 'Climb toward the heavens'\n→ The Cave Entrance - 'Descent into darkness'\n→ Cupid's Palace - 'The path of love'"
+        "→ Venus's Courtyard - 'Where the goddess judges mortals'\n→ Lakeside - 'Follow the water's song'\n→ Mountain Path - 'Climb toward the heavens'\n→ Cave Entrance - 'Descent into darkness'\n→ Cupid's Palace - 'The path of love'"
       ],
       "transitions": [],
       "collectible": false,
@@ -390,10 +390,10 @@
         "Honey Cakes",
         "Crystal Vessel"
       ],
-      "exits": ["The Crossroads"]
+      "exits": ["Crossroads"]
     },
     {
-      "name": "The Crossroads",
+      "name": "Crossroads",
       "type": "location",
       "descriptions": [
         "A junction where multiple paths diverge. This is the heart of your journey - all roads lead from here."
@@ -403,9 +403,9 @@
       "exits": [
         "Cottage",
         "Venus's Courtyard",
-        "The Lakeside",
-        "The Mountain Path",
-        "The Cave Entrance",
+        "Lakeside",
+        "Mountain Path",
+        "Cave Entrance",
         "Cupid's Palace"
       ]
     },
@@ -417,10 +417,10 @@
       ],
       "transitions": [],
       "items": ["Rose Altar", "Pelt Altar", "Vessel Altar", "Box Altar"],
-      "exits": ["The Crossroads", "The Sacred Garden"]
+      "exits": ["Crossroads", "Sacred Garden"]
     },
     {
-      "name": "The Sacred Garden",
+      "name": "Sacred Garden",
       "type": "location",
       "descriptions": ["Venus's sacred garden."],
       "transitions": [],
@@ -428,17 +428,17 @@
       "exits": ["Venus's Courtyard"]
     },
     {
-      "name": "The Lakeside",
+      "name": "Lakeside",
       "type": "location",
       "descriptions": [
         "A lake with clear water. Tall reeds grow at the edge and sway. They whisper secrets."
       ],
       "transitions": [],
       "items": ["Music Box", "Whispering Reeds"],
-      "exits": ["The Crossroads", "The Meadow"]
+      "exits": ["Crossroads", "Meadow"]
     },
     {
-      "name": "The Meadow",
+      "name": "Meadow",
       "type": "location",
       "descriptions": [
         "A meadow with tall grass and wildflowers. Fierce wolves patrol here. They growl and watch you. In the center the Golden Pelt. You need to calm them first.",
@@ -459,45 +459,40 @@
         }
       ],
       "items": ["Golden Pelt"],
-      "exits": ["The Lakeside", "The Mountain Path"]
+      "exits": ["Lakeside", "Mountain Path"]
     },
     {
-      "name": "The Mountain Path",
+      "name": "Mountain Path",
       "type": "location",
       "descriptions": [
         "A narrow path up the mountain, offering stunning views of the landscape. The air is thin. Rocks give shelter from wind."
       ],
       "transitions": [],
       "items": [],
-      "exits": [
-        "The Crossroads",
-        "The Meadow",
-        "The Cliff Edge",
-        "The Cave Entrance"
-      ]
+      "exits": ["Crossroads", "Meadow", "Cliff Edge", "Cave Entrance"]
     },
     {
-      "name": "The Cliff Edge",
+      "name": "Cliff Edge",
       "type": "location",
       "descriptions": [
         "An ancient offering site for the Styx. Far below, you see its glittering waters, boundary between the living and the dead."
       ],
       "transitions": [],
       "items": ["Styx Shrine"],
-      "exits": ["The Mountain Path", "The Lakeside"]
+      "exits": ["Mountain Path", "Lakeside"]
     },
     {
-      "name": "The Cave Entrance",
+      "name": "Cave Entrance",
       "type": "location",
       "descriptions": [
         "A dark cave opens before you. Cold air flows out. It smells of earth and old stone. This is the gateway to the underworld. Few mortals who enter return."
       ],
       "transitions": [],
       "items": ["Ancient Tower"],
-      "exits": ["The Crossroads", "The Mountain Path", "The River Styx"]
+      "exits": ["Crossroads", "Mountain Path", "River Styx"]
     },
     {
-      "name": "The River Styx",
+      "name": "River Styx",
       "type": "location",
       "descriptions": [
         "The River Styx flows black and silent. The water absorbs light and sound. On the shore Charon stands still pointing to the basin payment.",
@@ -518,10 +513,10 @@
         }
       ],
       "items": ["Obol Basin"],
-      "exits": ["The Cave Entrance", "The Gates of Hades"]
+      "exits": ["Cave Entrance", "Gates of Hades"]
     },
     {
-      "name": "The Gates of Hades",
+      "name": "Gates of Hades",
       "type": "location",
       "descriptions": [
         "Cerberus the three-headed dog blocks the passage. He guards Hades. Each of his heads snarls at you, teeth bared. You need to bait him to pass through."
@@ -534,14 +529,14 @@
           "requirements": {
             "inventory": null,
             "items": null,
-            "locations": ["The River Styx.1"],
+            "locations": ["River Styx.1"],
             "turns": null,
             "current_location": null
           }
         }
       ],
       "items": ["Cerberus"],
-      "exits": ["The River Styx", "Persephone's Hall"]
+      "exits": ["River Styx", "Persephone's Hall"]
     },
     {
       "name": "Persephone's Hall",
@@ -564,7 +559,7 @@
         }
       ],
       "items": ["Persephone's Answering Machine", "Sealed Box"],
-      "exits": ["The Gates of Hades"]
+      "exits": ["Gates of Hades"]
     },
     {
       "name": "Cupid's Palace",
