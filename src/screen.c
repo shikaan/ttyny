@@ -198,9 +198,9 @@ void formatHelp(string_t *response, const world_t *world) {
          "You can type commands too! Their output is prefixed with `~`.\n"
          "Available commands:\n"
          "   • %s - shows the player status\n"
-         "   • %s - displays this help\n"
-         "   • %s - summarizes the current location\n"
-         "   • %s - ends the game\n"
+         "   • %s   - displays this help\n"
+         "   • %s   - summarizes the current location\n"
+         "   • %s   - ends the game\n"
          "\n"
          "Based on your last input, you could try %s.",
          NAME, promptfmt("Light the lamp"), promptfmt("Go to the garden"),
