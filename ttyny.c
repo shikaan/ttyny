@@ -268,7 +268,8 @@ int main(int argc, char **argv) {
       masterDescribeAction(master, world, input, &item->object, response);
       // When taking an object, the room description must be regenerated
       // else it'll mention objects you have in the inventory
-      masterForget(master, &world->location->object);
+      masterForget(master, &world->location->object, LOCATION_NAMESPACE);
+      masterForget(master, &world->location->object, OBJECT_NAMESPACE);
 
       printCallback = printDescription;
       formatTake(state, item);
@@ -298,7 +299,8 @@ int main(int argc, char **argv) {
       masterDescribeAction(master, world, input, &item->object, response);
       // When dropping an object, the room description must be regenerated
       // else it won't mention the object just dropped
-      masterForget(master, &world->location->object);
+      masterForget(master, &world->location->object, LOCATION_NAMESPACE);
+      masterForget(master, &world->location->object, OBJECT_NAMESPACE);
 
       printCallback = printDescription;
       formatDrop(state, item);
@@ -321,7 +323,8 @@ int main(int argc, char **argv) {
       switch (transition) {
       case TRANSITION_RESULT_OK:
         masterDescribeAction(master, world, input, &item->object, response);
-        masterForget(master, &item->object);
+        masterForget(master, &item->object, OBJECT_NAMESPACE);
+        masterForget(master, &item->object, ITEM_NAMESPACE);
 
         printCallback = printDescription;
         formatUse(state, item);

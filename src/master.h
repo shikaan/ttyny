@@ -20,6 +20,12 @@ typedef struct {
   map_t *descriptions;
 } master_t;
 
+// Namespaces in memory. The same object can be described generically as an
+// object, or specifically as item or location
+extern const char *LOCATION_NAMESPACE;
+extern const char *ITEM_NAMESPACE;
+extern const char *OBJECT_NAMESPACE;
+
 // Allocate the master and related resources
 master_t *masterCreate(world_t *world);
 
@@ -45,7 +51,7 @@ void masterDescribeEndGame(master_t *, const string_t *, const world_t *,
                            game_state_t, string_t *);
 
 // Forget the description of a given object that was previously described.
-void masterForget(master_t *, const object_t *);
+void masterForget(master_t *, const object_t *, const char *);
 
 // Destroys master and all associated resources
 void masterDestroy(master_t **);

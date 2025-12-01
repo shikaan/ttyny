@@ -13,6 +13,11 @@
 #include <stdio.h>
 #include <string.h>
 
+// Define namespace constants
+const char *LOCATION_NAMESPACE = "location";
+const char *ITEM_NAMESPACE = "item";
+const char *OBJECT_NAMESPACE = "object";
+
 words_t *wordsCreate(size_t len) {
   words_t *result;
   bufCreate(words_t, const char *, result, len);
@@ -108,6 +113,12 @@ master_t *masterCreate(world_t *world) {
   return master;
 }
 
+static char cache_key_buffer[256] = {};
+static key_t makeCacheKey(object_name_t name, const char *namespace) {
+  snprintf(cache_key_buffer, 256, "%s.%s", namespace, name);
+  return cache_key_buffer;
+}
+
 static const char *WORD_BREAK = " \t\r\n:-*'.,";
 
 static int hasStopWords(string_t *response) {
@@ -195,7 +206,7 @@ static void generateAndValidate(ai_t *ai, const string_t *prompt,
 
 void masterDescribeLocation(master_t *self, const location_t *location,
                             string_t *description) {
-  key_t cache_key = location->object.name;
+  key_t cache_key = makeCacheKey(location->object.name, LOCATION_NAMESPACE);
   char *cached = mapGet(self->descriptions, cache_key);
   if (cached) {
     strFmt(description, "%s", cached);
@@ -236,7 +247,7 @@ void masterDescribeLocation(master_t *self, const location_t *location,
 
 void masterReadItem(master_t *self, const item_t *item, string_t *description) {
   const object_t object = item->object;
-  key_t cache_key = object.name;
+  key_t cache_key = makeCacheKey(object.name, ITEM_NAMESPACE);
   const char *state_desc = bufAt(object.descriptions, object.state);
   strFmt(description, "%s", state_desc);
   char *copy = strdup(description->data);
@@ -246,7 +257,7 @@ void masterReadItem(master_t *self, const item_t *item, string_t *description) {
 
 void masterDescribeObject(master_t *self, const object_t *object,
                           string_t *description) {
-  key_t cache_key = object->name;
+  key_t cache_key = makeCacheKey(object->name, OBJECT_NAMESPACE);
   char *cached = mapGet(self->descriptions, cache_key);
   if (cached) {
     strFmt(description, "%s", cached);
@@ -329,8 +340,9 @@ void masterDescribeEndGame(master_t *self, const string_t *last_action,
   generateAndValidate(self->ai, self->prompt, description, &ACTION_MUST_HAVES);
 }
 
-void masterForget(master_t *self, const object_t *object) {
-  key_t cache_key = object->name;
+void masterForget(master_t *self, const object_t *object,
+                  const char *namespace) {
+  key_t cache_key = makeCacheKey(object->name, namespace);
   char *value = mapDelete(self->descriptions, cache_key);
   deallocate(&value);
 }
