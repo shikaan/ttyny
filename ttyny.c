@@ -266,6 +266,9 @@ int main(int argc, char **argv) {
       bufRemove(world->location->items, item, NULL);
 
       masterDescribeAction(master, world, input, &item->object, response);
+      // When taking an object, the room description must be regenerated
+      // else it'll mention objects you have in the inventory
+      masterForget(master, &world->location->object);
 
       printCallback = printDescription;
       formatTake(state, item);
@@ -293,6 +296,9 @@ int main(int argc, char **argv) {
       bufRemove(world->inventory, item, NULL);
 
       masterDescribeAction(master, world, input, &item->object, response);
+      // When dropping an object, the room description must be regenerated
+      // else it won't mention the object just dropped
+      masterForget(master, &world->location->object);
 
       printCallback = printDescription;
       formatDrop(state, item);
