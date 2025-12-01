@@ -1,5 +1,5 @@
 #pragma once
-#include "buffers.h"
+#include "lib/buffers.h"
 #include "world/world.h"
 #include <pthread.h>
 #include <stdatomic.h>

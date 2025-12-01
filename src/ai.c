@@ -1,6 +1,6 @@
 #include "ai.h"
-#include "alloc.h"
-#include "buffers.h"
+#include "lib/alloc.h"
+#include "lib/buffers.h"
 #include <ggml-backend.h>
 #include <ggml.h>
 #include <llama.h>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../buffers.h"
+#include "../lib/buffers.h"
 
 typedef enum {
   COMMAND_TYPE_UNKNOWN = -1,

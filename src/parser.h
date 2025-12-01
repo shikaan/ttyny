@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ai.h"
-#include "buffers.h"
+#include "lib/buffers.h"
 #include "world/action.h"
 #include "world/command.h"
 #include "world/item.h"

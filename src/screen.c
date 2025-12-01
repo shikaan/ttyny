@@ -1,7 +1,7 @@
 #include "screen.h"
-#include "alloc.h"
-#include "buffers.h"
-#include "tty.h"
+#include "lib/alloc.h"
+#include "lib/buffers.h"
+#include "lib/tty.h"
 #include "utils.h"
 #include "world/world.h"
 #include <stddef.h>

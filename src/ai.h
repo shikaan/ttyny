@@ -1,6 +1,6 @@
 #pragma once
 
-#include "buffers.h"
+#include "lib/buffers.h"
 #include <llama.h>
 #include <stdint.h>
 

@@ -1,6 +1,6 @@
-#include "src/buffers.h"
+#include "src/lib/buffers.h"
+#include "src/lib/panic.h"
 #include "src/master.h"
-#include "src/panic.h"
 #include "src/parser.h"
 #include "src/screen.h"
 #include "src/utils.h"

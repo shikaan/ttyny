@@ -1,13 +1,10 @@
 #pragma once
 
-#include "../buffers.h"
+#include "../lib/buffers.h"
 #include "action.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
-
-#include "../buffers.h"
-#include <stdint.h>
 
 typedef struct requirements_t requirements_t;
 static inline void requirementsDestroy(requirements_t **self);

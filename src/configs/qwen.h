@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../ai.h"
-#include "../buffers.h"
+#include "../lib/buffers.h"
 #include <time.h>
 
 static const string_t PARSER_ACTION_SYS_PROMPT =

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tty.h"
+#include "lib/tty.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <sys/stat.h>

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "ai.h"
-#include "buffers.h"
-#include "map.h"
+#include "lib/buffers.h"
+#include "lib/map.h"
 #include "world/world.h"
 
 #include <stddef.h>
