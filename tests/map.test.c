@@ -1,4 +1,4 @@
-#include "../src/map.h"
+#include "../src/lib/map.h"
 #include "../src/utils.h"
 #include "test.h"
 

@@ -149,6 +149,14 @@ static bool transitionsEquals(transitions_t *a, transitions_t *b) {
       return false;
     if (ta.to != tb.to)
       return false;
+    if ((ta.target == NULL) != (tb.target == NULL))
+      return false;
+    if (ta.target && tb.target) {
+      if (strcmp(ta.target->name, tb.target->name) != 0)
+        return false;
+      if (ta.target->state != tb.target->state)
+        return false;
+    }
     if (!requirementsEquals(ta.requirements, tb.requirements))
       return false;
   }
@@ -668,10 +676,12 @@ void items(void) {
       .locations = NULL,
       .turns = 0,
   };
+  static requirement_tuple_t box_target_tuple = { box_name, 0 };
   static const transition_t box_transition = {
       .action = ACTION_TYPE_USE,
       .from = 0,
       .to = 1,
+      .target = &box_target_tuple,
       .requirements = &box_reqs,
   };
   static transitions_t box_transitions = bufConst(1, box_transition);
@@ -803,7 +813,7 @@ void items(void) {
       .end_game = NULL,
   };
 
-  // 3) Item with multiple transitions/actions
+  // 3) Item with multiple transitions/actions (non-targeted)
   static char device_name[] = "device";
   static char device_desc1[] = "A dormant device";
   static char device_desc2[] = "An active device";
@@ -820,16 +830,20 @@ void items(void) {
       .locations = NULL,
       .turns = 0,
   };
+  static requirement_tuple_t device_target_use0 = { device_name, 0 };
+  static requirement_tuple_t device_target_examine1 = { device_name, 1 };
   static transition_t device_transition_use = {
       .action = ACTION_TYPE_USE,
       .from = 0,
       .to = 1,
+      .target = &device_target_use0,
       .requirements = &device_reqs_use,
   };
   static transition_t device_transition_examine = {
       .action = ACTION_TYPE_EXAMINE,
       .from = 1,
       .to = 1,
+      .target = &device_target_examine1,
       .requirements = &device_reqs_examine,
   };
   transitions_t *device_transitions =
@@ -886,6 +900,55 @@ void items(void) {
       .end_game = NULL,
   };
 
+  // 5) Targeted multi-action transitions (self-targeting)
+  static requirement_tuple_t device_target0 = { device_name, 0 };
+  static requirement_tuple_t device_target1 = { device_name, 1 };
+  static requirements_t device_target_reqs = {
+      .inventory = NULL,
+      .items = NULL,
+      .locations = NULL,
+      .turns = 0,
+      .current_location = NULL,
+  };
+  static const transition_t device_targeted_use = {
+      .action = ACTION_TYPE_USE,
+      .from = 0,
+      .to = 1,
+      .target = &device_target0,
+      .requirements = &device_target_reqs,
+  };
+  static const transition_t device_targeted_examine = {
+      .action = ACTION_TYPE_EXAMINE,
+      .from = 1,
+      .to = 1,
+      .target = &device_target1,
+      .requirements = &device_target_reqs,
+  };
+  static transitions_t device_targeted_transitions =
+      bufConst(2, device_targeted_use, device_targeted_examine);
+  static item_t device_targeted_item = {
+      .object =
+          {
+              .name = device_name,
+              .type = OBJECT_TYPE_ITEM,
+              .state = 0,
+              .descriptions = &device_descs,
+              .transitions = &device_targeted_transitions,
+          },
+      .collectible = false,
+      .readable = false,
+  };
+  static items_t device_targeted_items = bufConst(1, &device_targeted_item);
+  static world_t device_targeted_world = {
+      .items = &device_targeted_items,
+      .locations = &start_locations,
+      .endings = &empty_endings,
+      .inventory = &empty_inventory,
+      .turns = 0,
+      .location = &start_location,
+      .end_game = NULL,
+  };
+
   parser_test_t tests[] = {
       {
           .name = "simple collectible item",
@@ -900,7 +963,7 @@ void items(void) {
           .json = "{\"items\": [{\"name\": \"box\", \"type\": \"item\","
                   "\"descriptions\": [\"A sealed box\", \"An open box\"],"
                   "\"transitions\": [{\"actions\": [\"use\"], \"from\": 0, "
-                  "\"to\": 1, \"requirements\": {\"inventory\": null, \"items\": null, \"locations\": null, \"turns\": 0, \"current_location\": null}}],"
+                  "\"to\": 1, \"target\": \"box.0\", \"requirements\": {\"inventory\": null, \"items\": null, \"locations\": null, \"turns\": 0, \"current_location\": null}}],"
                   "\"collectible\": true, \"readable\": false}],"
                   "\"locations\": [{\"name\": \"start\", \"type\": \"location\", \"descriptions\": [\"Start\"], \"transitions\": [], \"items\": [], \"exits\": []}], \"endings\": []}",
           .expected = &box_world,
@@ -957,8 +1020,8 @@ void items(void) {
               "{\"items\": [{\"name\": \"device\", \"type\": \"item\","
               "\"descriptions\": [\"A dormant device\", \"An active device\"],"
               "\"transitions\": ["
-              "{\"actions\": [\"use\"], \"from\": 0, \"to\": 1, \"requirements\": {\"inventory\": null, \"items\": null, \"locations\": null, \"turns\": 0, \"current_location\": null}},"
-              "{\"actions\": [\"examine\"], \"from\": 1, \"to\": 1, \"requirements\": {\"inventory\": null, \"items\": null, \"locations\": null, \"turns\": 0, \"current_location\": null}}"
+              "{\"actions\": [\"use\"], \"from\": 0, \"to\": 1, \"target\": \"device.0\", \"requirements\": {\"inventory\": null, \"items\": null, \"locations\": null, \"turns\": 0, \"current_location\": null}},"
+              "{\"actions\": [\"examine\"], \"from\": 1, \"to\": 1, \"target\": \"device.1\", \"requirements\": {\"inventory\": null, \"items\": null, \"locations\": null, \"turns\": 0, \"current_location\": null}}"
               "],"
               "\"collectible\": false, \"readable\": false}],"
               "\"locations\": [{\"name\": \"start\", \"type\": \"location\", \"descriptions\": [\"Start\"], \"transitions\": [], \"items\": [], \"exits\": []}], \"endings\": []}",
@@ -971,6 +1034,28 @@ void items(void) {
                   "\"collectible\": true, \"readable\": false}],"
                   "\"locations\": [{\"name\": \"start\", \"type\": \"location\", \"descriptions\": [\"Start\"], \"transitions\": [], \"items\": [], \"exits\": []}], \"endings\": []}",
           .expected = &blank_world,
+      },
+      {
+          .name = "targeted multi-action transitions",
+          .json =
+              "{\"items\": [{\"name\": \"device\", \"type\": \"item\","
+              "\"descriptions\": [\"A dormant device\", \"An active device\"],"
+              "\"transitions\": ["
+              "{\"actions\": [\"use\"], \"from\": 0, \"to\": 1, \"target\": \"device.0\", \"requirements\": {\"inventory\": null, \"items\": null, \"locations\": null, \"turns\": 0, \"current_location\": null}},"
+              "{\"actions\": [\"examine\"], \"from\": 1, \"to\": 1, \"target\": \"device.1\", \"requirements\": {\"inventory\": null, \"items\": null, \"locations\": null, \"turns\": 0, \"current_location\": null}}"
+              "],"
+              "\"collectible\": false, \"readable\": false}],"
+              "\"locations\": [{\"name\": \"start\", \"type\": \"location\", \"descriptions\": [\"Start\"], \"transitions\": [], \"items\": [], \"exits\": []}], \"endings\": []}",
+          .expected = &device_targeted_world,
+      },
+      {
+          .name = "item with targeted single transition",
+          .json = "{\"items\": [{\"name\": \"box\", \"type\": \"item\","
+                  "\"descriptions\": [\"A sealed box\", \"An open box\"],"
+                  "\"transitions\": [{\"actions\": [\"use\"], \"from\": 0, \"to\": 1, \"target\": \"box.0\", \"requirements\": {\"inventory\": null, \"items\": null, \"locations\": null, \"turns\": 0, \"current_location\": null}}],"
+                  "\"collectible\": true, \"readable\": false}],"
+                  "\"locations\": [{\"name\": \"start\", \"type\": \"location\", \"descriptions\": [\"Start\"], \"transitions\": [], \"items\": [], \"exits\": []}], \"endings\": []}",
+          .expected = &box_world,
       },
   };
 
@@ -1140,16 +1225,19 @@ void locations(void) {
         .locations = NULL,
         .turns = 0,
     };
+    static requirement_tuple_t lab_target0 = { lab_name, 0 };
     static transition_t lab_trans_use = {
         .action = ACTION_TYPE_USE,
         .from = 0,
         .to = 1,
+        .target = &lab_target0,
         .requirements = &lab_reqs,
     };
     static transition_t lab_trans_examine = {
         .action = ACTION_TYPE_EXAMINE,
         .from = 0,
         .to = 1,
+        .target = &lab_target0,
         .requirements = &lab_reqs,
     };
     transitions_t *lab_transitions_ptr = NULL;
@@ -1217,7 +1305,7 @@ void locations(void) {
                 "{\"items\": [], \"locations\": [{\"name\": \"lab\", "
                 "\"type\": \"location\", \"descriptions\": [\"A dark lab\", "
                 "\"A lit lab\"], \"transitions\": [{\"actions\": [\"use\", "
-                "\"examine\"], \"from\": 0, \"to\": 1, \"requirements\": {\"inventory\": null, \"items\": null, \"locations\": null, \"turns\": 0, \"current_location\": null}}], \"items\": [], "
+                "\"examine\"], \"from\": 0, \"to\": 1, \"target\": \"lab.0\", \"requirements\": {\"inventory\": null, \"items\": null, \"locations\": null, \"turns\": 0, \"current_location\": null}}], \"items\": [], "
                 "\"exits\": []}], \"endings\": []}",
             .expected = &lab_world,
         },

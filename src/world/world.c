@@ -125,6 +125,20 @@ void worldAreRequirementsMet(world_t *self, requirements_t *requirements,
 #undef done
 }
 
+static inline object_t *findObjectByName(world_t *self, const char *name) {
+  int idx = itemsFindByName(self->items, name);
+  if (idx >= 0) {
+    return (object_t *)bufAt(self->items, (size_t)idx);
+  }
+
+  idx = locationsFindByName(self->locations, name);
+  if (idx >= 0) {
+    return (object_t *)bufAt(self->locations, (size_t)idx);
+  }
+
+  return NULL;
+}
+
 // Attempts an object transition due to `action`.
 // The result of the attempt is store in result.
 void worldTransitionObject(world_t *self, object_t *object,
@@ -137,7 +151,8 @@ void worldTransitionObject(world_t *self, object_t *object,
   requirements_result_t requirements_result;
   for (size_t i = 0; i < object->transitions->used; i++) {
     transition_t transition = bufAt(object->transitions, i);
-    if (transition.action == action && object->state == transition.from) {
+    if (transition.target && transition.action == action &&
+        object->state == transition.from) {
       worldAreRequirementsMet(self, transition.requirements,
                               &requirements_result);
       switch (requirements_result) {
@@ -157,10 +172,19 @@ void worldTransitionObject(world_t *self, object_t *object,
         return;
       case REQUIREMENTS_RESULT_OK:
       case REQUIREMENTS_RESULT_NO_REQUIREMENTS:
-      default:
-        object->state = transition.to;
-        *result = TRANSITION_RESULT_OK;
+      default: {
+        object_t *target = findObjectByName(self, transition.target->name);
+
+        if (target && (transition.target->state == OBJECT_STATE_ANY ||
+                       target->state == transition.target->state)) {
+          target->state = transition.to;
+          *result = TRANSITION_RESULT_OK;
+        } else {
+          *result = TRANSITION_RESULT_NO_TRANSITION;
+        }
+
         return;
+      }
       }
     }
   }
@@ -188,7 +212,8 @@ void worldDigest(world_t *self, game_state_t *result) {
 static void parseRequirementTupleFromJSONVal(yyjson_val *raw,
                                              requirement_tuple_t *tuple) {
   if (!yyjson_is_str(raw)) {
-    error("current_location tuple is not a string");
+    if (!yyjson_is_null(raw))
+      error("requirement tuple is not valid");
     return;
   }
 
@@ -208,7 +233,8 @@ static void parseRequirementTupleFromJSONVal(yyjson_val *raw,
 
 static requirement_tuples_t *requirementTuplesFromJSONVal(yyjson_val *raw) {
   if (!yyjson_is_arr(raw)) {
-    error("requirements is not an array");
+    if (!yyjson_is_null(raw))
+      error("requirements is not valid");
     return NULL;
   }
 
@@ -342,6 +368,12 @@ static void parseTransitionFromJSONVal(yyjson_val *raw,
 
   yyjson_val *to = yyjson_obj_get(raw, "to");
   transition->to = (object_state_t)yyjson_get_uint(to);
+
+  yyjson_val *target = yyjson_obj_get(raw, "target");
+  requirement_tuple_t *tuple = allocate(sizeof(requirement_tuple_t));
+  parseRequirementTupleFromJSONVal(target, tuple);
+  // TODO: what to do when requirements cannot be parsed?
+  transition->target = tuple;
 
   yyjson_val *requirements = yyjson_obj_get(raw, "requirements");
   transition->requirements = requirementsFromJSONVal(requirements);

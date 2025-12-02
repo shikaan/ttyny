@@ -16,7 +16,21 @@
       "descriptions": [
         "Iron shears with wooden handles. Used to cut vines and branches."
       ],
-      "transitions": [],
+      "transitions": [
+        {
+          "actions": ["use"],
+          "target": "Overgrown Vines.0",
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": null,
+            "items": null,
+            "locations": null,
+            "turns": null,
+            "current_location": "Sacred Garden"
+          }
+        }
+      ],
       "collectible": true,
       "readable": false
     },
@@ -26,7 +40,21 @@
       "descriptions": [
         "Two honey cakes. Animals like to eat them. Use them to calm guard beasts."
       ],
-      "transitions": [],
+      "transitions": [
+        {
+          "actions": ["use"],
+          "target": "Cerberus.0",
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": null,
+            "items": null,
+            "locations": null,
+            "turns": null,
+            "current_location": "Gates of Hades"
+          }
+        }
+      ],
       "collectible": true,
       "readable": false
     },
@@ -40,6 +68,7 @@
       "transitions": [
         {
           "actions": ["drop"],
+          "target": "Crystal Vessel.0",
           "from": 0,
           "to": 1,
           "requirements": {
@@ -60,7 +89,21 @@
       "descriptions": [
         "Bronze coins. Used to pay the ferryman to cross the River Styx to the underworld."
       ],
-      "transitions": [],
+      "transitions": [
+        {
+          "actions": ["drop"],
+          "target": "Bronze Coins",
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": null,
+            "items": null,
+            "locations": null,
+            "turns": null,
+            "current_location": "River Styx.0"
+          }
+        }
+      ],
       "collectible": true,
       "readable": false
     },
@@ -70,7 +113,21 @@
       "descriptions": [
         "A music box engraved with images of sleeping animals. When wound, it plays a haunting lullaby that could calm aggressive creatures if played in the right place."
       ],
-      "transitions": [],
+      "transitions": [
+        {
+          "actions": ["use"],
+          "target": "Meadow.0",
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": null,
+            "items": null,
+            "locations": null,
+            "turns": null,
+            "current_location": "Meadow.0"
+          }
+        }
+      ],
       "collectible": true,
       "readable": true
     },
@@ -81,20 +138,7 @@
         "Thick thorny vines block the garden. A rose grows among them. You need garden shears to cut them.",
         "The vines are cut. The Sacred Rose can now be taken."
       ],
-      "transitions": [
-        {
-          "actions": ["use"],
-          "from": 0,
-          "to": 1,
-          "requirements": {
-            "inventory": ["Garden Shears"],
-            "items": null,
-            "locations": null,
-            "turns": null,
-            "current_location": null
-          }
-        }
-      ],
+      "transitions": [],
       "collectible": false,
       "readable": false
     },
@@ -108,6 +152,7 @@
       "transitions": [
         {
           "actions": ["take"],
+          "target": "Sacred Rose.0",
           "from": 0,
           "to": 1,
           "requirements": {
@@ -142,6 +187,7 @@
       "transitions": [
         {
           "actions": ["use"],
+          "target": "Sealed Box.0",
           "from": 0,
           "to": 1,
           "requirements": {
@@ -166,6 +212,7 @@
       "transitions": [
         {
           "actions": ["examine", "use"],
+          "target": "Rose Altar",
           "from": 0,
           "to": 1,
           "requirements": {
@@ -190,6 +237,7 @@
       "transitions": [
         {
           "actions": ["examine", "use"],
+          "target": "Pelt Altar",
           "from": 0,
           "to": 1,
           "requirements": {
@@ -214,6 +262,7 @@
       "transitions": [
         {
           "actions": ["examine", "use"],
+          "target": "Vessel Altar",
           "from": 0,
           "to": 1,
           "requirements": {
@@ -238,6 +287,7 @@
       "transitions": [
         {
           "actions": ["examine", "use"],
+          "target": "Box Altar",
           "from": 0,
           "to": 1,
           "requirements": {
@@ -309,20 +359,7 @@
         "The three-headed dog Cerberus blocks the gate. All three heads snarl. He will not let you pass unless you give him what he wants. Honey cakes might work.",
         "Cerberus eats the honey cake. All three heads fight over it. He calms down and lets you pass."
       ],
-      "transitions": [
-        {
-          "actions": ["use"],
-          "from": 0,
-          "to": 1,
-          "requirements": {
-            "inventory": ["Honey Cakes"],
-            "items": null,
-            "locations": null,
-            "turns": null,
-            "current_location": null
-          }
-        }
-      ],
+      "transitions": [],
       "collectible": false,
       "readable": false
     },
@@ -337,6 +374,7 @@
       "transitions": [
         {
           "actions": ["use"],
+          "target": "Persephone's Answering Machine",
           "from": 0,
           "to": 1,
           "requirements": {
@@ -349,6 +387,7 @@
         },
         {
           "actions": ["use"],
+          "target": "Persephone's Answering Machine",
           "from": 1,
           "to": 2,
           "requirements": {
@@ -361,6 +400,7 @@
         },
         {
           "actions": ["use"],
+          "target": "Persephone's Answering Machine",
           "from": 2,
           "to": 0,
           "requirements": {
@@ -444,20 +484,7 @@
         "A meadow with tall grass and wildflowers. Fierce wolves patrol here. They growl and watch you. In the center the Golden Pelt. You need to calm them first.",
         "The meadow is peaceful. The wolves sleep in the grass. The music box made them sleep. You can take the golden pelt from the center now."
       ],
-      "transitions": [
-        {
-          "actions": ["use"],
-          "from": 0,
-          "to": 1,
-          "requirements": {
-            "inventory": ["Music Box"],
-            "items": null,
-            "locations": null,
-            "turns": null,
-            "current_location": null
-          }
-        }
-      ],
+      "transitions": [],
       "items": ["Golden Pelt"],
       "exits": ["Lakeside", "Mountain Path"]
     },
@@ -498,20 +525,7 @@
         "The River Styx flows black and silent. The water absorbs light and sound. On the shore Charon stands still pointing to the basin payment.",
         "Charon, content with the payment, will now carry your soul to the underworld."
       ],
-      "transitions": [
-        {
-          "actions": ["drop"],
-          "from": 0,
-          "to": 1,
-          "requirements": {
-            "inventory": null,
-            "items": ["Bronze Coins"],
-            "locations": null,
-            "turns": null,
-            "current_location": null
-          }
-        }
-      ],
+      "transitions": [],
       "items": ["Obol Basin"],
       "exits": ["Cave Entrance", "Gates of Hades"]
     },
@@ -524,6 +538,7 @@
       "transitions": [
         {
           "actions": ["move"],
+          "target": "Gates of Hades",
           "from": 0,
           "to": 1,
           "requirements": {
@@ -547,6 +562,7 @@
       "transitions": [
         {
           "actions": ["move"],
+          "target": "Persephone's Hall",
           "from": 0,
           "to": 1,
           "requirements": {
@@ -571,6 +587,7 @@
       "transitions": [
         {
           "actions": ["move"],
+          "target": "Cupid's Palace",
           "from": 0,
           "to": 1,
           "requirements": {

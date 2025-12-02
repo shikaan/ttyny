@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <string.h>
 
+typedef struct requirement_tuple_t requirement_tuple_t;
 typedef struct requirements_t requirements_t;
 static inline void requirementsDestroy(requirements_t **self);
 
@@ -42,6 +43,7 @@ typedef struct {
   action_type_t action;
   object_state_t from;
   object_state_t to;
+  requirement_tuple_t *target;
   requirements_t *requirements;
 } transition_t;
 
@@ -75,6 +77,7 @@ static inline void transitionDestroy(transition_t **self) {
     return;
 
   requirementsDestroy(&(*self)->requirements);
+  deallocate(&(*self)->target);
   deallocate(self);
 }
 
@@ -103,10 +106,10 @@ static inline void objectDestroyInner(object_t **self) {
   }
 }
 
-typedef struct {
+struct requirement_tuple_t {
   object_name_t name;
   object_state_t state;
-} requirement_tuple_t;
+};
 
 typedef Buffer(requirement_tuple_t) requirement_tuples_t;
 

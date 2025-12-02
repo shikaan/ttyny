@@ -91,6 +91,7 @@
       "additionalProperties": false,
       "properties": {
         "actions": { "$ref": "#/$defs/ActionList" },
+        "target": { "$ref": "#/$defs/ObjectSpecifier" },
         "from": {
           "type": "integer",
           "minimum": 0,
