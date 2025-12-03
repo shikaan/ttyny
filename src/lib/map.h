@@ -1,6 +1,7 @@
 #pragma once
 
 #include "alloc.h"
+#include "buffers.h"
 #include "panic.h"
 #include <stddef.h>
 #include <stdint.h>
@@ -10,7 +11,11 @@ typedef const char *key_t;
 typedef void *value_t;
 typedef uint64_t map_size_t;
 
-typedef enum { MAP_RESULT_OK = 0, MAP_ERROR_FULL } map_result_t;
+typedef enum {
+  MAP_RESULT_OK = 0,
+  MAP_ERROR_FULL,
+  MAP_ERROR_NOT_FOUND
+} map_result_t;
 
 typedef struct {
   map_size_t size;
@@ -28,6 +33,28 @@ static inline map_size_t mapMakeKey(const map_t *self, key_t key) {
   }
 
   return hash % self->size;
+}
+
+static inline map_result_t mapGetIndex(const map_t *self, key_t key,
+                                       map_size_t *result) {
+  panicif(!self, "map cannot not be null");
+  const map_size_t index = mapMakeKey(self, key);
+
+  for (map_size_t i = 0; i < self->size; i++) {
+    map_size_t probed_idx = (index + i) % self->size;
+    const key_t probed_key = self->keys[probed_idx];
+
+    if (!probed_key) {
+      continue;
+    }
+
+    if (strcmp(probed_key, key) == 0) {
+      *result = probed_idx;
+      return MAP_RESULT_OK;
+    }
+  }
+
+  return MAP_ERROR_NOT_FOUND;
 }
 
 static inline map_t *mapCreate(map_size_t size) {
@@ -90,31 +117,23 @@ set:
 
 static inline value_t mapGet(const map_t *self, const key_t key) {
   panicif(!self, "map cannot not be null");
-  const map_size_t index = mapMakeKey(self, key);
-
-  for (map_size_t i = 0; i < self->size; i++) {
-    map_size_t probed_idx = (index + i) % self->size;
-    const key_t probed_key = self->keys[probed_idx];
-
-    if (!probed_key)
-      return NULL;
-
-    if (strcmp(probed_key, key) == 0) {
-      return self->values[probed_idx];
-    }
+  map_size_t index;
+  if (mapGetIndex(self, key, &index) == MAP_RESULT_OK) {
+    return self->values[index];
   }
-
   return NULL;
 }
 
 static inline value_t mapDelete(map_t *self, const key_t key) {
-  value_t previous = mapGet(self, key);
-  if (!previous)
-    return NULL;
-
-  // Cannot fail allocations, value is already there.
-  (void)mapSet(self, key, NULL);
-  return previous;
+  panicif(!self, "map cannot not be null");
+  map_size_t index;
+  if (mapGetIndex(self, key, &index) == MAP_RESULT_OK) {
+    value_t previous = self->values[index];
+    self->values[index] = NULL;
+    self->keys[index] = NULL;
+    return previous;
+  }
+  return NULL;
 }
 
 static inline void mapDestroy(map_t **self) {

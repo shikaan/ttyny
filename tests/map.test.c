@@ -27,6 +27,14 @@ void getSet(void) {
   result = mapSet(map, "key4", &value);
   result = mapSet(map, "key5", &value);
   expectEqlu(result, MAP_ERROR_FULL, "errors on full map");
+
+  resolved = mapGet(map, "key1");
+  panicif(!resolved, "resolve set value");
+  resolved = mapDelete(map, "key1");
+  expectEqli(value, *resolved, "returns deleted value");
+
+  resolved = mapGet(map, "key1");
+  expectNull(resolved, "does not resolve deleted value");
 }
 
 void collisions(void) {
@@ -66,7 +74,18 @@ void collisions(void) {
   (void)mapSet(map3, key2, &value2);
 
   int *resolved3 = mapGet(map3, key2);
-  expectEqli(value2, *resolved3, "returns correct value when updating linearl-probed key");
+  expectEqli(value2, *resolved3,
+             "correct value when updating linearly-probed key");
+
+  map_t *map4 cleanup(mapDestroy) = mapCreate(2);
+  (void)mapSet(map4, key1, &value1);
+  (void)mapSet(map4, key2, &value2);
+
+  mapDelete(map, key1);
+
+  int *resolved = mapGet(map, key2);
+  panicif(!resolved, "did not find the colliding key");
+  expectEqli(*resolved, value2, "correct value on removing colliding key");
 }
 
 int main(void) {
