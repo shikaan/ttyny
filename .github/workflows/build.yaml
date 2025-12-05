@@ -39,12 +39,12 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-14
+          - os: macos-15
             platform: darwin
             arch: arm64
             cc: clang
 
-          - os: macos-14
+          - os: macos-15
             platform: darwin
             arch: amd64
             cc: clang -arch x86_64
