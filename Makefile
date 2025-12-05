@@ -30,6 +30,7 @@ build/llama.cpp/src/libllama.a:
 		-DLLAMA_BUILD_TOOLS=OFF \
 		-DLLAMA_BUILD_SERVER=OFF \
 		-DLLAMA_TOOLS_INSTALL=OFF \
+		-DLLAMA_CURL=OFF \
 		-DBUILD_SHARED_LIBS=OFF
 	cmake --build $(LLAMA_BUILD) -j --config Release
 
