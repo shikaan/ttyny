@@ -137,7 +137,7 @@
             "items": null,
             "locations": null,
             "turns": null,
-            "current_location": "Meadow.0"
+            "current_location": "Meadow"
           }
         }
       ],
@@ -427,7 +427,7 @@
         "Honey Cakes",
         "Crystal Vessel"
       ],
-      "exits": ["Crossroads"]
+      "exits": ["Venus's Courtyard"]
     },
     {
       "name": "Crossroads",
@@ -634,7 +634,7 @@
       "requirements": {
         "inventory": ["Golden Pelt"],
         "items": null,
-        "locations": ["The Meadow.0"],
+        "locations": ["Meadow.0"],
         "turns": null,
         "current_location": null
       }
