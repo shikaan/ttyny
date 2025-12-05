@@ -78,6 +78,7 @@ jobs:
       - name: Build binary
         run: |
           make CC="${{ matrix.cc }}" BUILD_TYPE=release VERSION="${{ steps.version.outputs.VERSION }}" SHA="${{ steps.version.outputs.SHA }}" clean all
+          mkdir -p artifacts
           cp ttyny artifacts/ttyny-${{ matrix.platform }}-${{ matrix.arch }}
         env:
           UNAME_S: ${{ matrix.platform == 'linux' && 'Linux' || 'Darwin' }}

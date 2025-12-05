@@ -2,16 +2,19 @@ include flags.mk
 
 LOG_LEVEL := -1
 CFLAGS := $(CFLAGS) -DLOG_LEVEL=$(LOG_LEVEL)
+BUILD := build
 
 .PHONY: all
 all: ttyny
 
 build/linenoise.o: CFLAGS = -Wall -W -Os
 build/linenoise.o: vendor/linenoise/linenoise.c
+	mkdir -p $(BUILD)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 build/yyjson.o: CFLAGS = -Wall -W -Os
 build/yyjson.o: vendor/yyjson/src/yyjson.c
+	mkdir -p $(BUILD)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 LLAMA_BUILD := build/llama.cpp
@@ -95,7 +98,6 @@ clean:
 	rm -f tests/*.test
 	rm -rf **/*.dSYM **/*.plist *.plist
 	find . -type f -name '*.o' -not -path './build/*' -delete
-	mkdir -p build
 
 .PHONY: deep-clean
 deep-clean: clean
