@@ -39,16 +39,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-22.04
-            platform: linux
-            arch: amd64
-            cc: clang
-
-          - os: ubuntu-22.04-arm
-            platform: linux
-            arch: arm64
-            cc: clang
-
           - os: macos-14
             platform: darwin
             arch: arm64
