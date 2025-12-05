@@ -353,6 +353,30 @@ void requirements(void) {
   };
   worldAreRequirementsMet(&w, &reqs_none, &rr);
   expectEqlu(rr, REQUIREMENTS_RESULT_NO_REQUIREMENTS, "no requirements result");
+
+  case("multiple requirements");
+  // Require: inventory has tool_name with state 0 AND turns >= 3
+  static requirement_tuples_t req_inv_multi = bufConst(1, (requirement_tuple_t){ tool_name, 0 });
+  static requirements_t reqs_inv_and_turns = {
+      .inventory = &req_inv_multi,
+      .items = NULL,
+      .locations = NULL,
+      .turns = 3,
+  };
+
+  w.turns = 2;
+  worldAreRequirementsMet(&w, &reqs_inv_and_turns, &rr);
+  expectEqlu(rr, REQUIREMENTS_RESULT_NOT_ENOUGH_TURNS, "not ok if only inventory is satisfied");
+
+  w.turns = 3;
+  req_inv_multi.data[0].state = 1; // require state 1 but item is 0
+  worldAreRequirementsMet(&w, &reqs_inv_and_turns, &rr);
+  expectEqlu(rr, REQUIREMENTS_RESULT_INVALID_INVENTORY_ITEM, "not ok if only turns is satisfied");
+
+  req_inv_multi.data[0].state = 0;
+  w.turns = 3;
+  worldAreRequirementsMet(&w, &reqs_inv_and_turns, &rr);
+  expectEqlu(rr, REQUIREMENTS_RESULT_OK, "ok when both are satisfied");
 }
 
 int main(void) {

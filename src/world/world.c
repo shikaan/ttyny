@@ -53,10 +53,9 @@ void worldAreRequirementsMet(world_t *self, requirements_t *requirements,
   return
 
   if (requirements->turns != 0) {
-    if (self->turns >= requirements->turns) {
-      done(REQUIREMENTS_RESULT_OK);
+    if (self->turns < requirements->turns) {
+      done(REQUIREMENTS_RESULT_NOT_ENOUGH_TURNS);
     }
-    done(REQUIREMENTS_RESULT_NOT_ENOUGH_TURNS);
   }
 
   size_t i;
@@ -74,7 +73,6 @@ void worldAreRequirementsMet(world_t *self, requirements_t *requirements,
         done(REQUIREMENTS_RESULT_MISSING_INVENTORY_ITEM);
       }
     }
-    done(REQUIREMENTS_RESULT_OK);
   }
 
   if (requirements->items) {
@@ -91,7 +89,6 @@ void worldAreRequirementsMet(world_t *self, requirements_t *requirements,
         done(REQUIREMENTS_RESULT_MISSING_WORLD_ITEM);
       }
     }
-    done(REQUIREMENTS_RESULT_OK);
   }
 
   if (requirements->locations) {
@@ -105,7 +102,6 @@ void worldAreRequirementsMet(world_t *self, requirements_t *requirements,
         done(REQUIREMENTS_RESULT_INVALID_LOCATION);
       }
     }
-    done(REQUIREMENTS_RESULT_OK);
   }
 
   if (requirements->current_location) {
@@ -118,6 +114,10 @@ void worldAreRequirementsMet(world_t *self, requirements_t *requirements,
         tuple->state != self->location->object.state) {
       done(REQUIREMENTS_RESULT_INVALID_CURRENT_LOCATION);
     }
+  }
+
+  if (requirements->turns != 0 || requirements->inventory || requirements->items ||
+      requirements->locations || requirements->current_location) {
     done(REQUIREMENTS_RESULT_OK);
   }
 
