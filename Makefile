@@ -2,16 +2,19 @@ include flags.mk
 
 LOG_LEVEL := -1
 CFLAGS := $(CFLAGS) -DLOG_LEVEL=$(LOG_LEVEL)
+BUILD := build
 
 .PHONY: all
 all: ttyny
 
 build/linenoise.o: CFLAGS = -Wall -W -Os
 build/linenoise.o: vendor/linenoise/linenoise.c
+	mkdir -p $(BUILD)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 build/yyjson.o: CFLAGS = -Wall -W -Os
 build/yyjson.o: vendor/yyjson/src/yyjson.c
+	mkdir -p $(BUILD)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 LLAMA_BUILD := build/llama.cpp
@@ -30,6 +33,7 @@ build/llama.cpp/src/libllama.a:
 		-DLLAMA_BUILD_TOOLS=OFF \
 		-DLLAMA_BUILD_SERVER=OFF \
 		-DLLAMA_TOOLS_INSTALL=OFF \
+		-DLLAMA_CURL=OFF \
 		-DBUILD_SHARED_LIBS=OFF
 	cmake --build $(LLAMA_BUILD) -j --config Release
 
@@ -77,12 +81,14 @@ snap: tests/master.snap
 time: tests/master.time
 	tests/master.time
 
+.PHONY: test-slow
+test-slow:  tests/parser.test
+	 tests/parser.test
+
 .PHONY: test
-test: tests/buffers.test tests/parser.test tests/map.test tests/world.test \
-	tests/json.test
+test: tests/buffers.test tests/map.test tests/world.test tests/json.test
 	tests/buffers.test
 	tests/map.test
-	tests/parser.test
 	tests/world.test
 	tests/json.test
 

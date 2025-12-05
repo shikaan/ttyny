@@ -188,7 +188,7 @@ void aiGenerate(ai_t *ai, ai_result_t *result, const string_t *prompt,
     }
 
     char parsed_token[256] = {};
-    ssize_t offset = llama_token_to_piece(
+    int32_t offset = llama_token_to_piece(
         ai->vocabulary, token_id, parsed_token, sizeof(parsed_token), 0, false);
 
     if (offset < 0) {

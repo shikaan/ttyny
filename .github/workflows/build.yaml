@@ -1,0 +1,72 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  release:
+    types: [created]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: macos-15
+            platform: darwin
+            arch: arm64
+            cc: clang
+
+    runs-on: ${{ matrix.os }}
+    outputs:
+      VERSION: ${{ steps.version.outputs.VERSION }}
+      SHA: ${{ steps.version.outputs.SHA }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Compute version string
+        id: version
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/}"
+          [[ "$GITHUB_REF" != refs/tags/* ]] && VERSION="dev"
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "SHA=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
+
+      - name: Run tests
+        run: |
+          make CC="${{ matrix.cc }}" clean test
+        env:
+          UNAME_S: ${{ matrix.platform == 'linux' && 'Linux' || 'Darwin' }}
+
+      - name: Run tests (release)
+        run: |
+          make CC="${{ matrix.cc }}" BUILD_TYPE=release clean test
+        env:
+          UNAME_S: ${{ matrix.platform == 'linux' && 'Linux' || 'Darwin' }}
+
+      - name: Build binary
+        run: |
+          make CC="${{ matrix.cc }}" BUILD_TYPE=release VERSION="${{ steps.version.outputs.VERSION }}" SHA="${{ steps.version.outputs.SHA }}" clean all
+          mkdir -p artifacts
+          cp ttyny artifacts/ttyny-${{ matrix.platform }}-${{ matrix.arch }}
+        env:
+          UNAME_S: ${{ matrix.platform == 'linux' && 'Linux' || 'Darwin' }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ttyny-${{ matrix.platform }}-${{ matrix.arch }}
+          path: artifacts/
+          retention-days: 7
+
+      - name: Upload release assets
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/ttyny-darwin-amd64
