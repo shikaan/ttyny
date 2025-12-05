@@ -78,6 +78,19 @@
             "turns": null,
             "current_location": "Cliff Edge"
           }
+        },
+        {
+          "actions": ["drop"],
+          "target": "Vessel Altar.0",
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": ["Crystal Vessel.1"],
+            "items": null,
+            "locations": null,
+            "turns": null,
+            "current_location": "Venus's Courtyard"
+          }
         }
       ],
       "collectible": true,
@@ -162,6 +175,19 @@
             "turns": null,
             "current_location": null
           }
+        },
+        {
+          "actions": ["drop"],
+          "target": "Rose Altar.0",
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": ["Sacred Rose"],
+            "items": null,
+            "locations": null,
+            "turns": null,
+            "current_location": "Venus's Courtyard"
+          }
         }
       ],
       "collectible": true,
@@ -173,7 +199,21 @@
       "descriptions": [
         "A golden fur pelt that glows like sunlight. It is warm and light. A sacred treasure."
       ],
-      "transitions": [],
+      "transitions": [
+        {
+          "actions": ["drop"],
+          "target": "Pelt Altar.0",
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": ["Golden Pelt"],
+            "items": null,
+            "locations": null,
+            "turns": null,
+            "current_location": "Venus's Courtyard"
+          }
+        }
+      ],
       "collectible": true,
       "readable": false
     },
@@ -197,6 +237,19 @@
             "turns": null,
             "current_location": null
           }
+        },
+        {
+          "actions": ["drop"],
+          "target": "Box Altar.0",
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": ["Sealed Box"],
+            "items": null,
+            "locations": null,
+            "turns": null,
+            "current_location": "Venus's Courtyard"
+          }
         }
       ],
       "collectible": true,
@@ -209,21 +262,7 @@
         "The First Trial - Restore the Sacred Garden and bring forth the Rose of Venus.",
         "The First Trial is complete. Venus acknowledges your dedication to beauty and order."
       ],
-      "transitions": [
-        {
-          "actions": ["examine", "use"],
-          "target": "Rose Altar",
-          "from": 0,
-          "to": 1,
-          "requirements": {
-            "inventory": ["Sacred Rose"],
-            "items": null,
-            "locations": null,
-            "turns": null,
-            "current_location": null
-          }
-        }
-      ],
+      "transitions": [],
       "collectible": false,
       "readable": true
     },
@@ -234,21 +273,7 @@
         "The Second Trial - Calm the savage guardians and claim the Golden Pelt they protect.",
         "The Second Trial is complete. Venus acknowledges your courage and cunning."
       ],
-      "transitions": [
-        {
-          "actions": ["examine", "use"],
-          "target": "Pelt Altar",
-          "from": 0,
-          "to": 1,
-          "requirements": {
-            "inventory": ["Golden Pelt"],
-            "items": null,
-            "locations": null,
-            "turns": null,
-            "current_location": null
-          }
-        }
-      ],
+      "transitions": [],
       "collectible": false,
       "readable": true
     },
@@ -259,21 +284,7 @@
         "The Third Trial - Bring water from the River Styx that flows beyond mortal reach.",
         "The Third Trial is complete. Venus acknowledges your resourcefulness and faith."
       ],
-      "transitions": [
-        {
-          "actions": ["examine", "use"],
-          "target": "Vessel Altar",
-          "from": 0,
-          "to": 1,
-          "requirements": {
-            "inventory": ["Crystal Vessel.1"],
-            "items": null,
-            "locations": null,
-            "turns": null,
-            "current_location": null
-          }
-        }
-      ],
+      "transitions": [],
       "collectible": false,
       "readable": true
     },
@@ -284,21 +295,7 @@
         "The Fourth Trial - Journey to the depths of Hades and return with Persephone's sealed gift. DO NOT OPEN IT.",
         "The Fourth Trial is complete. Venus acknowledges your perseverance and self-control."
       ],
-      "transitions": [
-        {
-          "actions": ["examine", "use"],
-          "target": "Box Altar",
-          "from": 0,
-          "to": 1,
-          "requirements": {
-            "inventory": ["Sealed Box"],
-            "items": null,
-            "locations": null,
-            "turns": null,
-            "current_location": null
-          }
-        }
-      ],
+      "transitions": [],
       "collectible": false,
       "readable": true
     },
