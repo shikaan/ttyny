@@ -313,7 +313,7 @@ void masterDescribeAction(master_t *self, const world_t *world,
     strFmtAppend(self->prompt, res_prompt_tpl->data, shot.output);
   }
 
-  strFmt(self->summary, "ACTION: %s\nTARGET:\n name: %s\n description: %s\n",
+  strFmt(self->summary, "ACTION: %s\nTARGET: %s (%s)\n",
          input->data, object->name, bufAt(object->descriptions, object->state));
   strFmtAppend(self->prompt, usr_prompt_tpl->data, self->summary->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
