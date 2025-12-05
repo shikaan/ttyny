@@ -185,7 +185,12 @@ static void generateAndValidate(ai_t *ai, const string_t *prompt,
   debug("Prompt:\n%s", prompt->data);
   int valid = 0;
   ai_result_t result;
-  for (size_t i = 0; i < 20 && !valid; i++) {
+#ifndef DEBUG
+  static const size_t MAX_ATTEMPTS = 20;
+#else
+  static const size_t MAX_ATTEMPTS = 1;
+#endif
+  for (size_t i = 0; i < MAX_ATTEMPTS && !valid; i++) {
     strClear(response);
     aiReset(ai, &result);
     panicif(result != AI_RESULT_OK, "cannot reset model state");
@@ -313,8 +318,8 @@ void masterDescribeAction(master_t *self, const world_t *world,
     strFmtAppend(self->prompt, res_prompt_tpl->data, shot.output);
   }
 
-  strFmt(self->summary, "ACTION: %s\nTARGET: %s (%s)\n",
-         input->data, object->name, bufAt(object->descriptions, object->state));
+  strFmt(self->summary, "ACTION: %s\nTARGET: %s (%s)\n", input->data,
+         object->name, bufAt(object->descriptions, object->state));
   strFmtAppend(self->prompt, usr_prompt_tpl->data, self->summary->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
