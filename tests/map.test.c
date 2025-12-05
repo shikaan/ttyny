@@ -6,7 +6,7 @@ void getSet(void) {
   map_t *map cleanup(mapDestroy) = mapCreate(5);
   map_result_t result;
 
-  int value = 189;
+  int value = 189, another_value = 185;
   result = mapSet(map, "key", &value);
   panicif(result != MAP_RESULT_OK, "set failed");
 
@@ -26,7 +26,9 @@ void getSet(void) {
   result = mapSet(map, "key3", &value);
   result = mapSet(map, "key4", &value);
   result = mapSet(map, "key5", &value);
-  expectEqlu(result, MAP_ERROR_FULL, "errors on full map");
+  expectEqlu(result, MAP_ERROR_FULL, "does not insert with full map");
+  result = mapSet(map, "key4", &value);
+  expectEqlu(result, MAP_RESULT_OK, "allows updates with full map");
 
   resolved = mapGet(map, "key1");
   panicif(!resolved, "resolve set value");
@@ -35,6 +37,11 @@ void getSet(void) {
 
   resolved = mapGet(map, "key1");
   expectNull(resolved, "does not resolve deleted value");
+
+  result = mapSet(map, "key1", &another_value);
+  expectEqlu(result, MAP_RESULT_OK, "deleted value can be reset");
+  resolved = mapGet(map, "key1");
+  expectEqli(*resolved, another_value, "returns correct value set after delete");
 }
 
 void collisions(void) {
@@ -86,6 +93,17 @@ void collisions(void) {
   int *resolved = mapGet(map, key2);
   panicif(!resolved, "did not find the colliding key");
   expectEqli(*resolved, value2, "correct value on removing colliding key");
+
+  {
+    map_t *m cleanup(mapDestroy) = mapCreate(2);
+    int v1 = 11, v2 = 22;
+    (void)mapSet(m, key1, &v1);
+    (void)mapSet(m, key2, &v2);
+    (void)mapDelete(m, key1);
+    int *p = mapGet(m, key2);
+    panicif(!p, "tail of chain retrievable after deleting head");
+    expectEqli(*p, v2, "tail value intact");
+  }
 }
 
 int main(void) {

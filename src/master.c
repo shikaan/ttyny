@@ -209,9 +209,11 @@ void masterDescribeLocation(master_t *self, const location_t *location,
   key_t cache_key = makeCacheKey(location->object.name, LOCATION_NAMESPACE);
   char *cached = mapGet(self->descriptions, cache_key);
   if (cached) {
+    debug("returning from cache: %s\n", cache_key);
     strFmt(description, "%s", cached);
     return;
   }
+  debug("cache miss: %s\n", cache_key);
 
   const config_t *config = self->ai->configuration;
   const string_t *usr_prompt_tpl = config->prompt_templates[PROMPT_TYPE_USR];
@@ -241,28 +243,34 @@ void masterDescribeLocation(master_t *self, const location_t *location,
 
   generateAndValidate(self->ai, self->prompt, description, must_haves);
 
-  char *copy = strdup(description->data);
-  (void)mapSet(self->descriptions, cache_key, copy);
+  char *description_data = strdup(description->data);
+  char *description_key = strdup(cache_key);
+  (void)mapSet(self->descriptions, description_key, description_data);
+  debug("written cache at: %s\n", cache_key);
 }
 
 void masterReadItem(master_t *self, const item_t *item, string_t *description) {
   const object_t object = item->object;
   key_t cache_key = makeCacheKey(object.name, ITEM_NAMESPACE);
+  debug("reading cache key: %s\n", cache_key);
   const char *state_desc = bufAt(object.descriptions, object.state);
   strFmt(description, "%s", state_desc);
   char *copy = strdup(description->data);
   (void)mapSet(self->descriptions, cache_key, copy);
-  return;
+  debug("written cache at: %s\n", cache_key);
 }
 
 void masterDescribeObject(master_t *self, const object_t *object,
                           string_t *description) {
   key_t cache_key = makeCacheKey(object->name, OBJECT_NAMESPACE);
+
   char *cached = mapGet(self->descriptions, cache_key);
   if (cached) {
+    debug("returning from cache: %s\n", cache_key);
     strFmt(description, "%s", cached);
     return;
   }
+  debug("cache miss: %s\n", cache_key);
 
   const config_t *config = self->ai->configuration;
   const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
@@ -280,6 +288,7 @@ void masterDescribeObject(master_t *self, const object_t *object,
 
   char *copy = strdup(description->data);
   (void)mapSet(self->descriptions, cache_key, copy);
+  debug("written cache at: %s\n", cache_key);
 }
 
 void masterDescribeAction(master_t *self, const world_t *world,

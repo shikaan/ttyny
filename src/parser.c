@@ -1,6 +1,7 @@
 #include "parser.h"
 #include "configs/qwen.h"
 #include "lib/panic.h"
+#include "utils.h"
 
 static string_t ACTION_GRAMMAR = strConst(
     "root ::= \"move\" | \"use\" | \"take\" | \"drop\" | \"examine\"\n");
@@ -182,6 +183,7 @@ void parserExtractTarget(parser_t *self, const string_t *input,
   for (size_t i = 0; i < locations->used; i++) {
     location_t *location = (location_t *)bufAt(locations, i);
     if (objectNameEq(self->response->data, location->object.name)) {
+      debug("found location: %s", location->object.name);
       *result_item = NULL;
       *result_location = location;
       return;
@@ -191,6 +193,7 @@ void parserExtractTarget(parser_t *self, const string_t *input,
   for (size_t i = 0; i < items->used; i++) {
     item_t *item = bufAt(items, i);
     if (objectNameEq(self->response->data, item->object.name)) {
+      debug("found item: %s", item->object.name);
       *result_item = item;
       *result_location = NULL;
       return;
