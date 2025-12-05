@@ -145,28 +145,31 @@ void digest(void) {
 }
 
 void transition(void) {
-  static char tool_name[] = "tool";
-  static char other_name[] = "other";
+  static char it1_name[] = "it1";
+  static char it2_name[] = "it2";
+  static char it3_name[] = "it3";
+  static char it4_name[] = "it4";
   static requirements_t no_reqs = {0};
-  static requirement_tuple_t tuple_tool = {tool_name, OBJECT_STATE_ANY};
+  static requirement_tuple_t tuple_tool = {it1_name, OBJECT_STATE_ANY};
   static const transition_t tr_1 = { ACTION_TYPE_USE, 0, 1, &tuple_tool, &no_reqs };
   static const transition_t tr_2 = { ACTION_TYPE_USE, 1, 2, &tuple_tool, &no_reqs };
   static char state[] = "state";
   static transitions_t transitions = bufConst(2, tr_1, tr_2);
   static descriptions_t descriptions = bufConst(3, state, state, state);
-  static item_t item_1 = {{tool_name, OBJECT_TYPE_ITEM,0 ,&descriptions, &transitions}, false, false};
-  static item_t item_2 = {{other_name, OBJECT_TYPE_ITEM,0,&descriptions,NULL}, false, false};
-  static requirement_tuples_t items_reqs = bufConst(1, {tool_name, 0});
+  static item_t item_1 = {{it1_name, OBJECT_TYPE_ITEM,0 ,&descriptions, &transitions}, false, false};
+  static item_t item_2 = {{it2_name, OBJECT_TYPE_ITEM,0,&descriptions,NULL}, false, false};
+  static requirement_tuples_t items_reqs = bufConst(1, {it1_name, 0});
   static requirements_t reqs = {&items_reqs, NULL, NULL, NULL, 0};
-  static requirement_tuple_t tuple_other = {other_name, 0};
+  static requirement_tuple_t tuple_it2_0 = {it2_name, 0};
+  static requirement_tuple_t tuple_it2_1 = {it2_name, 1};
 
-  static const transition_t tr_3 = { ACTION_TYPE_USE, 0, 1, &tuple_other, &reqs };
+  static const transition_t tr_3 = { ACTION_TYPE_USE, 0, 1, &tuple_it2_0, &reqs };
   static transitions_t transitions_with_reqs = bufConst(1, tr_3);
-  static item_t item_3 = {{other_name, OBJECT_TYPE_ITEM,0,&descriptions,&transitions_with_reqs}, false, false};
+  static item_t item_3 = {{it3_name, OBJECT_TYPE_ITEM,0,&descriptions,&transitions_with_reqs}, false, false};
 
-  static const transition_t tr_4 = { ACTION_TYPE_USE, 0, 1, &tuple_other, &no_reqs };
+  static const transition_t tr_4 = { ACTION_TYPE_USE, 1, 2, &tuple_it2_1, &no_reqs };
   static transitions_t transitions_something_else = bufConst(1, tr_4);
-  static  item_t item_4 = {{tool_name,OBJECT_TYPE_ITEM,0,&descriptions,&transitions_something_else},false,false};
+  static item_t item_4 = {{it4_name,OBJECT_TYPE_ITEM,0,&descriptions,&transitions_something_else},false,false};
 
   static items_t items = bufConst(4, &item_1, &item_2, &item_3, &item_4);
   static items_t inventory = bufConst(0);
@@ -206,9 +209,10 @@ void transition(void) {
   expectEqlu(tr, TRANSITION_RESULT_MISSING_ITEM, "transition blocked (missing item)");
   expectEqli(item_3.object.state, 0, "state unchanged with unmet requirement");
 
+  item_2.object.state = 1;
   worldTransitionObject(&w, &item_4.object, ACTION_TYPE_USE, &tr);
   expectEqlu(tr, TRANSITION_RESULT_OK, "transitions something else");
-  expectEqli(item_2.object.state, 1, "state changed");
+  expectEqli(item_2.object.state, 2, "state changed");
 }
 
 void requirements(void) {

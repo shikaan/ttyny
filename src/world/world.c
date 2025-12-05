@@ -151,8 +151,11 @@ void worldTransitionObject(world_t *self, object_t *object,
   requirements_result_t requirements_result;
   for (size_t i = 0; i < object->transitions->used; i++) {
     transition_t transition = bufAt(object->transitions, i);
-    if (transition.target && transition.action == action &&
-        object->state == transition.from) {
+    if (!transition.target)
+      continue;
+
+    object_t *target = findObjectByName(self, transition.target->name);
+    if (transition.action == action && target->state == transition.from) {
       worldAreRequirementsMet(self, transition.requirements,
                               &requirements_result);
       switch (requirements_result) {
@@ -173,10 +176,8 @@ void worldTransitionObject(world_t *self, object_t *object,
       case REQUIREMENTS_RESULT_OK:
       case REQUIREMENTS_RESULT_NO_REQUIREMENTS:
       default: {
-        object_t *target = findObjectByName(self, transition.target->name);
-
         if (target && (transition.target->state == OBJECT_STATE_ANY ||
-                       target->state == transition.target->state)) {
+                       transition.target->state == target->state)) {
           target->state = transition.to;
           *result = TRANSITION_RESULT_OK;
         } else {
