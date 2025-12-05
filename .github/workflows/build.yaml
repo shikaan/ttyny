@@ -1,0 +1,115 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  release:
+    types: [created]
+
+jobs:
+  push-docs:
+    if: github.event_name == 'release'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate documentation
+        run: |
+          make VERSION="${{ needs.build.outputs.VERSION }}" SHA="${{ needs.build.outputs.SHA }}" docs/index.md
+
+      - name: Commit and push updated docs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/index.md
+          git commit -m "chore(docs): update generated documentation for ${{ needs.build.outputs.VERSION }}"
+          git push origin HEAD:main
+
+      - name: Move release tag to docs commit
+        run: |
+          git fetch --tags
+          git tag -f "${GITHUB_REF#refs/tags/}"
+          git push --force origin "refs/tags/${GITHUB_REF#refs/tags/}"
+
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            platform: linux
+            arch: amd64
+            cc: clang
+
+          - os: ubuntu-22.04-arm
+            platform: linux
+            arch: arm64
+            cc: clang
+
+          - os: macos-14
+            platform: darwin
+            arch: arm64
+            cc: clang
+
+          - os: macos-14
+            platform: darwin
+            arch: amd64
+            cc: clang -arch x86_64
+
+    runs-on: ${{ matrix.os }}
+    outputs:
+      VERSION: ${{ steps.version.outputs.VERSION }}
+      SHA: ${{ steps.version.outputs.SHA }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Compute version string
+        id: version
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/}"
+          [[ "$GITHUB_REF" != refs/tags/* ]] && VERSION="dev"
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "SHA=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
+
+      - name: Run tests
+        run: |
+          make CC="${{ matrix.cc }}" clean test
+        env:
+          UNAME_S: ${{ matrix.platform == 'linux' && 'Linux' || 'Darwin' }}
+
+      - name: Run tests (release)
+        run: |
+          make CC="${{ matrix.cc }}" BUILD_TYPE=release clean test
+        env:
+          UNAME_S: ${{ matrix.platform == 'linux' && 'Linux' || 'Darwin' }}
+
+      - name: Build binary
+        run: |
+          make CC="${{ matrix.cc }}" BUILD_TYPE=release VERSION="${{ steps.version.outputs.VERSION }}" SHA="${{ steps.version.outputs.SHA }}" clean all
+          cp ttyny artifacts/ttyny-${{ matrix.platform }}-${{ matrix.arch }}
+        env:
+          UNAME_S: ${{ matrix.platform == 'linux' && 'Linux' || 'Darwin' }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ttyny-${{ matrix.platform }}-${{ matrix.arch }}
+          path: artifacts/
+          retention-days: 7
+
+      - name: Upload release assets
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/ttyny-darwin-amd64
+            artifacts/ttyny-darwin-arm64
+            artifacts/ttyny-linux-amd64
+            artifacts/ttyny-linux-arm64
