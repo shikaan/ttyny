@@ -1,6 +1,6 @@
 #include "test.h"
 
-#include "../src/buffers.h"
+#include "../src/lib/buffers.h"
 #include "../src/master.h"
 #include "../src/utils.h"
 #include <stddef.h>

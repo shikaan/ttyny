@@ -1,5 +1,5 @@
 #include "../src/master.h"
-#include "../src/buffers.h"
+#include "../src/lib/buffers.h"
 #include "../src/utils.h"
 #include "fixtures/world.h"
 #include "test.h"
@@ -47,7 +47,7 @@ void describeLocation(void) {
     debug("Attempt #%lu duration: %f\n", i + 1,
           (double)elapsed / (double)MICROSECONDS);
     samples[i] = elapsed;
-    masterForget(master, &room->object);
+    masterForget(master, &room->object, LOCATION_NAMESPACE);
 
     if (i != 0 && (i % 10) == 0) {
       info("current average: %fs\n", avg(i, samples) / (double)MICROSECONDS);

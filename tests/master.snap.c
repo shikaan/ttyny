@@ -1,5 +1,5 @@
 #include "../src/master.h"
-#include "../src/buffers.h"
+#include "../src/lib/buffers.h"
 #include "../src/utils.h"
 #include "fixtures/world.h"
 #include "test.h"
