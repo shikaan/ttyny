@@ -78,12 +78,14 @@ snap: tests/master.snap
 time: tests/master.time
 	tests/master.time
 
+.PHONY: test-slow
+test-slow:  tests/parser.test
+	 tests/parser.test
+
 .PHONY: test
-test: tests/buffers.test tests/parser.test tests/map.test tests/world.test \
-	tests/json.test
+test: tests/buffers.test tests/map.test tests/world.test tests/json.test
 	tests/buffers.test
 	tests/map.test
-	tests/parser.test
 	tests/world.test
 	tests/json.test
 
