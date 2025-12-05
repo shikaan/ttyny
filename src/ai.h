@@ -49,7 +49,7 @@ typedef struct {
   config_t *configuration;
 } ai_t;
 
-[[nodiscard]] ai_t *aiCreate(config_t *, ai_result_t *);
+__attribute__((warn_unused_result)) ai_t *aiCreate(config_t *, ai_result_t *);
 void aiDestroy(ai_t **);
 
 void aiGenerate(ai_t *, ai_result_t *, const string_t *, string_t *);

@@ -113,7 +113,7 @@ static inline map_t *mapCreate(map_size_t size) {
   return self;
 }
 
-[[nodiscard]] static inline map_result_t mapSet(map_t *self, const_key_t key,
+__attribute__((warn_unused_result)) static inline map_result_t mapSet(map_t *self, const_key_t key,
                                                 value_t value) {
   panicif(!self, "map cannot not be null");
   map_size_t index = mapMakeKey(self, key);

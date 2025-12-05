@@ -23,7 +23,7 @@
  * @example
  *   void* result = allocate(100);
  */
-[[nodiscard]] static inline void *allocate(size_t size) {
+__attribute__((warn_unused_result)) static inline void *allocate(size_t size) {
   return calloc(1, size);
 }
 
