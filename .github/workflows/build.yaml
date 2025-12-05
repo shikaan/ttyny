@@ -44,11 +44,6 @@ jobs:
             arch: arm64
             cc: clang
 
-          - os: macos-15
-            platform: darwin
-            arch: amd64
-            cc: clang -arch x86_64
-
     runs-on: ${{ matrix.os }}
     outputs:
       VERSION: ${{ steps.version.outputs.VERSION }}
