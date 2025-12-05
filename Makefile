@@ -95,6 +95,7 @@ clean:
 	rm -f tests/*.test
 	rm -rf **/*.dSYM **/*.plist *.plist
 	find . -type f -name '*.o' -not -path './build/*' -delete
+	mkdir -p build
 
 .PHONY: deep-clean
 deep-clean: clean
