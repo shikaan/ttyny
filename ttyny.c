@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
     strFmt(input, "%s", line);
     linenoiseFree(line);
 
-    if (input->used == 0)
+    if (bufIsEmpty(input))
       continue;
 
     linenoiseHistoryAdd(input->data);
@@ -368,7 +368,7 @@ int main(int argc, char **argv) {
 
     loadingStop(&loading);
     printCallback(response);
-    if (state->used > 0) {
+    if (!bufIsEmpty(state)) {
       printStateUpdate(state);
     }
   }

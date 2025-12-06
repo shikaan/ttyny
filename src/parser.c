@@ -2,6 +2,7 @@
 #include "configs/qwen.h"
 #include "lib/panic.h"
 #include "utils.h"
+#include <stddef.h>
 
 static string_t ACTION_GRAMMAR = strConst(
     "root ::= \"move\" | \"use\" | \"take\" | \"drop\" | \"examine\"\n");
@@ -136,19 +137,20 @@ void parserExtractTarget(parser_t *self, const string_t *input,
 
   strFmt(self->target_grammar, "root ::= \"unknown\"");
 
-  for (size_t i = 0; i < locations->used; i++) {
-    location_t *exit = (location_t *)bufAt(locations, i);
+  size_t i = 0;
+  bufEach(locations, i) {
+    location_t *exit = bufAt(locations, i);
     strFmtAppend(self->target_grammar, " | \"%s\"", exit->object.name);
   }
 
-  for (size_t i = 0; i < items->used; i++) {
+  bufEach(items, i) {
     item_t *item = bufAt(items, i);
     strFmtAppend(self->target_grammar, " | \"%s\"", item->object.name);
   }
 
   char shot_buffer[256] = {};
   if (locations->used) {
-    for (size_t i = 0; i < arrLen(location_shots_tpls); i++) {
+    for (i = 0; i < arrLen(location_shots_tpls); i++) {
       const char *shot_tpl = location_shots_tpls[i];
       const size_t j = i % locations->used;
       location_t *exit = (location_t *)bufAt(locations, j);
@@ -159,7 +161,7 @@ void parserExtractTarget(parser_t *self, const string_t *input,
   }
 
   if (items->used) {
-    for (size_t i = 0; i < arrLen(item_shots_tpls); i++) {
+    for (i = 0; i < arrLen(item_shots_tpls); i++) {
       const char *shot_tpl = item_shots_tpls[i];
       const size_t j = i % items->used;
       const item_t *item = bufAt(items, j);
@@ -180,8 +182,8 @@ void parserExtractTarget(parser_t *self, const string_t *input,
   panicif(result != AI_RESULT_OK, "cannot generate response");
   strTrim(self->response);
 
-  for (size_t i = 0; i < locations->used; i++) {
-    location_t *location = (location_t *)bufAt(locations, i);
+  bufEach(locations, i) {
+    location_t *location = bufAt(locations, i);
     if (objectNameEq(self->response->data, location->object.name)) {
       debug("found location: %s", location->object.name);
       *result_item = NULL;
@@ -190,7 +192,7 @@ void parserExtractTarget(parser_t *self, const string_t *input,
     }
   }
 
-  for (size_t i = 0; i < items->used; i++) {
+  bufEach(items, i) {
     item_t *item = bufAt(items, i);
     if (objectNameEq(self->response->data, item->object.name)) {
       debug("found item: %s", item->object.name);

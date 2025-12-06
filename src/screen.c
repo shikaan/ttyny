@@ -187,7 +187,7 @@ void printEndGame(string_t *buffer, game_state_t state, const world_t *world) {
   bufEach(world->items, i) {
     item_t *item = bufAt(world->items, i);
     transitions_t *transitions = item->object.transitions;
-    if (transitions && transitions->used > 0) {
+    if (transitions && !bufIsEmpty(transitions)) {
       total_puzzles++;
     }
   }
@@ -294,7 +294,7 @@ void formatHelp(string_t *response, const world_t *world) {
 
   strFmt(suggestion, promptfmt("Go to %s"), first_exit->object.name);
 
-  if (world->location->items->used > 0) {
+  if (!bufIsEmpty(world->location->items)) {
     item_t *room_item = bufAt(world->location->items, 0);
     if (room_item->collectible) {
       strFmtAppend(suggestion, " or " promptfmt("Take %s"),
@@ -335,10 +335,11 @@ void formatStatus(string_t *response, const world_t *world) {
                                          "Inventory:",
          world->location->object.name, world->turns);
 
-  if (inventory->used == 0) {
+  if (bufIsEmpty(inventory)) {
     strFmtAppend(response, dim(" empty"));
   } else {
-    for (size_t i = 0; i < inventory->used; i++) {
+    size_t i = 0;
+    bufEach(inventory, i) {
       item_t *inv_item = bufAt(inventory, i);
       strFmtAppend(response, "\n  • " itemfmt("%s"), inv_item->object.name);
     }
@@ -354,17 +355,19 @@ void formatTldr(string_t *response, const world_t *world) {
                                                 "Items:",
          world->location->object.name);
 
-  if (room_items->used == 0) {
+  if (bufIsEmpty(room_items)) {
     strFmtAppend(response, dim(" none") ".");
   } else {
-    for (size_t i = 0; i < room_items->used; i++) {
+    size_t i = 0;
+    bufEach(room_items, i) {
       item_t *inv_item = bufAt(room_items, i);
       strFmtAppend(response, "\n  • " itemfmt("%s"), inv_item->object.name);
     }
   }
 
   strFmtAppend(response, "\nExits:");
-  for (size_t i = 0; i < room_exits->used; i++) {
+  size_t i = 0;
+  bufEach(room_exits, i) {
     location_t *room_exit = (location_t *)bufAt(room_exits, i);
     strFmtAppend(response, "\n  • " locationfmt("%s"), room_exit->object.name);
   }

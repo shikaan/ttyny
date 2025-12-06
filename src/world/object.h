@@ -89,8 +89,9 @@ static inline void objectDestroyInner(object_t **self) {
 
   deallocate(&obj->name);
 
+  size_t i = 0;
   if (obj->descriptions) {
-    for (size_t i = 0; i < obj->descriptions->used; i++) {
+    bufEach(obj->descriptions, i) {
       char *description = bufAt(obj->descriptions, i);
       deallocate(&description);
     }
@@ -98,7 +99,7 @@ static inline void objectDestroyInner(object_t **self) {
   }
 
   if (obj->transitions) {
-    for (size_t i = 0; i < obj->transitions->used; i++) {
+    bufEach(obj->transitions, i) {
       transition_t transition = bufAt(obj->transitions, i);
       requirementsDestroy(&transition.requirements);
     }

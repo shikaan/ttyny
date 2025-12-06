@@ -53,9 +53,10 @@ static void summarizeLocation(const location_t *location, string_t *summary) {
          location->object.name,
          bufAt(location->object.descriptions, location->object.state));
 
-  if (location->items->used) {
+  size_t i = 0;
+  if (!bufIsEmpty(location->items)) {
     strFmtAppend(summary, "\nITEMS: ");
-    for (size_t i = 0; i < location->items->used; i++) {
+    bufEach(location->items, i) {
       item_t *item = bufAt(location->items, i);
       if (i > 0)
         strFmtAppend(summary, ", ");
@@ -64,7 +65,7 @@ static void summarizeLocation(const location_t *location, string_t *summary) {
   }
 
   strFmtAppend(summary, "\nEXITS: ");
-  for (size_t i = 0; i < location->exits->used; i++) {
+  bufEach(location->exits, i) {
     location_t *exit = (location_t *)bufAt(location->exits, i);
     if (i > 0)
       strFmtAppend(summary, ", ");
@@ -158,7 +159,8 @@ static int hasAllMustHaves(string_t *response, words_t *must_haves) {
   if (!must_haves)
     return 1;
 
-  for (size_t i = 0; i < must_haves->used; i++) {
+  size_t i = 0;
+  bufEach(must_haves, i)  {
     const char *word = bufAt(must_haves, i);
     char *word_position = strcasestr(response->data, word);
     if (!word_position) {
@@ -236,12 +238,13 @@ void masterDescribeLocation(master_t *self, const location_t *location,
   words_t *must_haves cleanup(wordsDestroy) =
       wordsCreate(location->items->used + location->exits->used);
 
-  for (size_t i = 0; i < location->items->used; i++) {
+  size_t i = 0;
+  bufEach(location->items, i) {
     item_t *item = bufAt(location->items, i);
     bufPush(must_haves, item->object.name);
   }
 
-  for (size_t i = 0; i < location->exits->used; i++) {
+  bufEach(location->exits, i) {
     location_t *exit = (location_t *)bufAt(location->exits, i);
     bufPush(must_haves, exit->object.name);
   }

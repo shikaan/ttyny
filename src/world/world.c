@@ -154,7 +154,8 @@ void worldTransitionObject(world_t *self, object_t *object,
   }
 
   requirements_result_t requirements_result;
-  for (size_t i = 0; i < object->transitions->used; i++) {
+  size_t i = 0;
+  bufEach(object->transitions, i) {
     transition_t transition = bufAt(object->transitions, i);
     if (!transition.target)
       continue;
@@ -705,7 +706,7 @@ static world_t *worldFromJSONDoc(yyjson_doc *doc) {
 
   yyjson_val *items = yyjson_obj_get(root, "items");
   world->items = itemsFromJSONVal(items);
-  if (!world->items || world->items->used == 0) {
+  if (!world->items || bufIsEmpty(world->items)) {
     error("cannot parse items");
     worldDestroy(&world);
     return NULL;
@@ -713,7 +714,7 @@ static world_t *worldFromJSONDoc(yyjson_doc *doc) {
 
   yyjson_val *locations = yyjson_obj_get(root, "locations");
   world->locations = locationsFromJSONVal(locations, world->items);
-  if (!world->locations || world->locations->used == 0) {
+  if (!world->locations || bufIsEmpty(world->locations)) {
     error("cannot parse locations");
     worldDestroy(&world);
     return NULL;
@@ -721,7 +722,7 @@ static world_t *worldFromJSONDoc(yyjson_doc *doc) {
 
   populateLocationsExits(locations, world->locations);
 
-  if (!world->locations || world->locations->used == 0) {
+  if (!world->locations || bufIsEmpty(world->locations)) {
     error("world must have at least one location");
     worldDestroy(&world);
     return NULL;
