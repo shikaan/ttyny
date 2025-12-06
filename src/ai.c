@@ -17,45 +17,6 @@ static const char STOP_CHARS[] = {'[', '*', '('};
   *result = Error;                                                             \
   goto error;
 
-void aiResultFormat(ai_result_t res, string_t *response) {
-  switch (res) {
-  case AI_RESULT_OK:
-    strFmt(response, "ok");
-    return;
-  case AI_RESULT_ERROR_LOAD_MODEL_FAILED:
-    strFmt(response, "cannot load model");
-    return;
-  case AI_RESULT_ERROR_CREATE_CONTEXT_FAILED:
-    strFmt(response, "cannot create context");
-    return;
-  case AI_RESULT_ERROR_TOKENIZATION_FAILED:
-    strFmt(response, "tokenization failed");
-    return;
-  case AI_RESULT_ERROR_CONTEXT_LENGTH_EXCEEDED:
-    strFmt(response, "context length exceeded");
-    return;
-  case AI_RESULT_ERROR_BATCH_DECODING_FAILED:
-    strFmt(response, "batch decoding failed");
-    return;
-  case AI_RESULT_ERROR_TOKEN_PARSING_FAILED:
-    strFmt(response, "token parsing failed");
-    return;
-  case AI_RESULT_ERROR_RESPONSE_LENGTH_EXCEEDED:
-    strFmt(response, "response length exceeded");
-    return;
-  case AI_RESULT_ERROR_ALLOCATION_FAILED:
-    strFmt(response, "allocation failed");
-    return;
-  case AI_RESULT_ERROR_INVALID_OUTPUT_DETECTED:
-    strFmt(response, "invalid output");
-    return;
-  default:
-  case AI_RESULT_ERROR:
-    strFmt(response, "unexpected error");
-    return;
-  }
-}
-
 static int containsStopChar(char string[]) {
   for (size_t i = 0; i < arrLen(STOP_CHARS); i++) {
     if (strchr(string, STOP_CHARS[i]) != NULL) {
@@ -66,13 +27,13 @@ static int containsStopChar(char string[]) {
 }
 
 static void filterLogs(enum ggml_log_level level, const char *text,
-                       void *data) {
+                         void *data) {
   (void)level;
   (void)text;
   (void)data;
 }
 
-static void aiInitSampler(ai_t *ai, ai_result_t *res, config_t *configuration) {
+static void initSampler(ai_t *ai, ai_result_t *res, config_t *configuration) {
   if (ai->sampler) {
     llama_sampler_free(ai->sampler);
   }
@@ -136,7 +97,7 @@ ai_t *aiCreate(config_t *configuration, ai_result_t *result) {
     throw(AI_RESULT_ERROR_CREATE_CONTEXT_FAILED);
   }
 
-  aiInitSampler(ai, result, configuration);
+  initSampler(ai, result, configuration);
 
   ai->configuration = configuration;
   *result = AI_RESULT_OK;
@@ -215,12 +176,12 @@ error:
 void aiSetGrammar(ai_t *self, ai_result_t *result, string_t *grammar) {
   self->configuration->grammar = grammar;
   llama_memory_clear(llama_get_memory(self->context), true);
-  aiInitSampler(self, result, self->configuration);
+  initSampler(self, result, self->configuration);
 }
 
 void aiReset(ai_t *self, ai_result_t *result) {
   llama_memory_clear(llama_get_memory(self->context), true);
-  aiInitSampler(self, result, self->configuration);
+  initSampler(self, result, self->configuration);
 }
 
 void aiDestroy(ai_t **self) {
@@ -240,6 +201,45 @@ void aiDestroy(ai_t **self) {
 
   llama_backend_free();
   deallocate(self);
+}
+
+void aiResultFormat(ai_result_t res, string_t *response) {
+  switch (res) {
+  case AI_RESULT_OK:
+    strFmt(response, "ok");
+    return;
+  case AI_RESULT_ERROR_LOAD_MODEL_FAILED:
+    strFmt(response, "cannot load model");
+    return;
+  case AI_RESULT_ERROR_CREATE_CONTEXT_FAILED:
+    strFmt(response, "cannot create context");
+    return;
+  case AI_RESULT_ERROR_TOKENIZATION_FAILED:
+    strFmt(response, "tokenization failed");
+    return;
+  case AI_RESULT_ERROR_CONTEXT_LENGTH_EXCEEDED:
+    strFmt(response, "context length exceeded");
+    return;
+  case AI_RESULT_ERROR_BATCH_DECODING_FAILED:
+    strFmt(response, "batch decoding failed");
+    return;
+  case AI_RESULT_ERROR_TOKEN_PARSING_FAILED:
+    strFmt(response, "token parsing failed");
+    return;
+  case AI_RESULT_ERROR_RESPONSE_LENGTH_EXCEEDED:
+    strFmt(response, "response length exceeded");
+    return;
+  case AI_RESULT_ERROR_ALLOCATION_FAILED:
+    strFmt(response, "allocation failed");
+    return;
+  case AI_RESULT_ERROR_INVALID_OUTPUT_DETECTED:
+    strFmt(response, "invalid output");
+    return;
+  default:
+  case AI_RESULT_ERROR:
+    strFmt(response, "unexpected error");
+    return;
+  }
 }
 
 #undef throw
