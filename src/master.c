@@ -114,7 +114,7 @@ master_t *masterCreate(world_t *world) {
 }
 
 static char cache_key_buffer[256] = {};
-static key_t makeCacheKey(object_name_t name, const char *namespace) {
+static map_key_t makeCacheKey(object_name_t name, const char *namespace) {
   snprintf(cache_key_buffer, 256, "%s.%s", namespace, name);
   return cache_key_buffer;
 }
@@ -211,7 +211,7 @@ static void generateAndValidate(ai_t *ai, const string_t *prompt,
 
 void masterDescribeLocation(master_t *self, const location_t *location,
                             string_t *description) {
-  key_t cache_key = makeCacheKey(location->object.name, LOCATION_NAMESPACE);
+  map_key_t cache_key = makeCacheKey(location->object.name, LOCATION_NAMESPACE);
   char *cached = mapGet(self->descriptions, cache_key);
   if (cached) {
     debug("returning from cache: %s\n", cache_key);
@@ -256,7 +256,7 @@ void masterDescribeLocation(master_t *self, const location_t *location,
 
 void masterReadItem(master_t *self, const item_t *item, string_t *description) {
   const object_t object = item->object;
-  key_t cache_key = makeCacheKey(object.name, ITEM_NAMESPACE);
+  map_key_t cache_key = makeCacheKey(object.name, ITEM_NAMESPACE);
   debug("reading cache key: %s\n", cache_key);
   const char *state_desc = bufAt(object.descriptions, object.state);
   strFmt(description, "%s", state_desc);
@@ -267,7 +267,7 @@ void masterReadItem(master_t *self, const item_t *item, string_t *description) {
 
 void masterDescribeObject(master_t *self, const object_t *object,
                           string_t *description) {
-  key_t cache_key = makeCacheKey(object->name, OBJECT_NAMESPACE);
+  map_key_t cache_key = makeCacheKey(object->name, OBJECT_NAMESPACE);
 
   char *cached = mapGet(self->descriptions, cache_key);
   if (cached) {
@@ -356,7 +356,7 @@ void masterDescribeEndGame(master_t *self, const string_t *last_action,
 
 void masterForget(master_t *self, const object_t *object,
                   const char *namespace) {
-  key_t cache_key = makeCacheKey(object->name, namespace);
+  map_key_t cache_key = makeCacheKey(object->name, namespace);
   char *value = mapDelete(self->descriptions, cache_key);
   deallocate(&value);
 }

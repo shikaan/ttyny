@@ -43,6 +43,12 @@ void worldDestroy(world_t **self) {
     endingsDestroy(&world->endings);
   }
 
+  setDestroy(&world->discovered_items);
+  setDestroy(&world->discovered_locations);
+  setDestroy(&world->solved_puzzles);
+  deallocate(&world->meta.title);
+  deallocate(&world->meta.author);
+
   deallocate(self);
 }
 
@@ -116,8 +122,9 @@ void worldAreRequirementsMet(world_t *self, requirements_t *requirements,
     }
   }
 
-  if (requirements->turns != 0 || requirements->inventory || requirements->items ||
-      requirements->locations || requirements->current_location) {
+  if (requirements->turns != 0 || requirements->inventory ||
+      requirements->items || requirements->locations ||
+      requirements->current_location) {
     done(REQUIREMENTS_RESULT_OK);
   }
 
@@ -139,8 +146,6 @@ static inline object_t *findObjectByName(world_t *self, const char *name) {
   return NULL;
 }
 
-// Attempts an object transition due to `action`.
-// The result of the attempt is store in result.
 void worldTransitionObject(world_t *self, object_t *object,
                            action_type_t action, transition_result_t *result) {
   if (!object->transitions) {
@@ -194,9 +199,32 @@ void worldTransitionObject(world_t *self, object_t *object,
 }
 
 void worldDigest(world_t *self, game_state_t *result) {
-  requirements_result_t requirements_result;
+  // Update score
+  (void)setAdd(self->discovered_locations, self->location->object.name);
 
-  for (size_t i = 0; i < self->endings->used; i++) {
+  size_t i = 0;
+  bufEach(self->location->items, i) {
+    item_t *item = bufAt(self->location->items, i);
+    (void)setAdd(self->discovered_items, item->object.name);
+  }
+
+  bufEach(self->items, i) {
+    item_t *item = bufAt(self->items, i);
+    if (item->object.state != 0) {
+      (void)setAdd(self->solved_puzzles, item->object.name);
+    }
+  }
+
+  bufEach(self->locations, i) {
+    location_t *location = bufAt(self->locations, i);
+    if (location->object.state != 0) {
+      (void)setAdd(self->solved_puzzles, location->object.name);
+    }
+  }
+
+  // check if game is over
+  requirements_result_t requirements_result;
+  bufEach(self->endings, i) {
     ending_t *ending = bufAt(self->endings, i);
     worldAreRequirementsMet(self, ending->requirements, &requirements_result);
 
@@ -636,11 +664,34 @@ static void populateLocationsExits(yyjson_val *raw,
   }
 }
 
+static void parseMetaFromJSONVal(yyjson_val *raw, meta_t* meta) {
+  if (!yyjson_is_obj(raw)) {
+    error("meta is not an object");
+    return;
+  }
+
+  yyjson_val *title = yyjson_obj_get(raw, "title");
+  const char *title_str = yyjson_get_str(title);
+  if (!title_str) {
+    error("title is not a valid string");
+    return;
+  }
+
+  yyjson_val *author = yyjson_obj_get(raw, "author");
+  const char *author_str = yyjson_get_str(author);
+  if (!author_str) {
+    error("author is not a valid string");
+    return;
+  }
+
+  meta->author = strdup(author_str);
+  meta->title = strdup(title_str);
+}
+
 static world_t *worldFromJSONDoc(yyjson_doc *doc) {
   yyjson_val *root = yyjson_doc_get_root(doc);
   world_t *world = allocate(sizeof(world_t));
   if (!world) {
-    yyjson_doc_free(doc);
     return NULL;
   }
 
@@ -648,20 +699,23 @@ static world_t *worldFromJSONDoc(yyjson_doc *doc) {
   world->endings = endingsFromJSONVal(endings);
   if (!world->endings) {
     error("cannot parse endings");
+    worldDestroy(&world);
     return NULL;
   }
 
   yyjson_val *items = yyjson_obj_get(root, "items");
   world->items = itemsFromJSONVal(items);
-  if (!world->items) {
+  if (!world->items || world->items->used == 0) {
     error("cannot parse items");
+    worldDestroy(&world);
     return NULL;
   }
 
   yyjson_val *locations = yyjson_obj_get(root, "locations");
   world->locations = locationsFromJSONVal(locations, world->items);
-  if (!world->locations) {
+  if (!world->locations || world->locations->used == 0) {
     error("cannot parse locations");
+    worldDestroy(&world);
     return NULL;
   }
 
@@ -669,13 +723,30 @@ static world_t *worldFromJSONDoc(yyjson_doc *doc) {
 
   if (!world->locations || world->locations->used == 0) {
     error("world must have at least one location");
+    worldDestroy(&world);
     return NULL;
   }
 
   world->inventory = itemsCreate(world->items->length);
-  world->turns = 0;
   world->location = bufAt(world->locations, 0);
   world->end_game = NULL;
+
+  yyjson_val *meta = yyjson_obj_get(root, "meta");
+  parseMetaFromJSONVal(meta, &world->meta);
+
+  world->turns = 0;
+  world->discovered_items = setCreate(world->items->length);
+  world->discovered_locations = setCreate(world->locations->length);
+
+  // Assuming at most one puzzle per object
+  world->solved_puzzles =
+      setCreate(world->items->length + world->locations->length);
+
+  if (!world->inventory || !world->discovered_items ||
+      !world->discovered_locations || !world->solved_puzzles) {
+    worldDestroy(&world);
+    return NULL;
+  }
 
   return world;
 }
