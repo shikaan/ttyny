@@ -3,6 +3,7 @@
 #include "ai.h"
 #include "lib/buffers.h"
 #include "lib/map.h"
+#include "world/object.h"
 #include "world/world.h"
 
 #include <stddef.h>
@@ -43,7 +44,8 @@ void masterReadItem(master_t *, const item_t *, string_t *);
 // Describes the action in the input string using the world and the target
 // object as context
 void masterDescribeAction(master_t *, const world_t *, const string_t *,
-                          const object_t *, string_t *);
+                          const object_t *, const object_t *, object_state_t,
+                          string_t *);
 
 // Use the last input, the game state and the current world to describe the end
 // of the adventure

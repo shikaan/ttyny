@@ -196,32 +196,32 @@ void transition(void) {
   };
 
   transition_result_t tr;
-  worldTransitionObject(&w, &item_1.object, ACTION_TYPE_USE, &tr);
+  tr = worldExecuteTransition(&w, &item_1.object, ACTION_TYPE_USE, NULL, NULL);
   expectEqlu(tr, TRANSITION_RESULT_OK, "transitions");
   expectEqli(item_1.object.state, 1, "correct state");
 
-  worldTransitionObject(&w, &item_1.object, ACTION_TYPE_TAKE, &tr);
+  tr = worldExecuteTransition(&w, &item_1.object, ACTION_TYPE_TAKE, NULL, NULL);
   expectEqlu(tr, TRANSITION_RESULT_NO_TRANSITION, "no transition on wrong action");
   expectEqli(item_1.object.state, 1, "state unchanged");
 
-  worldTransitionObject(&w, &item_1.object, ACTION_TYPE_USE, &tr);
+  tr = worldExecuteTransition(&w, &item_1.object, ACTION_TYPE_USE, NULL, NULL);
   expectEqlu(tr, TRANSITION_RESULT_OK, "transitions");
   expectEqli(item_1.object.state, 2, "correct state");
 
-  worldTransitionObject(&w, &item_1.object, ACTION_TYPE_USE, &tr);
+  tr = worldExecuteTransition(&w, &item_1.object, ACTION_TYPE_USE, NULL, NULL);
   expectEqlu(tr, TRANSITION_RESULT_NO_TRANSITION, "no further transition");
   expectEqli(item_1.object.state, 2, "state unchanged");
 
-  worldTransitionObject(&w, &item_2.object, ACTION_TYPE_USE, &tr);
+  tr = worldExecuteTransition(&w, &item_2.object, ACTION_TYPE_USE, NULL, NULL);
   expectEqlu(tr, TRANSITION_RESULT_OK, "noop is ok");
   expectEqli(item_2.object.state, 0, "state unchanged without transitions");
 
-  worldTransitionObject(&w, &item_3.object, ACTION_TYPE_USE, &tr);
+  tr = worldExecuteTransition(&w, &item_3.object, ACTION_TYPE_USE, NULL, NULL);
   expectEqlu(tr, TRANSITION_RESULT_MISSING_ITEM, "transition blocked (missing item)");
   expectEqli(item_3.object.state, 0, "state unchanged with unmet requirement");
 
   item_2.object.state = 1;
-  worldTransitionObject(&w, &item_4.object, ACTION_TYPE_USE, &tr);
+  tr = worldExecuteTransition(&w, &item_4.object, ACTION_TYPE_USE, NULL, NULL);
   expectEqlu(tr, TRANSITION_RESULT_OK, "transitions something else");
   expectEqli(item_2.object.state, 2, "state changed");
 }

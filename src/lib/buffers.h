@@ -93,6 +93,8 @@
     return -1;                                                                 \
   }
 
+#define bufIsEmpty(BufferPtr) (!(BufferPtr)->used)
+
 // String
 typedef Buffer(char) string_t;
 

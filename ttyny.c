@@ -28,10 +28,8 @@ void completion(const char *buf, linenoiseCompletions *lc) {
   }
 }
 
-int quit(string_t *response, ui_handle_t *loading, const world_t* world) {
-  strFmt(response, "Okay, bye!");
+int quit(string_t *response, ui_handle_t *loading, const world_t *world) {
   loadingStop(&loading);
-  printCommandOutput(response);
   printEndGame(response, GAME_STATE_DEAD, world);
   return 0;
 }
@@ -82,19 +80,20 @@ int main(int argc, char **argv) {
   items_t *items cleanup(itemsDestroy) = itemsCreate(world->items->length);
 
   screenClear();
+#ifndef DEBUG
   formatWelcomeScreen(response);
   printCommandOutput(response);
   fgetc(stdin);
   screenClear();
+
   printOpeningCredits(world);
   fgetc(stdin);
   screenClear();
-
+#endif
   ui_handle_t *loading = loadingStart();
 
   masterDescribeLocation(master, world->location, response);
   loadingStop(&loading);
-
   printDescription(response);
 
   formatLocationChange(response, world->location);
@@ -115,7 +114,7 @@ int main(int argc, char **argv) {
     strFmt(input, "%s", line);
     linenoiseFree(line);
 
-    if (input->used == 0)
+    if (bufIsEmpty(input))
       continue;
 
     linenoiseHistoryAdd(input->data);
@@ -181,7 +180,7 @@ int main(int argc, char **argv) {
     bufClear(locations, NULL);
     strClear(state);
 
-    transition_result_t transition;
+    transition_result_t trans_result;
     print_callback_t printCallback = printDescription;
 
     switch (action) {
@@ -195,12 +194,13 @@ int main(int argc, char **argv) {
         break;
       }
 
-      worldTransitionObject(world, &location->object, action, &transition);
-      if (transition == TRANSITION_RESULT_MISSING_ITEM) {
+      trans_result =
+          worldExecuteTransition(world, &location->object, action, NULL, NULL);
+      if (trans_result == TRANSITION_RESULT_MISSING_ITEM) {
         strFmt(response, "You need an item or a key to go there...");
         printCallback = printError;
         break;
-      } else if (transition == TRANSITION_RESULT_INVALID_TARGET) {
+      } else if (trans_result == TRANSITION_RESULT_INVALID_TARGET) {
         strFmt(response, "This way is locked by some contraption.");
         printCallback = printError;
         break;
@@ -220,7 +220,8 @@ int main(int argc, char **argv) {
 
       if (item) {
         // This is non-functional transition. No need to check result
-        worldTransitionObject(world, &item->object, action, &transition);
+        trans_result =
+            worldExecuteTransition(world, &item->object, action, NULL, NULL);
 
         if (item->readable) {
           masterReadItem(master, item, response);
@@ -258,9 +259,12 @@ int main(int argc, char **argv) {
         break;
       }
 
-      worldTransitionObject(world, &item->object, action, &transition);
-      if (transition != TRANSITION_RESULT_OK &&
-          transition != TRANSITION_RESULT_NO_TRANSITION) {
+      object_t *affected = NULL;
+      object_state_t affected_initial_state = OBJECT_STATE_ANY;
+      trans_result = worldExecuteTransition(world, &item->object, action,
+                                            &affected, &affected_initial_state);
+      if (trans_result != TRANSITION_RESULT_OK &&
+          trans_result != TRANSITION_RESULT_NO_TRANSITION) {
         strFmt(response, "You cannot take that.");
         printCallback = printError;
         break;
@@ -269,7 +273,8 @@ int main(int argc, char **argv) {
       bufPush(world->inventory, item);
       bufRemove(world->location->items, item, NULL);
 
-      masterDescribeAction(master, world, input, &item->object, response);
+      masterDescribeAction(master, world, input, &item->object, affected,
+                           affected_initial_state, response);
       // When taking an object, the room description must be regenerated
       // else it'll mention objects you have in the inventory
       masterForget(master, &world->location->object, LOCATION_NAMESPACE);
@@ -289,9 +294,12 @@ int main(int argc, char **argv) {
         break;
       }
 
-      worldTransitionObject(world, &item->object, action, &transition);
-      if (transition != TRANSITION_RESULT_OK &&
-          transition != TRANSITION_RESULT_NO_TRANSITION) {
+      object_t *affected = NULL;
+      object_state_t affected_initial_state = OBJECT_STATE_ANY;
+      trans_result = worldExecuteTransition(world, &item->object, action,
+                                            &affected, &affected_initial_state);
+      if (trans_result != TRANSITION_RESULT_OK &&
+          trans_result != TRANSITION_RESULT_NO_TRANSITION) {
         strFmt(response, "You cannot drop that.");
         printCallback = printError;
         break;
@@ -300,7 +308,8 @@ int main(int argc, char **argv) {
       bufPush(world->location->items, item);
       bufRemove(world->inventory, item, NULL);
 
-      masterDescribeAction(master, world, input, &item->object, response);
+      masterDescribeAction(master, world, input, &item->object, affected,
+                           affected_initial_state, response);
       // When dropping an object, the room description must be regenerated
       // else it won't mention the object just dropped
       masterForget(master, &world->location->object, LOCATION_NAMESPACE);
@@ -322,11 +331,15 @@ int main(int argc, char **argv) {
         break;
       }
 
-      worldTransitionObject(world, &item->object, action, &transition);
+      object_t *affected = NULL;
+      object_state_t affected_initial_state = OBJECT_STATE_ANY;
+      trans_result = worldExecuteTransition(world, &item->object, action,
+                                            &affected, &affected_initial_state);
 
-      switch (transition) {
+      switch (trans_result) {
       case TRANSITION_RESULT_OK:
-        masterDescribeAction(master, world, input, &item->object, response);
+        masterDescribeAction(master, world, input, &item->object, affected,
+                             affected_initial_state, response);
         masterForget(master, &item->object, OBJECT_NAMESPACE);
         masterForget(master, &item->object, ITEM_NAMESPACE);
 
@@ -368,7 +381,7 @@ int main(int argc, char **argv) {
 
     loadingStop(&loading);
     printCallback(response);
-    if (state->used > 0) {
+    if (!bufIsEmpty(state)) {
       printStateUpdate(state);
     }
   }
