@@ -33,7 +33,8 @@ static const string_t MASTER_ACTION_SYS_PROMPT = strConst(
     "You describe ACTION in one sentence.\n"
     " - Use 'you' for the player.\n"
     " - You must ONLY describe the action. No feelings, no sensations.\n"
-    " - You must ONLY use the context to check the output.\n");
+    " - You must ONLY use the context to check the output.\n"
+    " - ACTION triggers a TRANSITION in another object, describe that too if present.");
 
 static const string_t MASTER_END_GAME_SYS_PROMPT = strConst(
     "You are the narrator of a text adventure game writing the final scene. "

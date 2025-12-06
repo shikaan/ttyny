@@ -74,13 +74,14 @@ world_t *worldFromJSONFile(const char *);
 // Destroy a world and frees all allocated resources
 void worldDestroy(world_t **);
 
-// Attempts an object transition due to `action`.
-// The result of the attempt is store in result.
-void worldTransitionObject(world_t *, object_t *, action_type_t,
-                           transition_result_t *);
+// Executes an object transition triggered to `action`. The result of the
+// attempt is store in result.
+transition_result_t worldExecuteTransition(const world_t *, const object_t *,
+                                           action_type_t, object_t **,
+                                           object_state_t *);
 
 // Check whether the game is over and returns the game state
 void worldDigest(world_t *, game_state_t *);
 
-void worldAreRequirementsMet(world_t *, requirements_t *,
+void worldAreRequirementsMet(const world_t *, requirements_t *,
                              requirements_result_t *);

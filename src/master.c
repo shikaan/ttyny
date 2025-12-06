@@ -32,20 +32,6 @@ static words_t STOP_WORDS_CASE = bufConst(7, "EXITS", "EXIT", "ITEMS", "ACTION",
                                           "DESCRIPTION", "STATE", "TARGET");
 static words_t ACTION_MUST_HAVES = bufConst(1, "you");
 
-typedef struct {
-  const char *input;
-  const char *output;
-} action_desc_shot_t;
-
-static action_desc_shot_t action_desc_shots[] = {
-    {"ACTION: take apple\nTARGET: apple (A ripe red fruit)",
-     "You pick up the apple."},
-    {"ACTION: use knife\nTARGET: knife (A sharp steel blade)",
-     "You brandish the knife, its blade gleaming."},
-    {"ACTION: drop the ball\nTARGET: ball (A leather sphere)",
-     "You drop the ball and it bounces away."},
-};
-
 static void summarizeLocation(const location_t *location, string_t *summary) {
   strFmt(summary,
          "LOCATION: %s\n"
@@ -160,7 +146,7 @@ static int hasAllMustHaves(string_t *response, words_t *must_haves) {
     return 1;
 
   size_t i = 0;
-  bufEach(must_haves, i)  {
+  bufEach(must_haves, i) {
     const char *word = bufAt(must_haves, i);
     char *word_position = strcasestr(response->data, word);
     if (!word_position) {
@@ -301,6 +287,8 @@ void masterDescribeObject(master_t *self, const object_t *object,
 
 void masterDescribeAction(master_t *self, const world_t *world,
                           const string_t *input, const object_t *object,
+                          const object_t *transition_target,
+                          object_state_t transition_target_initial_state,
                           string_t *comment) {
   const config_t *config = self->ai->configuration;
   const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
@@ -314,15 +302,26 @@ void masterDescribeAction(master_t *self, const world_t *world,
   masterDescribeLocation(self, world->location, self->summary);
   strFmtAppend(self->prompt, res_prompt_tpl->data, self->summary->data);
 
-  // // Add few-shot examples
-  for (size_t i = 0; i < arrLen(action_desc_shots); i++) {
-    action_desc_shot_t shot = action_desc_shots[i];
-    strFmtAppend(self->prompt, usr_prompt_tpl->data, shot.input);
-    strFmtAppend(self->prompt, res_prompt_tpl->data, shot.output);
+  if (transition_target && transition_target != object) {
+    char *obj_desc = bufAt(object->descriptions, object->state);
+    char *target_initial_desc =
+        bufAt(transition_target->descriptions, transition_target_initial_state);
+    char *target_desc =
+        bufAt(transition_target->descriptions, transition_target->state);
+    strFmt(self->summary, "ACTION: %s\n", input->data);
+    strFmtAppend(self->summary, "TARGET: %s (%s)\n", object->name, obj_desc);
+
+    if (transition_target->state != transition_target_initial_state) {
+      strFmtAppend(self->summary,
+                   "TRANSITION_TARGET: %s\nTRANSITION_INITIAL_STATE: "
+                   "%s\nTRANSITION_FINAL_STATE: %s\n",
+                   transition_target->name, target_initial_desc, target_desc);
+    }
+  } else {
+    strFmt(self->summary, "ACTION: %s\nTARGET: %s (%s)", input->data,
+           object->name, bufAt(object->descriptions, object->state));
   }
 
-  strFmt(self->summary, "ACTION: %s\nTARGET: %s (%s)\n", input->data,
-         object->name, bufAt(object->descriptions, object->state));
   strFmtAppend(self->prompt, usr_prompt_tpl->data, self->summary->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 

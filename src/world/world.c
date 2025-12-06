@@ -52,7 +52,7 @@ void worldDestroy(world_t **self) {
   deallocate(self);
 }
 
-void worldAreRequirementsMet(world_t *self, requirements_t *requirements,
+void worldAreRequirementsMet(const world_t *self, requirements_t *requirements,
                              requirements_result_t *result) {
 #define done(Result)                                                           \
   *result = Result;                                                            \
@@ -132,7 +132,8 @@ void worldAreRequirementsMet(world_t *self, requirements_t *requirements,
 #undef done
 }
 
-static inline object_t *findObjectByName(world_t *self, const char *name) {
+static inline object_t *findObjectByName(const world_t *self,
+                                         const char *name) {
   int idx = itemsFindByName(self->items, name);
   if (idx >= 0) {
     return (object_t *)bufAt(self->items, (size_t)idx);
@@ -146,11 +147,12 @@ static inline object_t *findObjectByName(world_t *self, const char *name) {
   return NULL;
 }
 
-void worldTransitionObject(world_t *self, object_t *object,
-                           action_type_t action, transition_result_t *result) {
+transition_result_t
+worldExecuteTransition(const world_t *self, const object_t *object,
+                       action_type_t action, object_t **affected,
+                       object_state_t *affected_initial_state) {
   if (!object->transitions) {
-    *result = TRANSITION_RESULT_OK;
-    return;
+    return TRANSITION_RESULT_OK;
   }
 
   requirements_result_t requirements_result;
@@ -160,43 +162,48 @@ void worldTransitionObject(world_t *self, object_t *object,
     if (!transition.target)
       continue;
 
-    object_t *target = findObjectByName(self, transition.target->name);
-    if (transition.action == action && target->state == transition.from) {
+    object_t *target_object = findObjectByName(self, transition.target->name);
+    object_state_t target_state = transition.target->state;
+
+    if (transition.action == action &&
+        target_object->state == transition.from) {
       worldAreRequirementsMet(self, transition.requirements,
                               &requirements_result);
       switch (requirements_result) {
       case REQUIREMENTS_RESULT_MISSING_INVENTORY_ITEM:
       case REQUIREMENTS_RESULT_MISSING_WORLD_ITEM:
-        *result = TRANSITION_RESULT_MISSING_ITEM;
-        return;
+        return TRANSITION_RESULT_MISSING_ITEM;
       case REQUIREMENTS_RESULT_INVALID_INVENTORY_ITEM:
       case REQUIREMENTS_RESULT_INVALID_WORLD_ITEM:
       case REQUIREMENTS_RESULT_INVALID_LOCATION:
-        *result = TRANSITION_RESULT_INVALID_TARGET;
-        return;
+        return TRANSITION_RESULT_INVALID_TARGET;
       case REQUIREMENTS_RESULT_NOT_ENOUGH_TURNS:
       case REQUIREMENTS_RESULT_INVALID_CURRENT_LOCATION:
       case REQUIREMENTS_RESULT_CURRENT_LOCATION_MISMATCH:
-        *result = TRANSITION_RESULT_NO_TRANSITION;
-        return;
+        return TRANSITION_RESULT_NO_TRANSITION;
       case REQUIREMENTS_RESULT_OK:
       case REQUIREMENTS_RESULT_NO_REQUIREMENTS:
       default: {
-        if (target && (transition.target->state == OBJECT_STATE_ANY ||
-                       transition.target->state == target->state)) {
-          target->state = transition.to;
-          *result = TRANSITION_RESULT_OK;
-        } else {
-          *result = TRANSITION_RESULT_NO_TRANSITION;
+        if (!target_object || (target_state != OBJECT_STATE_ANY &&
+                               target_state != target_object->state)) {
+          return TRANSITION_RESULT_NO_TRANSITION;
         }
 
-        return;
+        if (affected) {
+          *affected = target_object;
+        }
+        if (affected_initial_state) {
+          *affected_initial_state = target_object->state;
+        }
+
+        target_object->state = transition.to;
+        return TRANSITION_RESULT_OK;
       }
       }
     }
   }
 
-  *result = TRANSITION_RESULT_NO_TRANSITION;
+  return TRANSITION_RESULT_NO_TRANSITION;
 }
 
 void worldDigest(world_t *self, game_state_t *result) {
@@ -665,7 +672,7 @@ static void populateLocationsExits(yyjson_val *raw,
   }
 }
 
-static void parseMetaFromJSONVal(yyjson_val *raw, meta_t* meta) {
+static void parseMetaFromJSONVal(yyjson_val *raw, meta_t *meta) {
   if (!yyjson_is_obj(raw)) {
     error("meta is not an object");
     return;
