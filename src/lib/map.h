@@ -74,7 +74,7 @@ static inline map_result_t mapGetIndex(const map_t *self, const_map_key_t key,
       return MAP_ERROR_NOT_FOUND;
     }
 
-    // Not a mistake! MAP_Tombstones are pointers to the constant string
+    // Not a mistake! Tombstones are pointers to the constant string
     if (probed_key == MAP_TOMBSTONE) {
       continue;
     }
