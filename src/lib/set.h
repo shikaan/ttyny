@@ -84,6 +84,7 @@ static inline set_result_t setGetIndex(const set_t *self, const_set_key_t key,
 }
 
 static inline set_t *setCreate(set_size_t size) {
+  panicif(size <= 0, "size cannot be null");
   set_t *self = allocate(sizeof(set_t));
   if (!self)
     return NULL;

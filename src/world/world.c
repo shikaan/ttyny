@@ -705,7 +705,7 @@ static world_t *worldFromJSONDoc(yyjson_doc *doc) {
 
   yyjson_val *items = yyjson_obj_get(root, "items");
   world->items = itemsFromJSONVal(items);
-  if (!world->items) {
+  if (!world->items || world->items->used == 0) {
     error("cannot parse items");
     worldDestroy(&world);
     return NULL;
@@ -713,7 +713,7 @@ static world_t *worldFromJSONDoc(yyjson_doc *doc) {
 
   yyjson_val *locations = yyjson_obj_get(root, "locations");
   world->locations = locationsFromJSONVal(locations, world->items);
-  if (!world->locations) {
+  if (!world->locations || world->locations->used == 0) {
     error("cannot parse locations");
     worldDestroy(&world);
     return NULL;

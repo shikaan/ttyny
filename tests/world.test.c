@@ -61,11 +61,13 @@ void location(void) {
 }
 
 void digest(void) {
+  static items_t no_items = {0,0};
+  static locations_t no_exits = {0,0};
   static char win[] = "win";
   static char lose[] = "lose";
   static char location_name[] = "location";
-  static location_t some_location = { .object.name = win};
-  static location_t lose_location = {.object.name = location_name};
+  static location_t some_location = { .object.name = win, .items = &no_items, .exits = &no_exits };
+  static location_t lose_location = { .object.name = location_name, .items = &no_items, .exits = &no_exits };
   static requirement_tuple_t tuple = {.name = location_name, .state = OBJECT_STATE_ANY};
   static requirements_t REQ_WIN_TURNS = {
       .inventory = NULL,
@@ -102,14 +104,23 @@ void digest(void) {
       .requirements = &REQ_CURRENT_LOCATION,
   };
   static endings_t ENDINGS = bufConst(3, &ENDING_WIN, &ENDING_LOSE, &ENDING_LOSE_CURRENT_LOCATION);
+  set_t* discovered_locations cleanup(setDestroy) = setCreate(1);
+  set_t* discovered_items cleanup(setDestroy) = setCreate(1);
+  set_t* solved_puzzles cleanup(setDestroy) = setCreate(1);
+  items_t* items cleanup(itemsDestroy) = itemsCreate(1);
+  locations_t* locations cleanup(locationsDestroy) = locationsCreate(1);
+
   world_t w = {
-      .items = NULL,
-      .locations = NULL,
+      .items = items,
+      .locations = locations,
       .endings = &ENDINGS,
       .turns = 0,
-      .inventory = NULL,
+      .inventory = items,
       .location = &some_location,
       .end_game = NULL,
+      .discovered_locations = discovered_locations,
+      .discovered_items = discovered_items,
+      .solved_puzzles = solved_puzzles,
   };
 
   game_state_t state;

@@ -287,13 +287,29 @@ typedef struct {
 } parser_test_t;
 
 void endings(void) {
-  // Empty buffers to normalize expected worlds (payload always has items, locations, endings)
-  static items_t empty_items = bufInit(0, 0);
+  // World parser requires at least one item and one location
   static locations_t empty_locations = bufInit(0, 0); // keep as empty for exits
+  static char dummy_item_name[] = "dummy";
+  static char dummy_item_desc[] = "A dummy item";
+  static descriptions_t dummy_item_descs = bufConst(1, dummy_item_desc);
+  static item_t dummy_item = {
+      .object = {
+          .name = dummy_item_name,
+          .type = OBJECT_TYPE_ITEM,
+          .state = 0,
+          .descriptions = &dummy_item_descs,
+          .transitions = NULL,
+      },
+      .collectible = false,
+      .readable = false,
+  };
+  static items_t test_items = bufConst(1, &dummy_item);
+
   // Added mandatory start location (loader now requires at least one location)
   static char start_name[] = "start";
   static char start_desc[] = "Start";
   static descriptions_t start_descs = bufConst(1, start_desc);
+  static items_t empty_items_for_location = bufInit(0, 0);
   static location_t start_location = {
       .object =
           {
@@ -303,7 +319,7 @@ void endings(void) {
               .descriptions = &start_descs,
               .transitions = NULL,
           },
-      .items = &empty_items,
+      .items = &empty_items_for_location,
       .exits = &empty_locations,
   };
   static locations_t start_locations = bufConst(1, &start_location);
@@ -327,7 +343,7 @@ void endings(void) {
   };
   static endings_t persephone_endings = bufConst(1, &persephone_ending);
   static world_t persephone_world = {
-      .items = &empty_items,
+      .items = &test_items,
       .locations = &start_locations,
       .endings = &persephone_endings,
       .inventory = &empty_inventory,
@@ -359,7 +375,7 @@ void endings(void) {
   };
   static endings_t victory_endings = bufConst(1, &victory_ending);
   static world_t victory_world = {
-      .items = &empty_items,
+      .items = &test_items,
       .locations = &start_locations,
       .endings = &victory_endings,
       .inventory = &empty_inventory,
@@ -388,7 +404,7 @@ void endings(void) {
   };
   static endings_t trapped_endings = bufConst(1, &trapped_ending);
   static world_t trapped_world = {
-      .items = &empty_items,
+      .items = &test_items,
       .locations = &start_locations,
       .endings = &trapped_endings,
       .inventory = &empty_inventory,
@@ -413,7 +429,7 @@ void endings(void) {
   };
   static endings_t timeout_endings = bufConst(1, &timeout_ending);
   static world_t timeout_world = {
-      .items = &empty_items,
+      .items = &test_items,
       .locations = &start_locations,
       .endings = &timeout_endings,
       .inventory = &empty_inventory,
@@ -455,7 +471,7 @@ void endings(void) {
       .length = 2,
   };
   static world_t multiple_world = {
-      .items = &empty_items,
+      .items = &test_items,
       .locations = &start_locations,
       .endings = &multiple_endings,
       .inventory = &empty_inventory,
@@ -488,7 +504,7 @@ void endings(void) {
   };
   static endings_t ritual_endings = bufConst(1, &ritual_ending);
   static world_t ritual_world = {
-      .items = &empty_items,
+      .items = &test_items,
       .locations = &start_locations,
       .endings = &ritual_endings,
       .inventory = &empty_inventory,
@@ -518,7 +534,7 @@ void endings(void) {
   };
   static endings_t throne_endings = bufConst(1, &throne_ending);
   static world_t throne_world = {
-      .items = &empty_items,
+      .items = &test_items,
       .locations = &start_locations,
       .endings = &throne_endings,
       .inventory = &empty_inventory,
@@ -530,7 +546,7 @@ void endings(void) {
   parser_test_t tests[] = {
       {
           .name = "lose with item requirement",
-          .json = "{\"locations\": [{\"name\": \"start\", \"type\": \"location\", \"descriptions\": [\"Start\"], \"transitions\": [], \"items\": [], \"exits\": []}], \"items\": [], \"endings\": "
+          .json = "{\"locations\": [{\"name\": \"start\", \"type\": \"location\", \"descriptions\": [\"Start\"], \"transitions\": [], \"items\": [], \"exits\": []}], \"items\": [{\"name\": \"dummy\", \"type\": \"item\", \"descriptions\": [\"A dummy item\"], \"transitions\": [], \"collectible\": false, \"readable\": false}], \"endings\": "
                   "[{\"state\": \"lose\","
                   "\"reason\": \"You opened Persephone's box.\","
                   "\"requirements\": {\"inventory\": null, \"items\": "
@@ -540,7 +556,7 @@ void endings(void) {
       },
       {
           .name = "win with inventory",
-          .json = "{\"locations\": [{\"name\": \"start\", \"type\": \"location\", \"descriptions\": [\"Start\"], \"transitions\": [], \"items\": [], \"exits\": []}], \"items\": [],\"endings\": [{\"state\": "
+          .json = "{\"locations\": [{\"name\": \"start\", \"type\": \"location\", \"descriptions\": [\"Start\"], \"transitions\": [], \"items\": [], \"exits\": []}], \"items\": [{\"name\": \"dummy\", \"type\": \"item\", \"descriptions\": [\"A dummy item\"], \"transitions\": [], \"collectible\": false, \"readable\": false}],\"endings\": [{\"state\": "
                   "\"win\","
                   "\"reason\": \"Victory!\","
                   "\"requirements\": {\"inventory\": [\"key\", \"sword\"],"
@@ -549,7 +565,7 @@ void endings(void) {
       },
       {
           .name = "lose with location requirement",
-          .json = "{\"locations\": [{\"name\": \"start\", \"type\": \"location\", \"descriptions\": [\"Start\"], \"transitions\": [], \"items\": [], \"exits\": []}], \"items\": [],\"endings\": [{\"state\": "
+          .json = "{\"locations\": [{\"name\": \"start\", \"type\": \"location\", \"descriptions\": [\"Start\"], \"transitions\": [], \"items\": [], \"exits\": []}], \"items\": [{\"name\": \"dummy\", \"type\": \"item\", \"descriptions\": [\"A dummy item\"], \"transitions\": [], \"collectible\": false, \"readable\": false}],\"endings\": [{\"state\": "
                   "\"lose\","
                   "\"reason\": \"You are trapped!\","
                   "\"requirements\": {\"inventory\": null, \"items\": null,"
@@ -559,7 +575,7 @@ void endings(void) {
       {
           .name = "lose with turn requirement",
           .json =
-              "{\"locations\": [{\"name\": \"start\", \"type\": \"location\", \"descriptions\": [\"Start\"], \"transitions\": [], \"items\": [], \"exits\": []}], \"items\": [], \"endings\": [{\"state\": "
+              "{\"locations\": [{\"name\": \"start\", \"type\": \"location\", \"descriptions\": [\"Start\"], \"transitions\": [], \"items\": [], \"exits\": []}], \"items\": [{\"name\": \"dummy\", \"type\": \"item\", \"descriptions\": [\"A dummy item\"], \"transitions\": [], \"collectible\": false, \"readable\": false}], \"endings\": [{\"state\": "
               "\"lose\","
               "\"reason\": \"Time ran out!\","
               "\"requirements\": {\"inventory\": null, \"items\": null,"
@@ -568,7 +584,7 @@ void endings(void) {
       },
       {
           .name = "multiple endings",
-          .json = "{\"locations\": [{\"name\": \"start\", \"type\": \"location\", \"descriptions\": [\"Start\"], \"transitions\": [], \"items\": [], \"exits\": []}], \"items\": [], \"endings\": ["
+          .json = "{\"locations\": [{\"name\": \"start\", \"type\": \"location\", \"descriptions\": [\"Start\"], \"transitions\": [], \"items\": [], \"exits\": []}], \"items\": [{\"name\": \"dummy\", \"type\": \"item\", \"descriptions\": [\"A dummy item\"], \"transitions\": [], \"collectible\": false, \"readable\": false}], \"endings\": ["
                   "{\"state\": \"win\","
                   "\"reason\": \"You escaped!\","
                   "\"requirements\": {\"inventory\": null, \"items\": null,"
@@ -583,7 +599,7 @@ void endings(void) {
       {
           .name = "complex requirements (inventory + items + turns)",
           .json =
-              "{\"locations\": [{\"name\": \"start\", \"type\": \"location\", \"descriptions\": [\"Start\"], \"transitions\": [], \"items\": [], \"exits\": []}], \"items\": [], \"endings\": [{\"state\": "
+              "{\"locations\": [{\"name\": \"start\", \"type\": \"location\", \"descriptions\": [\"Start\"], \"transitions\": [], \"items\": [], \"exits\": []}], \"items\": [{\"name\": \"dummy\", \"type\": \"item\", \"descriptions\": [\"A dummy item\"], \"transitions\": [], \"collectible\": false, \"readable\": false}], \"endings\": [{\"state\": "
               "\"win\","
               "\"reason\": \"The ritual is complete!\","
               "\"requirements\": {\"inventory\": [\"torch.2\"], \"items\": "
@@ -593,7 +609,7 @@ void endings(void) {
       },
       {
           .name = "win with current_location requirement",
-          .json = "{\"locations\": [{\"name\": \"start\", \"type\": \"location\", \"descriptions\": [\"Start\"], \"transitions\": [], \"items\": [], \"exits\": []}], \"items\": [], \"endings\": [{\"state\": \"win\",\"reason\": \"You sit upon the throne.\",\"requirements\": {\"inventory\": null, \"items\": null, \"locations\": null, \"turns\": 0, \"current_location\": \"throne\"}}]}",
+          .json = "{\"locations\": [{\"name\": \"start\", \"type\": \"location\", \"descriptions\": [\"Start\"], \"transitions\": [], \"items\": [], \"exits\": []}], \"items\": [{\"name\": \"dummy\", \"type\": \"item\", \"descriptions\": [\"A dummy item\"], \"transitions\": [], \"collectible\": false, \"readable\": false}], \"endings\": [{\"state\": \"win\",\"reason\": \"You sit upon the throne.\",\"requirements\": {\"inventory\": null, \"items\": null, \"locations\": null, \"turns\": 0, \"current_location\": \"throne\"}}]}",
           .expected = &throne_world,
       },
   };
@@ -1069,11 +1085,28 @@ void items(void) {
 
 }
 void locations(void) {
-    // Shared empty buffers
-    static items_t empty_items = bufInit(0, 0);
+    // World parser requires at least one item
     static items_t empty_inventory = bufInit(0, 0);
     static endings_t empty_endings = bufInit(0, 0);
     static locations_t empty_locations_buf = bufInit(0, 0);
+
+    // Minimal dummy item to satisfy parser invariant
+    static char dummy_item_name[] = "dummy";
+    static char dummy_item_desc[] = "A dummy item";
+    static descriptions_t dummy_item_descs = bufConst(1, dummy_item_desc);
+    static item_t dummy_item = {
+        .object = {
+            .name = dummy_item_name,
+            .type = OBJECT_TYPE_ITEM,
+            .state = 0,
+            .descriptions = &dummy_item_descs,
+            .transitions = NULL,
+        },
+        .collectible = false,
+        .readable = false,
+    };
+    static items_t test_items = bufConst(1, &dummy_item);
+    static items_t empty_items = bufInit(0, 0);
 
     // 1) Single minimal location
     static char hall_name[] = "hall";
@@ -1093,7 +1126,7 @@ void locations(void) {
     };
     static locations_t single_locations = bufConst(1, &hall_location);
     static world_t single_world = {
-        .items = &empty_items,
+        .items = &test_items,
         .locations = &single_locations,
         .endings = &empty_endings,
         .inventory = &empty_inventory,
@@ -1156,7 +1189,7 @@ void locations(void) {
       init_links_done = true;
     }
     static world_t exits_world = {
-        .items = &empty_items,
+        .items = &test_items,
         .locations = &multi_locations,
         .endings = &empty_endings,
         .inventory = &empty_inventory,
@@ -1257,7 +1290,7 @@ void locations(void) {
     lab_location.object.transitions = lab_transitions_ptr;
     static locations_t lab_locations = bufConst(1, &lab_location);
     static world_t lab_world = {
-        .items = &empty_items,
+        .items = &test_items,
         .locations = &lab_locations,
         .endings = &empty_endings,
         .inventory = &empty_inventory,
@@ -1269,7 +1302,7 @@ void locations(void) {
     parser_test_t tests[] = {
         {
             .name = "single location minimal",
-            .json = "{\"items\": [], \"locations\": [{\"name\": \"hall\", "
+            .json = "{\"items\": [{\"name\": \"dummy\", \"type\": \"item\", \"descriptions\": [\"A dummy item\"], \"transitions\": [], \"collectible\": false, \"readable\": false}], \"locations\": [{\"name\": \"hall\", "
                     "\"type\": \"location\", \"descriptions\": [\"A long hall\"],"
                     "\"transitions\": [], \"items\": [], \"exits\": []}], "
                     "\"endings\": []}",
@@ -1278,7 +1311,7 @@ void locations(void) {
         {
             .name = "locations with exits",
             .json =
-                "{\"items\": [], \"locations\": ["
+                "{\"items\": [{\"name\": \"dummy\", \"type\": \"item\", \"descriptions\": [\"A dummy item\"], \"transitions\": [], \"collectible\": false, \"readable\": false}], \"locations\": ["
                 "{\"name\": \"hall\", \"type\": \"location\", "
                 "\"descriptions\": [\"Hall\"], \"transitions\": [], "
                 "\"items\": [], \"exits\": [\"kitchen\"]},"
@@ -1302,7 +1335,7 @@ void locations(void) {
         {
             .name = "location with multi-action transition",
             .json =
-                "{\"items\": [], \"locations\": [{\"name\": \"lab\", "
+                "{\"items\": [{\"name\": \"dummy\", \"type\": \"item\", \"descriptions\": [\"A dummy item\"], \"transitions\": [], \"collectible\": false, \"readable\": false}], \"locations\": [{\"name\": \"lab\", "
                 "\"type\": \"location\", \"descriptions\": [\"A dark lab\", "
                 "\"A lit lab\"], \"transitions\": [{\"actions\": [\"use\", "
                 "\"examine\"], \"from\": 0, \"to\": 1, \"target\": \"lab.0\", \"requirements\": {\"inventory\": null, \"items\": null, \"locations\": null, \"turns\": 0, \"current_location\": null}}], \"items\": [], "
