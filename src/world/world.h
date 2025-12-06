@@ -55,7 +55,7 @@ struct world_t {
   // Discovering an item means entering the room where its located.
   set_t *discovered_items;
   // Number of locations the player discovered.
-  // Discovering an item means entering the room where its located.
+  // Discovering a location means entering walking into it.
   set_t *discovered_locations;
   // Number of solved puzzles.
   // Solving a puzzle equates to triggering a transition.

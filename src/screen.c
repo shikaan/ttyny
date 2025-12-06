@@ -6,6 +6,7 @@
 #include "utils.h"
 #include "world/item.h"
 #include "world/location.h"
+#include "world/object.h"
 #include "world/world.h"
 #include <ctype.h>
 #include <stddef.h>
@@ -115,7 +116,8 @@ static void printResponse(string_t *response, const char *prefix) {
 // Get visible string length, removing control sequences
 static size_t strVisibleLength(const char *s) {
   size_t len = 0;
-  for (size_t i = 0; i < strlen(s) - 1; i++) {
+  size_t str_len = strlen(s);
+  for (size_t i = 0; i < str_len - 1; i++) {
     char curr = s[i];
     char next = s[i + 1];
     if (curr == 0x1B && next == '[') {
@@ -176,7 +178,7 @@ void printEndGame(string_t *buffer, game_state_t state, const world_t *world) {
   printCentered(buffer->data);
 
   size_t discovered_locations = setUsed(world->discovered_locations);
-  strFmt(buffer, "Locations: " numberfmt("%lu/%ld"), discovered_locations,
+  strFmt(buffer, "Locations: " numberfmt("%lu/%lu"), discovered_locations,
          world->locations->used);
   printCentered(buffer->data);
 
@@ -184,14 +186,16 @@ void printEndGame(string_t *buffer, game_state_t state, const world_t *world) {
   size_t i = 0;
   bufEach(world->items, i) {
     item_t *item = bufAt(world->items, i);
-    if (item->object.transitions->used > 0) {
+    transitions_t *transitions = item->object.transitions;
+    if (transitions && transitions->used > 0) {
       total_puzzles++;
     }
   }
 
   bufEach(world->locations, i) {
     location_t *location = bufAt(world->locations, i);
-    if (location->object.transitions->used > 0) {
+    transitions_t *transitions = location->object.transitions;
+    if (transitions && transitions->used > 0) {
       total_puzzles++;
     }
   }
