@@ -17,6 +17,21 @@
       "type": "array",
       "description": "Possible endings of the story. They are evaluated in order, from first to last. The first one to have all requirements satisfied will trigger.",
       "items": { "$ref": "#/$defs/Ending" }
+    },
+    "meta": {
+      "type": "object",
+      "required": ["title", "author"],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/NonEmptyString",
+          "description": "The title of the story."
+        },
+        "author": {
+          "$ref": "#/$defs/NonEmptyString",
+          "description": "Name or nickname of the author of the story."
+        }
+      }
     }
   },
   "$defs": {

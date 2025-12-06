@@ -1,9 +1,13 @@
 #include "screen.h"
 #include "lib/alloc.h"
 #include "lib/buffers.h"
+#include "lib/set.h"
 #include "lib/tty.h"
 #include "utils.h"
+#include "world/item.h"
+#include "world/location.h"
 #include "world/world.h"
+#include <ctype.h>
 #include <stddef.h>
 #include <stdio.h>
 
@@ -14,6 +18,7 @@
 #define successfmt fg_green
 #define failfmt fg_red
 #define descriptionfmt italic
+#define numberfmt bold
 
 const char *NAME = fg_green(bold("ttyny"));
 
@@ -107,6 +112,39 @@ static void printResponse(string_t *response, const char *prefix) {
   putchar('\n');
 }
 
+// Get visible string length, removing control sequences
+static size_t strVisibleLength(const char *s) {
+  size_t len = 0;
+  for (size_t i = 0; i < strlen(s) - 1; i++) {
+    char curr = s[i];
+    char next = s[i + 1];
+    if (curr == 0x1B && next == '[') {
+      i += 2;
+      while ((isdigit(s[i]) || s[i] == ';' || s[i] == '?' || s[i] == ':' ||
+              s[i] == '<' || s[i] == '=' || s[i] == '>')) {
+        i++;
+      }
+      continue;
+    }
+
+    len++;
+  }
+  return len;
+}
+
+// Print a string in the (horizontal) center of the screen
+static void printCentered(const char *str) {
+  size_t prefix_len = max_line_len / 2 - strVisibleLength(str) / 2;
+
+  if (prefix_len < max_line_len) {
+    for (size_t i = 0; i < prefix_len; i++) {
+      putchar(' ');
+    }
+  }
+
+  printf("%s\n", str);
+}
+
 void printError(string_t *response) {
   printResponse(response, failfmt(" !  "));
 }
@@ -121,13 +159,72 @@ void printReadable(string_t *response) {
   printResponse(response, "    " ESC_ITALIC);
 }
 
-void printEndGame(string_t *response, game_state_t state) {
-  if (state == GAME_STATE_VICTORY) {
-    strFmtAppend(response, "\n\n" successfmt("~~~> YOU WON! <~~~"))
-  } else {
-    strFmtAppend(response, "\n\n" failfmt("~~~> GAME OVER <~~~"))
+void printEndGame(string_t *buffer, game_state_t state, const world_t *world) {
+  const char *state_text = state == GAME_STATE_VICTORY
+                               ? successfmt("~~~>   YOU WON!   <~~~")
+                               : failfmt("~~~>   GAME  OVER   <~~~");
+  printCentered(state_text);
+
+  printf("\n");
+  strFmt(buffer, underline("STATS"));
+  printCentered(buffer->data);
+  printf("\n");
+
+  size_t discovered_items = setUsed(world->discovered_items);
+  strFmt(buffer, "Items: " numberfmt("%lu/%lu"), discovered_items,
+         world->items->used);
+  printCentered(buffer->data);
+
+  size_t discovered_locations = setUsed(world->discovered_locations);
+  strFmt(buffer, "Locations: " numberfmt("%lu/%ld"), discovered_locations,
+         world->locations->used);
+  printCentered(buffer->data);
+
+  size_t total_puzzles = 0;
+  size_t i = 0;
+  bufEach(world->items, i) {
+    item_t *item = bufAt(world->items, i);
+    if (item->object.transitions->used > 0) {
+      total_puzzles++;
+    }
   }
-  printResponse(response, " |  ");
+
+  bufEach(world->locations, i) {
+    location_t *location = bufAt(world->locations, i);
+    if (location->object.transitions->used > 0) {
+      total_puzzles++;
+    }
+  }
+
+  size_t solved_puzzles = setUsed(world->solved_puzzles);
+  strFmt(buffer, "Puzzles: " numberfmt("%lu/%lu"), solved_puzzles,
+         total_puzzles);
+  printCentered(buffer->data);
+
+  size_t actual = discovered_locations + discovered_items + solved_puzzles;
+  size_t total = total_puzzles + world->locations->used + world->items->used;
+
+  strFmt(buffer, "Score: " numberfmt("%.2f") "%%",
+         (double)(actual * 100) / (double)total);
+  printCentered(buffer->data);
+
+  printf("\n");
+
+  strFmt(buffer, underline("CREDITS"));
+  printCentered(buffer->data);
+  printf("\n");
+
+  strFmt(buffer, italic("%s"), world->meta.title);
+  printCentered(buffer->data);
+  strFmt(buffer, "%s", world->meta.author);
+  printCentered(buffer->data);
+  printf("\n");
+
+  strFmt(buffer, "%s", NAME);
+  printCentered(buffer->data);
+  strFmt(buffer, underline("%s"), "https://github.com/shikaan/ttyny");
+  printCentered(buffer->data);
+  printf("\n");
 }
 
 void screenClear(void) { puts("\e[1;1H\e[2J"); }
@@ -151,6 +248,23 @@ void formatWelcomeScreen(string_t *response) {
          NAME, promptfmt("I want to go in the kitchen"),
          promptfmt("Pick up the lamp"), promptfmt("Open this door"),
          commandfmt("/help"));
+}
+
+void printOpeningCredits(const world_t *world) {
+  screenClear();
+  char buffer[1024] = {};
+
+  printf("\n\n\n");
+  snprintf(buffer, sizeof(buffer), fg_yellow(italic("%s")), world->meta.title);
+  printCentered(buffer);
+  printf("\n");
+  snprintf(buffer, sizeof(buffer), "by");
+  printCentered(buffer);
+  snprintf(buffer, sizeof(buffer), bold("%s"), world->meta.author);
+  printCentered(buffer);
+  printf("\n\n\n");
+  snprintf(buffer, sizeof(buffer), "[Press ENTER to continue]");
+  printCentered(buffer);
 }
 
 void formatLocationChange(string_t *response, location_t *l) {
@@ -218,7 +332,7 @@ void formatStatus(string_t *response, const world_t *world) {
          world->location->object.name, world->turns);
 
   if (inventory->used == 0) {
-    strFmtAppend(response, dim(" empty") ".");
+    strFmtAppend(response, dim(" empty"));
   } else {
     for (size_t i = 0; i < inventory->used; i++) {
       item_t *inv_item = bufAt(inventory, i);

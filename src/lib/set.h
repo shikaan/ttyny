@@ -158,6 +158,17 @@ static inline void setDelete(set_t *self, const_set_key_t key) {
   return;
 }
 
+static inline size_t setUsed(const set_t *self) {
+  size_t used = 0;
+  for (size_t i = 0; i < self->size; i++) {
+    set_key_t key = self->keys[i];
+    if (key && key != SET_TOMBSTONE) {
+      used++;
+    }
+  }
+  return used;
+}
+
 static inline void setDestroy(set_t **self) {
   if (!self || !*self)
     return;

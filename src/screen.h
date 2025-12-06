@@ -17,7 +17,8 @@ void printStateUpdate(string_t *);
 void printCommandOutput(string_t *);
 void printDescription(string_t *);
 void printReadable(string_t *);
-void printEndGame(string_t *, game_state_t);
+void printEndGame(string_t *, game_state_t, const world_t *);
+void printOpeningCredits(const world_t *);
 
 void formatWelcomeScreen(string_t *);
 void formatLocationChange(string_t *, location_t *);

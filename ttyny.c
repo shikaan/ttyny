@@ -28,10 +28,11 @@ void completion(const char *buf, linenoiseCompletions *lc) {
   }
 }
 
-int quit(string_t *response, ui_handle_t *loading) {
+int quit(string_t *response, ui_handle_t *loading, const world_t* world) {
   strFmt(response, "Okay, bye!");
   loadingStop(&loading);
   printCommandOutput(response);
+  printEndGame(response, GAME_STATE_DEAD, world);
   return 0;
 }
 
@@ -85,6 +86,9 @@ int main(int argc, char **argv) {
   printCommandOutput(response);
   fgetc(stdin);
   screenClear();
+  printOpeningCredits(world);
+  fgetc(stdin);
+  screenClear();
 
   ui_handle_t *loading = loadingStart();
 
@@ -105,7 +109,7 @@ int main(int argc, char **argv) {
 
     // This is invoked on Ctrl+C/D
     if (!line) {
-      return quit(response, loading);
+      return quit(response, loading, world);
     }
 
     strFmt(input, "%s", line);
@@ -143,7 +147,7 @@ int main(int argc, char **argv) {
         break;
       }
       case COMMAND_TYPE_QUIT: {
-        return quit(response, loading);
+        return quit(response, loading, world);
       }
       case COMMAND_TYPE_UNKNOWN:
       case COMMAND_TYPES:
@@ -357,7 +361,8 @@ int main(int argc, char **argv) {
     if (game_state != GAME_STATE_CONTINUE) {
       masterDescribeEndGame(master, input, world, game_state, response);
       loadingStop(&loading);
-      printEndGame(response, game_state);
+      printDescription(response);
+      printEndGame(response, game_state, world);
       return 0;
     }
 
