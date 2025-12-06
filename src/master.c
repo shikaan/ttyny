@@ -41,7 +41,7 @@ static void summarizeLocation(const location_t *location, string_t *summary) {
 
   size_t i = 0;
   if (!bufIsEmpty(location->items)) {
-    strFmtAppend(summary, "\nITEMS: ");
+    strFmtAppend(summary, "ITEMS: ");
     bufEach(location->items, i) {
       item_t *item = bufAt(location->items, i);
       if (i > 0)
@@ -295,31 +295,37 @@ void masterDescribeAction(master_t *self, const world_t *world,
   const string_t *usr_prompt_tpl = config->prompt_templates[PROMPT_TYPE_USR];
   const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];
 
-  strFmt(self->prompt, sys_prompt_tpl->data, MASTER_ACTION_SYS_PROMPT.data);
-
-  // Using a shot to provide some context
-  strFmtAppend(self->prompt, usr_prompt_tpl->data, "look around");
+  // Need to do it first, else it scrambles the self->prompt
   masterDescribeLocation(self, world->location, self->summary);
+
+  strFmt(self->prompt, sys_prompt_tpl->data, MASTER_ACTION_SYS_PROMPT.data);
+  strFmtAppend(self->prompt, usr_prompt_tpl->data, "look around");
   strFmtAppend(self->prompt, res_prompt_tpl->data, self->summary->data);
 
   if (transition_target && transition_target != object) {
-    char *obj_desc = bufAt(object->descriptions, object->state);
     char *target_initial_desc =
         bufAt(transition_target->descriptions, transition_target_initial_state);
     char *target_desc =
         bufAt(transition_target->descriptions, transition_target->state);
-    strFmt(self->summary, "ACTION: %s\n", input->data);
-    strFmtAppend(self->summary, "TARGET: %s (%s)\n", object->name, obj_desc);
+    strFmt(self->summary,
+           "ACTION: %s\n"
+           "TARGET: %s (%s)\n",
+           input->data, object->name,
+           bufAt(object->descriptions, object->state));
 
     if (transition_target->state != transition_target_initial_state) {
       strFmtAppend(self->summary,
-                   "TRANSITION_TARGET: %s\nTRANSITION_INITIAL_STATE: "
-                   "%s\nTRANSITION_FINAL_STATE: %s\n",
+                   "TRANSITION_TARGET: %s\n"
+                   "TRANSITION_INITIAL_STATE: %s\n"
+                   "TRANSITION_FINAL_STATE: %s\n",
                    transition_target->name, target_initial_desc, target_desc);
     }
   } else {
-    strFmt(self->summary, "ACTION: %s\nTARGET: %s (%s)", input->data,
-           object->name, bufAt(object->descriptions, object->state));
+    strFmt(self->summary,
+           "ACTION: %s\n"
+           "TARGET: %s (%s)\n",
+           input->data, object->name,
+           bufAt(object->descriptions, object->state));
   }
 
   strFmtAppend(self->prompt, usr_prompt_tpl->data, self->summary->data);

@@ -260,7 +260,7 @@ int main(int argc, char **argv) {
       }
 
       object_t *affected = NULL;
-      object_state_t affected_initial_state;
+      object_state_t affected_initial_state = OBJECT_STATE_ANY;
       trans_result = worldExecuteTransition(world, &item->object, action,
                                             &affected, &affected_initial_state);
       if (trans_result != TRANSITION_RESULT_OK &&
@@ -295,7 +295,7 @@ int main(int argc, char **argv) {
       }
 
       object_t *affected = NULL;
-      object_state_t affected_initial_state;
+      object_state_t affected_initial_state = OBJECT_STATE_ANY;
       trans_result = worldExecuteTransition(world, &item->object, action,
                                             &affected, &affected_initial_state);
       if (trans_result != TRANSITION_RESULT_OK &&
@@ -332,7 +332,7 @@ int main(int argc, char **argv) {
       }
 
       object_t *affected = NULL;
-      object_state_t affected_initial_state;
+      object_state_t affected_initial_state = OBJECT_STATE_ANY;
       trans_result = worldExecuteTransition(world, &item->object, action,
                                             &affected, &affected_initial_state);
 
