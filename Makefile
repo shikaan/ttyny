@@ -86,11 +86,12 @@ test-slow:  tests/parser.test
 	 tests/parser.test
 
 .PHONY: test
-test: tests/buffers.test tests/map.test tests/world.test tests/json.test
+test: tests/buffers.test tests/map.test tests/world.test tests/json.test tests/set.test
 	tests/buffers.test
 	tests/map.test
 	tests/world.test
 	tests/json.test
+	tests/set.test
 
 .PHONY: clean
 clean:
