@@ -119,6 +119,7 @@ ai_result_t aiGenerate(ai_t *ai, const string_t *prompt, string_t *response) {
 
   llama_token *tokens = allocate(sizeof(llama_token) * (size_t)tok_count);
   if (!tokens) {
+    deallocate(&tokens);
     return AI_RESULT_ERROR_ALLOCATION_FAILED;
   }
 
