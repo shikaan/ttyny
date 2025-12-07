@@ -628,7 +628,7 @@
         "inventory": null,
         "items": null,
         "locations": null,
-        "turns": 80,
+        "turns": 160,
         "current_location": null
       }
     },
