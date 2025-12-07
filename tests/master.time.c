@@ -39,7 +39,7 @@ void describeLocation(void) {
   info("doing %d measurements\n", SAMPLE_SIZE);
   for (size_t i = 0; i < SAMPLE_SIZE; i++) {
     location_t *room =
-        (location_t *)world->locations->data[i % world->locations->length];
+        (location_t *)world->locations->data[i % world->locations->len];
     strClear(buffer);
     uint64_t elapsed = readTimer();
     masterDescribeLocation(master, room, buffer);

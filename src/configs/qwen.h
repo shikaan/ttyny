@@ -2,7 +2,6 @@
 
 #include "../ai.h"
 #include "../lib/buffers.h"
-#include <time.h>
 
 static const string_t PARSER_ACTION_SYS_PROMPT =
     strConst("Classify the action in one verb.");
@@ -14,16 +13,15 @@ static const string_t PARSER_TARGET_SYS_PROMPT = strConst(
     "Choose the single best option that matches the user's "
     "intent. When there is no match, respond with 'unknown'.");
 
-static const string_t MASTER_WORLD_DESC_SYS_PROMPT = strConst(
-    "You are the narrator of a text adventure game."
-    "Write a vivid, immersive description of LOCATION with this template:\n"
-    "  {Maximum 2 sentences from DESCRIPTION}\n"
-    "  {Describe ITEMS as part of the scene}\n"
-    "  {Describe EXITS as part of the scene}\n"
-    "Instructions:\n"
-    " - Be very concise\n"
-    " - Use 'you' for the player\n"
-    " - Describe only. Don't invent action.");
+static const string_t MASTER_WORLD_DESC_SYS_PROMPT =
+    strConst("You are the narrator of a fantasy text adventure. Write a short "
+             "description based on user input.\n"
+             "- Your description must be based on the provided data.\n"
+             "- The description should follow this template:\n"
+             "  \"{LOCATION in your own words based on DESCRIPTION}. You "
+             "see {ITEMS you see} and {EXITS}.\"\n"
+             "- Always mention every item and every exit by name.\n"
+             "- Write names verbatim as provided.");
 
 static const string_t MASTER_OBJECT_DESC_SYS_PROMPT =
     strConst("You are the narrator of a fantasy game. "
@@ -68,7 +66,7 @@ static config_t PARSER_CONFIG = {
 static config_t NARRATOR_CONFIG = {
     .path = "./models/qwen2.5-1.5b-instruct-q4_k_m.gguf",
     .min_p = 0.05F,
-    .temp = 0.5F,
+    .temp = 0.55F,
     .context_size = 2048,
     .top_k = 30,
     .repetition_penalty = 1.15F,
