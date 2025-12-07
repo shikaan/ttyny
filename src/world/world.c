@@ -52,15 +52,11 @@ void worldDestroy(world_t **self) {
   deallocate(self);
 }
 
-void worldAreRequirementsMet(const world_t *self, requirements_t *requirements,
-                             requirements_result_t *result) {
-#define done(Result)                                                           \
-  *result = Result;                                                            \
-  return
-
+requirements_result_t worldAreRequirementsMet(const world_t *self,
+                                              requirements_t *requirements) {
   if (requirements->turns != 0) {
     if (self->turns < requirements->turns) {
-      done(REQUIREMENTS_RESULT_NOT_ENOUGH_TURNS);
+      return REQUIREMENTS_RESULT_NOT_ENOUGH_TURNS;
     }
   }
 
@@ -73,10 +69,10 @@ void worldAreRequirementsMet(const world_t *self, requirements_t *requirements,
         item_t *inventory_item = bufAt(self->inventory, (size_t)idx);
         if (tuple.state != OBJECT_STATE_ANY &&
             tuple.state != inventory_item->object.state) {
-          done(REQUIREMENTS_RESULT_INVALID_INVENTORY_ITEM);
+          return REQUIREMENTS_RESULT_INVALID_INVENTORY_ITEM;
         }
       } else {
-        done(REQUIREMENTS_RESULT_MISSING_INVENTORY_ITEM);
+        return REQUIREMENTS_RESULT_MISSING_INVENTORY_ITEM;
       }
     }
   }
@@ -89,10 +85,10 @@ void worldAreRequirementsMet(const world_t *self, requirements_t *requirements,
         item_t *world_item = bufAt(self->items, (size_t)idx);
         if (tuple.state != OBJECT_STATE_ANY &&
             tuple.state != world_item->object.state) {
-          done(REQUIREMENTS_RESULT_INVALID_WORLD_ITEM);
+          return REQUIREMENTS_RESULT_INVALID_WORLD_ITEM;
         }
       } else {
-        done(REQUIREMENTS_RESULT_MISSING_WORLD_ITEM);
+        return REQUIREMENTS_RESULT_MISSING_WORLD_ITEM;
       }
     }
   }
@@ -105,7 +101,7 @@ void worldAreRequirementsMet(const world_t *self, requirements_t *requirements,
       location_t *world_location = bufAt(self->locations, (size_t)idx);
       if (tuple.state != OBJECT_STATE_ANY &&
           tuple.state != world_location->object.state) {
-        done(REQUIREMENTS_RESULT_INVALID_LOCATION);
+        return REQUIREMENTS_RESULT_INVALID_LOCATION;
       }
     }
   }
@@ -114,22 +110,21 @@ void worldAreRequirementsMet(const world_t *self, requirements_t *requirements,
     panicif(!self->location, "current location cannot be null");
     requirement_tuple_t *tuple = requirements->current_location;
     if (!objectNameEq(tuple->name, self->location->object.name)) {
-      done(REQUIREMENTS_RESULT_CURRENT_LOCATION_MISMATCH);
+      return REQUIREMENTS_RESULT_CURRENT_LOCATION_MISMATCH;
     }
     if (tuple->state != OBJECT_STATE_ANY &&
         tuple->state != self->location->object.state) {
-      done(REQUIREMENTS_RESULT_INVALID_CURRENT_LOCATION);
+      return REQUIREMENTS_RESULT_INVALID_CURRENT_LOCATION;
     }
   }
 
   if (requirements->turns != 0 || requirements->inventory ||
       requirements->items || requirements->locations ||
       requirements->current_location) {
-    done(REQUIREMENTS_RESULT_OK);
+    return REQUIREMENTS_RESULT_OK;
   }
 
-  done(REQUIREMENTS_RESULT_NO_REQUIREMENTS);
-#undef done
+  return REQUIREMENTS_RESULT_NO_REQUIREMENTS;
 }
 
 static inline object_t *findObjectByName(const world_t *self,
@@ -167,8 +162,8 @@ worldExecuteTransition(const world_t *self, const object_t *object,
 
     if (transition.action == action &&
         target_object->state == transition.from) {
-      worldAreRequirementsMet(self, transition.requirements,
-                              &requirements_result);
+      requirements_result =
+          worldAreRequirementsMet(self, transition.requirements);
       switch (requirements_result) {
       case REQUIREMENTS_RESULT_MISSING_INVENTORY_ITEM:
       case REQUIREMENTS_RESULT_MISSING_WORLD_ITEM:
@@ -234,7 +229,7 @@ void worldDigest(world_t *self, game_state_t *result) {
   requirements_result_t requirements_result;
   bufEach(self->endings, i) {
     ending_t *ending = bufAt(self->endings, i);
-    worldAreRequirementsMet(self, ending->requirements, &requirements_result);
+    requirements_result = worldAreRequirementsMet(self, ending->requirements);
 
     if (requirements_result == REQUIREMENTS_RESULT_OK) {
       *result = ending->success ? GAME_STATE_VICTORY : GAME_STATE_DEAD;
