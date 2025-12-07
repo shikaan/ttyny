@@ -253,16 +253,16 @@ void requirements(void) {
       .turns = 0,
   };
 
-  worldAreRequirementsMet(&w, &reqs_inv, &rr);
+  rr = worldAreRequirementsMet(&w, &reqs_inv);
   expectEqlu(rr, REQUIREMENTS_RESULT_OK, "inventory: ok");
 
   req_inv.data[0].state = 1;
-  worldAreRequirementsMet(&w, &reqs_inv, &rr);
+  rr = worldAreRequirementsMet(&w, &reqs_inv);
   expectEqlu(rr, REQUIREMENTS_RESULT_INVALID_INVENTORY_ITEM, "inventory: invalid");
 
   req_inv.data[0].state = 0;
   w.inventory = &no_items;
-  worldAreRequirementsMet(&w, &reqs_inv, &rr);
+  rr = worldAreRequirementsMet(&w, &reqs_inv);
   expectEqlu(rr, REQUIREMENTS_RESULT_MISSING_INVENTORY_ITEM, "inventory: missing");
   w.inventory = &items; // restore
 
@@ -275,19 +275,19 @@ void requirements(void) {
       .turns = 0,
   };
 
-  worldAreRequirementsMet(&w, &reqs_items, &rr);
+  rr = worldAreRequirementsMet(&w, &reqs_items);
   expectEqlu(rr, REQUIREMENTS_RESULT_OK, "items: ok");
 
   // Change world item state so requirement tuple mismatches
   item_1.object.state = 1;
-  worldAreRequirementsMet(&w, &reqs_items, &rr);
+  rr = worldAreRequirementsMet(&w, &reqs_items);
   expectEqlu(rr, REQUIREMENTS_RESULT_INVALID_WORLD_ITEM, "items: invalid");
   item_1.object.state = 0; // restore
 
   // Missing world item name
   char missing_name[] ="missing";
   req_items.data[0].name = missing_name;
-  worldAreRequirementsMet(&w, &reqs_items, &rr);
+  rr = worldAreRequirementsMet(&w, &reqs_items);
   expectEqlu(rr, REQUIREMENTS_RESULT_MISSING_WORLD_ITEM, "items: missing");
   req_items.data[0].name = tool_name; // restore
 
@@ -307,12 +307,12 @@ void requirements(void) {
       .turns = 0,
   };
 
-  worldAreRequirementsMet(&w, &reqs_locs, &rr);
+  rr = worldAreRequirementsMet(&w, &reqs_locs);
   expectEqlu(rr, REQUIREMENTS_RESULT_OK, "locations: ok");
 
   // Invalid location state
   loc_1.object.state = 1;
-  worldAreRequirementsMet(&w, &reqs_locs, &rr);
+  rr = worldAreRequirementsMet(&w, &reqs_locs);
   expectEqlu(rr, REQUIREMENTS_RESULT_INVALID_LOCATION, "location: invalid");
   loc_1.object.state = 0; // restore
 
@@ -324,10 +324,10 @@ void requirements(void) {
       .turns = 3,
   };
   w.turns = 2;
-  worldAreRequirementsMet(&w, &reqs_turns, &rr);
+  rr = worldAreRequirementsMet(&w, &reqs_turns);
   expectEqlu(rr, REQUIREMENTS_RESULT_NOT_ENOUGH_TURNS, "turns not enough");
   w.turns = 3;
-  worldAreRequirementsMet(&w, &reqs_turns, &rr);
+  rr = worldAreRequirementsMet(&w, &reqs_turns);
   expectEqlu(rr, REQUIREMENTS_RESULT_OK, "turns enough");
 
   case("current_location");
@@ -340,18 +340,18 @@ void requirements(void) {
       .current_location = &tuple,
       .turns = 0,
   };
-  worldAreRequirementsMet(&w, &reqs_current_loc, &rr);
+  rr = worldAreRequirementsMet(&w, &reqs_current_loc);
   expectEqlu(rr, REQUIREMENTS_RESULT_OK, "current_location: ok");
 
   w.location->object.state = 1;
-  worldAreRequirementsMet(&w, &reqs_current_loc, &rr);
+  rr = worldAreRequirementsMet(&w, &reqs_current_loc);
   expectEqlu(rr, REQUIREMENTS_RESULT_INVALID_CURRENT_LOCATION, "current_location: invalid");
   w.location->object.state = 0;
 
   static char other_place_desc_str[] = "other_place";
   static location_t loc_2 = {{other_place_desc_str, OBJECT_TYPE_LOCATION, 0, &loc_desc, NULL}, NULL, NULL};
   w.location = &loc_2;
-  worldAreRequirementsMet(&w, &reqs_current_loc, &rr);
+  rr = worldAreRequirementsMet(&w, &reqs_current_loc);
   expectEqlu(rr, REQUIREMENTS_RESULT_CURRENT_LOCATION_MISMATCH, "current_location: mismatch");
   w.location = &loc_1; // restore
 
@@ -362,7 +362,7 @@ void requirements(void) {
       .locations = NULL,
       .turns = 0,
   };
-  worldAreRequirementsMet(&w, &reqs_none, &rr);
+  rr = worldAreRequirementsMet(&w, &reqs_none);
   expectEqlu(rr, REQUIREMENTS_RESULT_NO_REQUIREMENTS, "no requirements result");
 
   case("multiple requirements");
@@ -376,17 +376,17 @@ void requirements(void) {
   };
 
   w.turns = 2;
-  worldAreRequirementsMet(&w, &reqs_inv_and_turns, &rr);
+  rr = worldAreRequirementsMet(&w, &reqs_inv_and_turns);
   expectEqlu(rr, REQUIREMENTS_RESULT_NOT_ENOUGH_TURNS, "not ok if only inventory is satisfied");
 
   w.turns = 3;
   req_inv_multi.data[0].state = 1; // require state 1 but item is 0
-  worldAreRequirementsMet(&w, &reqs_inv_and_turns, &rr);
+  rr = worldAreRequirementsMet(&w, &reqs_inv_and_turns);
   expectEqlu(rr, REQUIREMENTS_RESULT_INVALID_INVENTORY_ITEM, "not ok if only turns is satisfied");
 
   req_inv_multi.data[0].state = 0;
   w.turns = 3;
-  worldAreRequirementsMet(&w, &reqs_inv_and_turns, &rr);
+  rr = worldAreRequirementsMet(&w, &reqs_inv_and_turns);
   expectEqlu(rr, REQUIREMENTS_RESULT_OK, "ok when both are satisfied");
 }
 

@@ -83,5 +83,4 @@ transition_result_t worldExecuteTransition(const world_t *, const object_t *,
 // Check whether the game is over and returns the game state
 void worldDigest(world_t *, game_state_t *);
 
-void worldAreRequirementsMet(const world_t *, requirements_t *,
-                             requirements_result_t *);
+requirements_result_t worldAreRequirementsMet(const world_t *, requirements_t *);
