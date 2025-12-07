@@ -13,10 +13,6 @@
 #define GPU_LAYERS 99
 static const char STOP_CHARS[] = {'[', '*', '('};
 
-#define throw(Error)                                                           \
-  *result = Error;                                                             \
-  goto error;
-
 static int containsStopChar(char string[]) {
   for (size_t i = 0; i < arrLen(STOP_CHARS); i++) {
     if (strchr(string, STOP_CHARS[i]) != NULL) {
@@ -33,15 +29,14 @@ static void filterLogs(enum ggml_log_level level, const char *text,
   (void)data;
 }
 
-static void initSampler(ai_t *ai, ai_result_t *res, config_t *configuration) {
+static ai_result_t initSampler(ai_t *ai, config_t *configuration) {
   if (ai->sampler) {
     llama_sampler_free(ai->sampler);
   }
 
   ai->sampler = llama_sampler_chain_init(llama_sampler_chain_default_params());
   if (!ai->sampler) {
-    *res = AI_RESULT_ERROR;
-    return;
+    return AI_RESULT_ERROR;
   }
 
   if (configuration->grammar) {
@@ -49,8 +44,7 @@ static void initSampler(ai_t *ai, ai_result_t *res, config_t *configuration) {
         ai->vocabulary, configuration->grammar->data, "root");
 
     if (!grammar_sampler) {
-      *res = AI_RESULT_ERROR;
-      return;
+      return AI_RESULT_ERROR;
     }
     llama_sampler_chain_add(ai->sampler, grammar_sampler);
   }
@@ -68,10 +62,14 @@ static void initSampler(ai_t *ai, ai_result_t *res, config_t *configuration) {
   uint32_t seed =
       configuration->seed == 0 ? (uint32_t)time(NULL) : configuration->seed;
   llama_sampler_chain_add(ai->sampler, llama_sampler_init_dist(seed));
-  *res = AI_RESULT_OK;
+  return AI_RESULT_OK;
 }
 
 ai_t *aiCreate(config_t *configuration, ai_result_t *result) {
+#define throw(Error)                                                           \
+  *result = Error;                                                             \
+  goto error;
+
   llama_log_set(filterLogs, NULL);
 
   ai_t *ai = allocate(sizeof(ai_t));
@@ -97,7 +95,10 @@ ai_t *aiCreate(config_t *configuration, ai_result_t *result) {
     throw(AI_RESULT_ERROR_CREATE_CONTEXT_FAILED);
   }
 
-  initSampler(ai, result, configuration);
+  *result = initSampler(ai, configuration);
+  if (*result != AI_RESULT_OK) {
+    throw(*result);
+  }
 
   ai->configuration = configuration;
   *result = AI_RESULT_OK;
@@ -106,10 +107,10 @@ ai_t *aiCreate(config_t *configuration, ai_result_t *result) {
 error:
   aiDestroy(&ai);
   return NULL;
+#undef throw
 }
 
-void aiGenerate(ai_t *ai, ai_result_t *result, const string_t *prompt,
-                string_t *response) {
+ai_result_t aiGenerate(ai_t *ai, const string_t *prompt, string_t *response) {
   const bool is_first =
       llama_memory_seq_pos_max(llama_get_memory(ai->context), 0) == -1;
 
@@ -118,12 +119,13 @@ void aiGenerate(ai_t *ai, ai_result_t *result, const string_t *prompt,
 
   llama_token *tokens = allocate(sizeof(llama_token) * (size_t)tok_count);
   if (!tokens) {
-    throw(AI_RESULT_ERROR_ALLOCATION_FAILED);
+    return AI_RESULT_ERROR_ALLOCATION_FAILED;
   }
 
   if (llama_tokenize(ai->vocabulary, prompt->data, (int)prompt->used, tokens,
                      tok_count, is_first, true) < 0) {
-    throw(AI_RESULT_ERROR_TOKENIZATION_FAILED);
+    deallocate(&tokens);
+    return AI_RESULT_ERROR_TOKENIZATION_FAILED;
   }
 
   llama_batch batch = llama_batch_get_one(tokens, tok_count);
@@ -135,11 +137,13 @@ void aiGenerate(ai_t *ai, ai_result_t *result, const string_t *prompt,
     llama_pos current_context_length = llama_memory_seq_pos_max(memory, 0) + 1;
 
     if (current_context_length + batch.n_tokens > (int)context_size) {
-      throw(AI_RESULT_ERROR_CONTEXT_LENGTH_EXCEEDED);
+      deallocate(&tokens);
+      return AI_RESULT_ERROR_CONTEXT_LENGTH_EXCEEDED;
     }
 
     if (llama_decode(ai->context, batch) != 0) {
-      throw(AI_RESULT_ERROR_BATCH_DECODING_FAILED);
+      deallocate(&tokens);
+      return AI_RESULT_ERROR_BATCH_DECODING_FAILED;
     };
 
     token_id = llama_sampler_sample(ai->sampler, ai->context, -1);
@@ -153,35 +157,36 @@ void aiGenerate(ai_t *ai, ai_result_t *result, const string_t *prompt,
         ai->vocabulary, token_id, parsed_token, sizeof(parsed_token), 0, false);
 
     if (offset < 0) {
-      throw(AI_RESULT_ERROR_TOKEN_PARSING_FAILED);
+      deallocate(&tokens);
+      return AI_RESULT_ERROR_TOKEN_PARSING_FAILED;
     }
 
     if (containsStopChar(parsed_token)) {
-      throw(AI_RESULT_ERROR_INVALID_OUTPUT_DETECTED);
+      deallocate(&tokens);
+      return AI_RESULT_ERROR_INVALID_OUTPUT_DETECTED;
     }
 
     if (response->used + (size_t)offset > response->length) {
-      throw(AI_RESULT_ERROR_RESPONSE_LENGTH_EXCEEDED);
+      deallocate(&tokens);
+      return AI_RESULT_ERROR_RESPONSE_LENGTH_EXCEEDED;
     }
 
     strFmtAppend(response, "%s", parsed_token);
     batch = llama_batch_get_one(&token_id, 1);
   }
 
-  *result = AI_RESULT_OK;
-error:
-  deallocate(&tokens);
+  return AI_RESULT_OK;
 }
 
-void aiSetGrammar(ai_t *self, ai_result_t *result, string_t *grammar) {
+ai_result_t aiSetGrammar(ai_t *self, string_t *grammar) {
   self->configuration->grammar = grammar;
   llama_memory_clear(llama_get_memory(self->context), true);
-  initSampler(self, result, self->configuration);
+  return initSampler(self, self->configuration);
 }
 
-void aiReset(ai_t *self, ai_result_t *result) {
+ai_result_t aiReset(ai_t *self) {
   llama_memory_clear(llama_get_memory(self->context), true);
-  initSampler(self, result, self->configuration);
+  return initSampler(self, self->configuration);
 }
 
 void aiDestroy(ai_t **self) {
@@ -241,5 +246,3 @@ void aiResultFormat(ai_result_t res, string_t *response) {
     return;
   }
 }
-
-#undef throw

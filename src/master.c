@@ -180,9 +180,9 @@ static void generateAndValidate(ai_t *ai, const string_t *prompt,
 #endif
   for (size_t i = 0; i < MAX_ATTEMPTS && !valid; i++) {
     strClear(response);
-    aiReset(ai, &result);
+    result = aiReset(ai);
     panicif(result != AI_RESULT_OK, "cannot reset model state");
-    aiGenerate(ai, &result, prompt, response);
+    result = aiGenerate(ai, prompt, response);
     if (result != AI_RESULT_OK) {
       valid = 0;
       continue;
