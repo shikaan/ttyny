@@ -109,6 +109,7 @@ void parserGetOperation(parser_t *self, operation_t *operation,
   ai_result_t result = aiSetGrammar(self->ai, &ACTION_GRAMMAR);
   panicif(result != AI_RESULT_OK, "cannot set grammar");
   strClear(self->response);
+  debug("%s", self->prompt->data);
   result = aiGenerate(self->ai, self->prompt, self->response);
   panicif(result != AI_RESULT_OK, "cannot generate response");
 

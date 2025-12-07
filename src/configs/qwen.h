@@ -14,15 +14,16 @@ static const string_t PARSER_TARGET_SYS_PROMPT = strConst(
     "Choose the single best option that matches the user's "
     "intent. When there is no match, respond with 'unknown'.");
 
-static const string_t MASTER_WORLD_DESC_SYS_PROMPT =
-    strConst("You are the narrator of a fantasy text adventure. Write a short "
-             "description based on user input.\n"
-             "- Your description must be based on the provided data.\n"
-             "- The description should follow this template:\n"
-             "  \"The {LOCATION}, {your own words based on DESCRIPTION and "
-             "STATE}. You see {ITEMS} and {EXITS}.\"\n"
-             "- Always mention every item and every exit by name.\n"
-             "- Keep the names of items and exits exactly as provided.");
+static const string_t MASTER_WORLD_DESC_SYS_PROMPT = strConst(
+    "You are the narrator of a text adventure game."
+    "Write a vivid, immersive description of LOCATION with this template:\n"
+    "  {Maximum 2 sentences from DESCRIPTION}\n"
+    "  {Describe ITEMS as part of the scene}\n"
+    "  {Describe EXITS as part of the scene}\n"
+    "Instructions:\n"
+    " - Be very concise\n"
+    " - Use 'you' for the player\n"
+    " - Describe only. Don't invent action.");
 
 static const string_t MASTER_OBJECT_DESC_SYS_PROMPT =
     strConst("You are the narrator of a fantasy game. "
