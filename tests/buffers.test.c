@@ -108,13 +108,15 @@ void buffer(void) {
   expectEqllu(buf_empty->len, buf_2->len, "pushes to an empty list");
 
   case("bufRemove");
+  size_t initial_len = buf_empty->len;
   bufRemove(buf_empty, bufAt(buf_2, 0), 0);
-  expectEqllu(buf_empty->len, 0, "removes element if found");
+  expectEqllu(buf_empty->len, initial_len-1, "removes element if found");
 
+  initial_len = buf_empty->len;
   bufRemove(buf_empty, bufAt(buf_2, 0), 0);
-  expectEqllu(buf_empty->len, 0, "does nothing on empty list");
+  expectEqllu(buf_empty->len, initial_len, "does nothing on empty list");
 
-  size_t initial_len = buf_2->cap;
+  initial_len = buf_2->len;
   bufRemove(buf_2, 99, 0);
   expectEqllu(buf_2->len, initial_len, "doesn't change capacity if not found");
 
