@@ -4,9 +4,9 @@
 #include <stddef.h>
 
 typedef Buffer(int) test_buffer_t;
-static test_buffer_t *testBufferCreate(size_t length) {
+static test_buffer_t *testBufferCreate(size_t capacity) {
   test_buffer_t *result;
-  bufCreate(test_buffer_t, int, result, length);
+  bufCreate(test_buffer_t, int, result, capacity);
   return result;
 }
 static void testBufferDestroy(test_buffer_t **self) { deallocate(self); }
@@ -17,65 +17,65 @@ static int testBufferFind(test_buffer_t *self, int item) {
 void stringCreate(void) {
   string_t *subject cleanup(strDestroy) = strCreate(3);
   expectEqls(subject->data, "", 3, "has correct content");
-  expectEqllu(subject->length, 3, "has correct length");
-  expectEqllu(subject->used, 0, "has correct used");
+  expectEqllu(subject->cap, 3, "has correct capacity");
+  expectEqllu(subject->len, 0, "has correct length");
   strDestroy(&subject);
 }
 
 void stringFrom(void) {
   string_t *subject cleanup(strDestroy) = strFrom("lol");
   expectEqls(subject->data, "lol", 3, "has correct content");
-  expectEqllu(subject->length, 3, "has correct length");
-  expectEqllu(subject->used, 3, "has correct used");
+  expectEqllu(subject->cap, 3, "has correct capacity");
+  expectEqllu(subject->len, 3, "has correct length");
 }
 
 void stringFormat(void) {
   string_t *subject cleanup(strDestroy) = strCreate(4);
   strFmt(subject, "%s", "longer");
   expectEqls(subject->data, "long", 4, "truncates content");
-  expectEqllu(subject->used, 4, "has correct used");
+  expectEqllu(subject->len, 4, "has correct length");
 
   strFmt(subject, "%s", "rr");
-  expectEqls(subject->data, "rr", subject->length, "overwrites content");
-  expectEqllu(subject->used, 2, "has correct used");
+  expectEqls(subject->data, "rr", subject->cap, "overwrites content");
+  expectEqllu(subject->len, 2, "has correct length");
 }
 
 void stringClear(void) {
   string_t *subject cleanup(strDestroy) = strFrom("hello");
-  size_t length = subject->length;
+  size_t capacity = subject->cap;
   strClear(subject);
-  expectEqls(subject->data, "", length, "truncates content");
-  expectEqllu(subject->length, length, "preserves length");
-  expectEqllu(subject->used, 0, "updates used");
+  expectEqls(subject->data, "", capacity, "truncates content");
+  expectEqllu(subject->cap, capacity, "preserves capacity");
+  expectEqllu(subject->len, 0, "updates length");
 }
 
 void stringTrim(void) {
   string_t *subject cleanup(strDestroy) = strCreate(128);
 
   strFmt(subject, "%s", "         hello");
-  size_t length = subject->length;
+  size_t capacity = subject->cap;
   strTrim(subject);
-  expectEqls(subject->data, "hello", length, "trims left");
+  expectEqls(subject->data, "hello", capacity, "trims left");
 
   strFmt(subject, "%s", "hello     ");
   strTrim(subject);
-  expectEqls(subject->data, "hello", length, "trims right");
+  expectEqls(subject->data, "hello", capacity, "trims right");
 
   strFmt(subject, "%s", "        hello     ");
   strTrim(subject);
-  expectEqls(subject->data, "hello", length, "trims both");
+  expectEqls(subject->data, "hello", capacity, "trims both");
 
   strFmt(subject, "%s", "hello");
   strTrim(subject);
-  expectEqls(subject->data, "hello", length, "trims nothing");
+  expectEqls(subject->data, "hello", capacity, "trims nothing");
 
   strFmt(subject, "%s", "he llo");
   strTrim(subject);
-  expectEqls(subject->data, "he llo", length, "trims nothing (whitespaces)");
+  expectEqls(subject->data, "he llo", capacity, "trims nothing (whitespaces)");
 
   strFmt(subject, "%s", "    ");
   strTrim(subject);
-  expectEqls(subject->data, "", length, "trims everything");
+  expectEqls(subject->data, "", capacity, "trims everything");
 }
 
 void buffer(void) {
@@ -86,37 +86,37 @@ void buffer(void) {
   test_buffer_t *buf_empty cleanup(testBufferDestroy) = testBufferCreate(1);
 
   case("bufCreate");
-  expectEqllu(buf_1->length, 2, "has correct length");
-  expectEqllu(buf_1->used, 0, "has correct used");
+  expectEqllu(buf_1->cap, 2, "has correct capacity");
+  expectEqllu(buf_1->len, 0, "has correct length");
 
   case("bufPush");
-  panicif(buf_2->used != 0, "unexpected filled buffer");
+  panicif(buf_2->len != 0, "unexpected filled buffer");
   bufPush(buf_2, 1);
-  expectEqllu(buf_2->used, 1, "increments used");
+  expectEqllu(buf_2->len, 1, "increments length");
   bufPush(buf_1, 2);
 
   case("bufCat");
   bufCat(buf_1, buf_2);
-  expectEqllu(buf_1->used, 2, "increases used");
+  expectEqllu(buf_1->len, 2, "increases length");
   expectEqli(bufAt(buf_1, 1), 1, "concatenates correctly");
-  expectEqllu(buf_2->used, 1, "does not change other buffer");
+  expectEqllu(buf_2->len, 1, "does not change other buffer");
 
   bufCat(buf_2, buf_empty);
-  expectEqllu(buf_2->used, 1, "pushes an empty list");
+  expectEqllu(buf_2->len, 1, "pushes an empty list");
 
   bufCat(buf_empty, buf_2);
-  expectEqllu(buf_empty->used, buf_2->used, "pushes to an empty list");
+  expectEqllu(buf_empty->len, buf_2->len, "pushes to an empty list");
 
   case("bufRemove");
   bufRemove(buf_empty, bufAt(buf_2, 0), 0);
-  expectEqllu(buf_empty->used, 0, "removes element if found");
+  expectEqllu(buf_empty->len, 0, "removes element if found");
 
   bufRemove(buf_empty, bufAt(buf_2, 0), 0);
-  expectEqllu(buf_empty->used, 0, "does nothing on empty list");
+  expectEqllu(buf_empty->len, 0, "does nothing on empty list");
 
-  size_t initial_len = buf_2->length;
+  size_t initial_len = buf_2->cap;
   bufRemove(buf_2, 99, 0);
-  expectEqllu(buf_2->used, initial_len, "doesn't change length if not found");
+  expectEqllu(buf_2->len, initial_len, "doesn't change capacity if not found");
 
   case("bufFind");
   int idx = testBufferFind(buf_empty, 0);

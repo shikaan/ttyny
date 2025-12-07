@@ -12,71 +12,69 @@
 
 #define Buffer(Type)                                                           \
   struct {                                                                     \
-    size_t length;                                                             \
-    size_t used;                                                               \
+    size_t cap;                                                                \
+    size_t len;                                                                \
     Type data[];                                                               \
   }
 
-#define bufInit(Length, Used, ...)                                             \
+#define bufInit(Cap, Len, ...)                                                 \
   {                                                                            \
-      (Length),                                                                \
-      (Used),                                                                  \
+      (Cap),                                                                   \
+      (Len),                                                                   \
       {__VA_ARGS__},                                                           \
   }
 
-#define bufConst(Length, ...) bufInit(Length, Length, __VA_ARGS__)
+#define bufConst(Cap, ...) bufInit(Cap, Cap, __VA_ARGS__)
 
 #define bufAt(BufferPtr, Index)                                                \
-  (panicif((Index) >= (BufferPtr)->length || Index < 0,                        \
-           "index out of bounds"),                                             \
+  (panicif((Index) >= (BufferPtr)->cap || Index < 0, "index out of bounds"),   \
    (BufferPtr)->data[(Index)])
 
 #define bufSet(BufferPtr, Index, Value)                                        \
   {                                                                            \
-    panicif((Index) >= (BufferPtr)->length || Index < 0,                       \
-            "index out of bounds");                                            \
+    panicif((Index) >= (BufferPtr)->cap || Index < 0, "index out of bounds");  \
     (BufferPtr)->data[(Index)] = (Value);                                      \
   }
 
 #define bufPush(BufferPtr, Value)                                              \
   {                                                                            \
-    bufSet((BufferPtr), (BufferPtr)->used, (Value));                           \
-    (BufferPtr)->used++;                                                       \
+    bufSet((BufferPtr), (BufferPtr)->len, (Value));                            \
+    (BufferPtr)->len++;                                                        \
   }
 
 #define bufClear(BufferPtr, NullValue)                                         \
   {                                                                            \
     bufSet((BufferPtr), (size_t)0, (NullValue));                               \
-    (BufferPtr)->used = 0;                                                     \
+    (BufferPtr)->len = 0;                                                      \
   }
 
-#define bufCreate(BufferType, ItemType, Result, Length)                        \
+#define bufCreate(BufferType, ItemType, Result, Cap)                           \
   const size_t size = sizeof(BufferType);                                      \
-  Result = allocate(size + ((unsigned)(Length) * sizeof(ItemType)));           \
+  Result = allocate(size + ((unsigned)(Cap) * sizeof(ItemType)));              \
   if (!Result) {                                                               \
     return NULL;                                                               \
   }                                                                            \
-  Result->length = Length;                                                     \
-  Result->used = 0;
+  Result->cap = Cap;                                                           \
+  Result->len = 0;
 
-#define bufEach(BufferPtr, Index) for ((Index) = 0; i < (BufferPtr)->used; i++)
+#define bufEach(BufferPtr, Index) for ((Index) = 0; i < (BufferPtr)->len; i++)
 
 #define bufCat(BufferPtr, OtherBufferPtr)                                      \
   {                                                                            \
     size_t i;                                                                  \
-    bufEach(OtherBufferPtr, i) {                                                    \
+    bufEach(OtherBufferPtr, i) {                                               \
       bufPush((BufferPtr), bufAt((OtherBufferPtr), i));                        \
     }                                                                          \
   }
 
-#define bufRemove(BufferPtr, Item, NullValue)                                             \
+#define bufRemove(BufferPtr, Item, NullValue)                                  \
   {                                                                            \
     size_t i;                                                                  \
     bufEach(BufferPtr, i) {                                                    \
       if (bufAt(BufferPtr, i) == Item) {                                       \
-        bufSet(BufferPtr, i, bufAt(BufferPtr, (BufferPtr)->used - 1));           \
-        bufSet(BufferPtr, (BufferPtr)->used - 1, (NullValue));                          \
-        (BufferPtr)->used--;                                                     \
+        bufSet(BufferPtr, i, bufAt(BufferPtr, (BufferPtr)->len - 1));          \
+        bufSet(BufferPtr, (BufferPtr)->len - 1, (NullValue));                  \
+        (BufferPtr)->len--;                                                    \
         break;                                                                 \
       }                                                                        \
     }                                                                          \
@@ -93,7 +91,7 @@
     return -1;                                                                 \
   }
 
-#define bufIsEmpty(BufferPtr) (!(BufferPtr)->used)
+#define bufIsEmpty(BufferPtr) (!(BufferPtr)->len)
 
 // String
 typedef Buffer(char) string_t;
@@ -101,30 +99,30 @@ typedef Buffer(char) string_t;
 #define strConst(String)                                                       \
   {                                                                            \
       .data = String,                                                          \
-      .used = sizeof(String) - 1,                                              \
-      .length = sizeof(String) - 1,                                            \
+      .len = sizeof(String) - 1,                                               \
+      .cap = sizeof(String) - 1,                                               \
   }
 
-static inline string_t *strCreate(size_t length) {
+static inline string_t *strCreate(size_t cap) {
   string_t *result = NULL;
-  bufCreate(string_t, char, result, length + 1);
-  result->length = length;
-  result->data[length] = 0;
+  bufCreate(string_t, char, result, cap + 1);
+  result->cap = cap;
+  result->data[cap] = 0;
   return result;
 }
 
 static inline string_t *strFrom(const char *initial) {
-  size_t length = strlen(initial);
-  string_t *result = strCreate(length);
+  size_t cap = strlen(initial);
+  string_t *result = strCreate(cap);
   if (!result) {
     return NULL;
   }
 
-  for (size_t i = 0; i < length; i++) {
+  for (size_t i = 0; i < cap; i++) {
     bufSet(result, i, initial[i]);
   }
 
-  result->used = length;
+  result->len = cap;
   return result;
 }
 
@@ -135,20 +133,20 @@ static inline void strFmtOffset(string_t *self, size_t offset, const char *fmt,
   va_list arguments;
   va_start(arguments, fmt);
   int end_offset =
-      vsnprintf(self->data + offset, self->length + 1 - offset, fmt, arguments);
+      vsnprintf(self->data + offset, self->cap + 1 - offset, fmt, arguments);
   va_end(arguments);
 
   if (end_offset < 0) {
     self->data[0] = 0;
-    self->used = 0;
+    self->len = 0;
     return;
   }
 
-  if ((size_t)end_offset + offset > self->length) {
+  if ((size_t)end_offset + offset > self->cap) {
     // Truncated
-    self->used = self->length;
+    self->len = self->cap;
   } else {
-    self->used = (size_t)end_offset + offset;
+    self->len = (size_t)end_offset + offset;
   }
 }
 
@@ -156,35 +154,35 @@ static inline void strFmtOffset(string_t *self, size_t offset, const char *fmt,
   strFmtOffset(Self, 0, Fmt __VA_OPT__(, __VA_ARGS__));
 
 #define strFmtAppend(Self, Fmt, ...)                                           \
-  strFmtOffset(Self, (Self)->used, Fmt __VA_OPT__(, __VA_ARGS__));
+  strFmtOffset(Self, (Self)->len, Fmt __VA_OPT__(, __VA_ARGS__));
 
 static inline void strCat(string_t *self, const string_t *other) {
-  size_t available = self->length - self->used;
-  size_t to_copy = other->used < available ? other->used : available;
+  size_t available = self->cap - self->len;
+  size_t to_copy = other->len < available ? other->len : available;
 
-  memcpy(self->data + self->used, other->data, to_copy);
-  self->used += to_copy;
+  memcpy(self->data + self->len, other->data, to_copy);
+  self->len += to_copy;
 
-  self->data[self->used] = 0;
+  self->data[self->len] = 0;
 }
 
 static inline int strEq(const string_t *self, const string_t *other) {
-  return self->used == other->used &&
-         (strncmp(self->data, other->data, self->used) == 0);
+  return self->len == other->len &&
+         (strncmp(self->data, other->data, self->len) == 0);
 }
 
 static inline int strStartsWith(const string_t *haysack,
                                 const string_t *needle) {
-  return haysack->used >= needle->used &&
-         (strncmp(haysack->data, needle->data, needle->used) == 0);
+  return haysack->len >= needle->len &&
+         (strncmp(haysack->data, needle->data, needle->len) == 0);
 }
 
 static inline void strTrim(string_t *self) {
   size_t begin = 0;
-  while (begin < self->used && isspace(bufAt(self, begin)))
+  while (begin < self->len && isspace(bufAt(self, begin)))
     begin++;
 
-  size_t end = self->used - 1;
+  size_t end = self->len - 1;
   while (end > begin && isspace(bufAt(self, end)))
     end--;
 
@@ -192,11 +190,11 @@ static inline void strTrim(string_t *self) {
     bufSet(self, i, bufAt(self, i + begin));
   }
 
-  for (size_t i = end - begin + 1; i < self->used; i++) {
+  for (size_t i = end - begin + 1; i < self->len; i++) {
     bufSet(self, i, '\0');
   }
 
-  self->used = end - begin + 1;
+  self->len = end - begin + 1;
 }
 
 static inline string_t *strDup(const string_t *self) {

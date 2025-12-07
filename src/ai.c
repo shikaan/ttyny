@@ -115,14 +115,14 @@ ai_result_t aiGenerate(ai_t *ai, const string_t *prompt, string_t *response) {
       llama_memory_seq_pos_max(llama_get_memory(ai->context), 0) == -1;
 
   const int tok_count = -llama_tokenize(
-      ai->vocabulary, prompt->data, (int)prompt->used, NULL, 0, is_first, true);
+      ai->vocabulary, prompt->data, (int)prompt->len, NULL, 0, is_first, true);
 
   llama_token *tokens = allocate(sizeof(llama_token) * (size_t)tok_count);
   if (!tokens) {
     return AI_RESULT_ERROR_ALLOCATION_FAILED;
   }
 
-  if (llama_tokenize(ai->vocabulary, prompt->data, (int)prompt->used, tokens,
+  if (llama_tokenize(ai->vocabulary, prompt->data, (int)prompt->len, tokens,
                      tok_count, is_first, true) < 0) {
     deallocate(&tokens);
     return AI_RESULT_ERROR_TOKENIZATION_FAILED;
@@ -166,7 +166,7 @@ ai_result_t aiGenerate(ai_t *ai, const string_t *prompt, string_t *response) {
       return AI_RESULT_ERROR_INVALID_OUTPUT_DETECTED;
     }
 
-    if (response->used + (size_t)offset > response->length) {
+    if (response->len + (size_t)offset > response->cap) {
       deallocate(&tokens);
       return AI_RESULT_ERROR_RESPONSE_LENGTH_EXCEEDED;
     }

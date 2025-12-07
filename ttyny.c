@@ -76,8 +76,8 @@ int main(int argc, char **argv) {
   panicif(!parser, "cannot create parser");
 
   locations_t *locations cleanup(locationsDestroy) =
-      locationsCreate(world->locations->length);
-  items_t *items cleanup(itemsDestroy) = itemsCreate(world->items->length);
+      locationsCreate(world->locations->cap);
+  items_t *items cleanup(itemsDestroy) = itemsCreate(world->items->cap);
 
   screenClear();
 #ifndef DEBUG

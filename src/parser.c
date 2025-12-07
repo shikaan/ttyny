@@ -67,7 +67,7 @@ void parserGetOperation(parser_t *self, operation_t *operation,
     operation->type = OPERATION_TYPE_COMMAND;
     operation->as.command = COMMAND_TYPE_UNKNOWN;
 
-    if (input->used <= 1)
+    if (input->len <= 1)
       return;
 
     if (strStartsWith(&COMMAND_HELP, input)) {
@@ -148,10 +148,10 @@ void parserExtractTarget(parser_t *self, const string_t *input,
   }
 
   char shot_buffer[256] = {};
-  if (locations->used) {
+  if (locations->len) {
     for (i = 0; i < arrLen(location_shots_tpls); i++) {
       const char *shot_tpl = location_shots_tpls[i];
-      const size_t j = i % locations->used;
+      const size_t j = i % locations->len;
       location_t *exit = (location_t *)bufAt(locations, j);
       snprintf(shot_buffer, sizeof(shot_buffer), shot_tpl, exit->object.name);
       strFmtAppend(self->prompt, usr_prompt_tpl->data, shot_buffer);
@@ -159,10 +159,10 @@ void parserExtractTarget(parser_t *self, const string_t *input,
     }
   }
 
-  if (items->used) {
+  if (items->len) {
     for (i = 0; i < arrLen(item_shots_tpls); i++) {
       const char *shot_tpl = item_shots_tpls[i];
-      const size_t j = i % items->used;
+      const size_t j = i % items->len;
       const item_t *item = bufAt(items, j);
       snprintf(shot_buffer, sizeof(shot_buffer), shot_tpl, item->object.name);
       strFmtAppend(self->prompt, usr_prompt_tpl->data, shot_buffer);

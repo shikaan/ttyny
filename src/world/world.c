@@ -553,7 +553,7 @@ static location_t *locationFromJSONVal(yyjson_val *raw, items_t *world_items) {
   if (yyjson_is_arr(items)) {
     size_t i, length = yyjson_arr_size(items);
     yyjson_val *raw_item;
-    location->items = itemsCreate(world_items->length);
+    location->items = itemsCreate(world_items->cap);
 
     yyjson_arr_foreach(items, i, length, raw_item) {
       if (!yyjson_is_str(raw_item)) {
@@ -730,7 +730,7 @@ static world_t *worldFromJSONDoc(yyjson_doc *doc) {
     return NULL;
   }
 
-  world->inventory = itemsCreate(world->items->length);
+  world->inventory = itemsCreate(world->items->cap);
   world->location = bufAt(world->locations, 0);
   world->end_game = NULL;
 
@@ -738,12 +738,12 @@ static world_t *worldFromJSONDoc(yyjson_doc *doc) {
   parseMetaFromJSONVal(meta, &world->meta);
 
   world->turns = 0;
-  world->discovered_items = setCreate(world->items->length);
-  world->discovered_locations = setCreate(world->locations->length);
+  world->discovered_items = setCreate(world->items->cap);
+  world->discovered_locations = setCreate(world->locations->cap);
 
   // Assuming at most one puzzle per object
   world->solved_puzzles =
-      setCreate(world->items->length + world->locations->length);
+      setCreate(world->items->cap + world->locations->cap);
 
   if (!world->inventory || !world->discovered_items ||
       !world->discovered_locations || !world->solved_puzzles) {
@@ -755,7 +755,7 @@ static world_t *worldFromJSONDoc(yyjson_doc *doc) {
 }
 
 world_t *worldFromJSONString(string_t *json) {
-  yyjson_doc *doc = yyjson_read(json->data, json->used, 0);
+  yyjson_doc *doc = yyjson_read(json->data, json->len, 0);
   if (!doc)
     return NULL;
 

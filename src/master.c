@@ -90,7 +90,7 @@ master_t *masterCreate(world_t *world) {
     return NULL;
   }
 
-  master->descriptions = mapCreate(world->items->used + world->locations->used);
+  master->descriptions = mapCreate(world->items->len + world->locations->len);
   if (!master->descriptions) {
     error("cannot allocate summary buffer");
     masterDestroy(&master);
@@ -118,7 +118,7 @@ static int hasStopWords(string_t *response) {
   char *saveptr = NULL;
   char *token = strtok_r(input->data, WORD_BREAK, &saveptr);
   while (token) {
-    for (size_t i = 0; i < STOP_WORDS.used; i++) {
+    for (size_t i = 0; i < STOP_WORDS.len; i++) {
       const char *word = bufAt(&STOP_WORDS, i);
       if (strcasecmp(token, word) == 0) {
         info("Invalid: Found a STOP WORD %s", word);
@@ -126,7 +126,7 @@ static int hasStopWords(string_t *response) {
       }
     }
 
-    for (size_t i = 0; i < STOP_WORDS_CASE.used; i++) {
+    for (size_t i = 0; i < STOP_WORDS_CASE.len; i++) {
       const char *word = bufAt(&STOP_WORDS_CASE, i);
       if (strcmp(token, word) == 0) {
         info("Invalid: Found a STOP WORD %s", word);
@@ -222,7 +222,7 @@ void masterDescribeLocation(master_t *self, const location_t *location,
   // TODO: this seems inefficient: this list can never be longer than all
   // elements + all exits, it could be statically allocated
   words_t *must_haves cleanup(wordsDestroy) =
-      wordsCreate(location->items->used + location->exits->used);
+      wordsCreate(location->items->len + location->exits->len);
 
   size_t i = 0;
   bufEach(location->items, i) {
