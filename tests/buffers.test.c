@@ -118,7 +118,7 @@ void buffer(void) {
 
   initial_len = buf_2->len;
   bufRemove(buf_2, 99, 0);
-  expectEqllu(buf_2->len, initial_len, "doesn't change capacity if not found");
+  expectEqllu(buf_2->len, initial_len, "doesn't change len if not found");
 
   case("bufFind");
   int idx = testBufferFind(buf_empty, 0);
