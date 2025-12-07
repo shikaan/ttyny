@@ -18,7 +18,6 @@ typedef enum {
   AI_RESULT_ERROR,
 } ai_result_t;
 
-ai_result_t aiResultGetLast(void);
 void aiResultFormat(ai_result_t, string_t *);
 
 typedef enum {
@@ -52,6 +51,6 @@ typedef struct {
 __attribute__((warn_unused_result)) ai_t *aiCreate(config_t *, ai_result_t *);
 void aiDestroy(ai_t **);
 
-void aiGenerate(ai_t *, ai_result_t *, const string_t *, string_t *);
-void aiSetGrammar(ai_t *, ai_result_t *, string_t *);
-void aiReset(ai_t *, ai_result_t *);
+ai_result_t aiGenerate(ai_t *, const string_t *, string_t *);
+ai_result_t aiSetGrammar(ai_t *, string_t *);
+ai_result_t aiReset(ai_t *);

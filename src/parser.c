@@ -106,11 +106,10 @@ void parserGetOperation(parser_t *self, operation_t *operation,
   strFmtAppend(self->prompt, usr_prompt_tpl->data, input->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
-  ai_result_t result;
-  aiSetGrammar(self->ai, &result, &ACTION_GRAMMAR);
+  ai_result_t result = aiSetGrammar(self->ai, &ACTION_GRAMMAR);
   panicif(result != AI_RESULT_OK, "cannot set grammar");
   strClear(self->response);
-  aiGenerate(self->ai, &result, self->prompt, self->response);
+  result = aiGenerate(self->ai, self->prompt, self->response);
   panicif(result != AI_RESULT_OK, "cannot generate response");
 
   for (size_t i = 0; i < ACTION_TYPES; i++) {
@@ -174,11 +173,10 @@ void parserExtractTarget(parser_t *self, const string_t *input,
   strFmtAppend(self->prompt, usr_prompt_tpl->data, input->data);
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
-  ai_result_t result;
-  aiSetGrammar(self->ai, &result, self->target_grammar);
+  ai_result_t result = aiSetGrammar(self->ai, self->target_grammar);
   panicif(result != AI_RESULT_OK, "cannot set grammar");
   strClear(self->response);
-  aiGenerate(self->ai, &result, self->prompt, self->response);
+  result = aiGenerate(self->ai, self->prompt, self->response);
   panicif(result != AI_RESULT_OK, "cannot generate response");
   strTrim(self->response);
 
