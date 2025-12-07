@@ -35,7 +35,8 @@ See [`stories.md`](./docs/stories.md) for further details.
 
 ## Development
 
-This project is written in C11 and oly targets POSIX systems.
+This project is written in C17 and only targets MacOS. It uses `__attribute__`
+so it is expected to be compiled with gcc, clang, or zig cc.
 
 ```bash
 # Clone the repository
