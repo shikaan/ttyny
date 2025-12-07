@@ -2,22 +2,22 @@ include flags.mk
 
 LOG_LEVEL := -1
 CFLAGS := $(CFLAGS) -DLOG_LEVEL=$(LOG_LEVEL)
-BUILD := build
+BUILD_DIR := build
 
 .PHONY: all
 all: ttyny
 
-build/linenoise.o: CFLAGS = -Wall -W -Os
-build/linenoise.o: vendor/linenoise/linenoise.c
-	mkdir -p $(BUILD)
+$(BUILD_DIR)/linenoise.o: CFLAGS = -Wall -W -Os
+$(BUILD_DIR)/linenoise.o: vendor/linenoise/linenoise.c
+	mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-build/yyjson.o: CFLAGS = -Wall -W -Os
-build/yyjson.o: vendor/yyjson/src/yyjson.c
-	mkdir -p $(BUILD)
+$(BUILD_DIR)/yyjson.o: CFLAGS = -Wall -W -Os
+$(BUILD_DIR)/yyjson.o: vendor/yyjson/src/yyjson.c
+	mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-LLAMA_BUILD := build/llama.cpp
+LLAMA_BUILD := $(BUILD_DIR)/llama.cpp
 LLAMA_STATIC_LIBS := $(LLAMA_BUILD)/src/libllama.a \
 	$(LLAMA_BUILD)/ggml/src/libggml.a \
 	$(LLAMA_BUILD)/ggml/src/libggml-cpu.a \
@@ -25,7 +25,7 @@ LLAMA_STATIC_LIBS := $(LLAMA_BUILD)/src/libllama.a \
 	$(LLAMA_BUILD)/ggml/src/ggml-metal/libggml-metal.a \
 	$(LLAMA_BUILD)/ggml/src/ggml-blas/libggml-blas.a
 
-build/llama.cpp/src/libllama.a:
+$(LLAMA_BUILD)/src/libllama.a:
 	mkdir -p $(LLAMA_BUILD)
 	cmake -S vendor/llama.cpp -B $(LLAMA_BUILD) \
 		-DLLAMA_BUILD_TESTS=OFF \
@@ -44,7 +44,8 @@ ttyny: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
 	-Ivendor/llama.cpp/ggml/include -Ivendor/linenoise -Ivendor/yyjson/src
 ttyny: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
 	-framework Foundation -framework Metal -framework MetalKit
-ttyny: src/ai.o src/screen.o src/master.o src/parser.o src/world/world.o build/linenoise.o build/yyjson.o $(LLAMA_STATIC_LIBS)
+ttyny: src/ai.o src/screen.o src/master.o src/parser.o src/world/world.o \
+	build/linenoise.o build/yyjson.o $(LLAMA_STATIC_LIBS)
 
 tests/parser.test: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
 	-Ivendor/llama.cpp/ggml/include
