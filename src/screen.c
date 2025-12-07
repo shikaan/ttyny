@@ -174,12 +174,12 @@ void printEndGame(string_t *buffer, game_state_t state, const world_t *world) {
 
   size_t discovered_items = setUsed(world->discovered_items);
   strFmt(buffer, "Items: " numberfmt("%lu/%lu"), discovered_items,
-         world->items->used);
+         world->items->len);
   printCentered(buffer->data);
 
   size_t discovered_locations = setUsed(world->discovered_locations);
   strFmt(buffer, "Locations: " numberfmt("%lu/%lu"), discovered_locations,
-         world->locations->used);
+         world->locations->len);
   printCentered(buffer->data);
 
   size_t total_puzzles = 0;
@@ -195,7 +195,7 @@ void printEndGame(string_t *buffer, game_state_t state, const world_t *world) {
   bufEach(world->locations, i) {
     location_t *location = bufAt(world->locations, i);
     transitions_t *transitions = location->object.transitions;
-    if (transitions && transitions->used > 0) {
+    if (transitions && !bufIsEmpty(transitions)) {
       total_puzzles++;
     }
   }
@@ -206,7 +206,7 @@ void printEndGame(string_t *buffer, game_state_t state, const world_t *world) {
   printCentered(buffer->data);
 
   size_t actual = discovered_locations + discovered_items + solved_puzzles;
-  size_t total = total_puzzles + world->locations->used + world->items->used;
+  size_t total = total_puzzles + world->locations->len + world->items->len;
 
   strFmt(buffer, "Score: " numberfmt("%.2f") "%%",
          (double)(actual * 100) / (double)total);

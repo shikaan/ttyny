@@ -12,8 +12,8 @@ void item(void) {
   case("itemsCreate");
   items_t *items cleanup(itemsDestroy) = itemsCreate(2);
   panicif(!items, "cannot create items");
-  expectEqllu(items->used, 0, "correct used");
-  expectEqllu(items->length, 2, "correct length");
+  expectEqllu(items->len, 0, "correct length");
+  expectEqllu(items->cap, 2, "correct capacity");
 
   case("itemCreate");
   item_t *item_1 cleanup(itemDestroy) = itemCreate();
@@ -39,8 +39,8 @@ void location(void) {
   case("locationsCreate");
   locations_t *locations cleanup(locationsDestroy) = locationsCreate(2);
   panicif(!locations, "cannot create locations");
-  expectEqllu(locations->used, 0, "correct used");
-  expectEqllu(locations->length, 2, "correct length");
+  expectEqllu(locations->len, 0, "correct length");
+  expectEqllu(locations->cap, 2, "correct capacity");
 
   case("locationCreate");
   location_t *location_1 cleanup(locationDestroy) = locationCreate();

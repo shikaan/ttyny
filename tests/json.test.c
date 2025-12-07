@@ -24,10 +24,10 @@ static bool requirementTuplesEquals(requirement_tuples_t *a,
     return true;
   if (a == NULL || b == NULL)
     return false;
-  if (a->used != b->used)
+  if (a->len != b->len)
     return false;
 
-  for (size_t i = 0; i < a->used; i++) {
+  for (size_t i = 0; i < a->len; i++) {
     requirement_tuple_t ta = bufAt(a, i);
     requirement_tuple_t tb = bufAt(b, i);
     if (strcmp(ta.name, tb.name) != 0)
@@ -81,18 +81,18 @@ static bool endingEquals(ending_t *a, ending_t *b) {
 
 static bool endingsEquals(endings_t *a, endings_t *b) {
   // Treat NULL and empty arrays as equivalent
-  bool a_empty = (a == NULL || a->used == 0);
-  bool b_empty = (b == NULL || b->used == 0);
+  bool a_empty = (a == NULL || a->len == 0);
+  bool b_empty = (b == NULL || b->len == 0);
 
   if (a_empty && b_empty)
     return true;
   if (a_empty || b_empty)
     return false;
 
-  if (a->used != b->used)
+  if (a->len != b->len)
     return false;
 
-  for (size_t i = 0; i < a->used; i++) {
+  for (size_t i = 0; i < a->len; i++) {
     ending_t *ea = bufAt(a, i);
     ending_t *eb = bufAt(b, i);
     if (!endingEquals(ea, eb))
@@ -103,18 +103,18 @@ static bool endingsEquals(endings_t *a, endings_t *b) {
 
 static bool descriptionsEquals(descriptions_t *a, descriptions_t *b) {
   // Treat NULL and empty arrays as equivalent
-  bool a_empty = (a == NULL || a->used == 0);
-  bool b_empty = (b == NULL || b->used == 0);
+  bool a_empty = (a == NULL || a->len == 0);
+  bool b_empty = (b == NULL || b->len == 0);
 
   if (a_empty && b_empty)
     return true;
   if (a_empty || b_empty)
     return false;
 
-  if (a->used != b->used)
+  if (a->len != b->len)
     return false;
 
-  for (size_t i = 0; i < a->used; i++) {
+  for (size_t i = 0; i < a->len; i++) {
     char *da = bufAt(a, i);
     char *db = bufAt(b, i);
     if (da == NULL && db == NULL)
@@ -129,18 +129,18 @@ static bool descriptionsEquals(descriptions_t *a, descriptions_t *b) {
 
 static bool transitionsEquals(transitions_t *a, transitions_t *b) {
   // Treat NULL and empty arrays as equivalent
-  bool a_empty = (a == NULL || a->used == 0);
-  bool b_empty = (b == NULL || b->used == 0);
+  bool a_empty = (a == NULL || a->len == 0);
+  bool b_empty = (b == NULL || b->len == 0);
 
   if (a_empty && b_empty)
     return true;
   if (a_empty || b_empty)
     return false;
 
-  if (a->used != b->used)
+  if (a->len != b->len)
     return false;
 
-  for (size_t i = 0; i < a->used; i++) {
+  for (size_t i = 0; i < a->len; i++) {
     transition_t ta = bufAt(a, i);
     transition_t tb = bufAt(b, i);
     if (ta.action != tb.action)
@@ -200,10 +200,10 @@ static bool itemsEquals(items_t *a, items_t *b) {
     return true;
   if (a == NULL || b == NULL)
     return false;
-  if (a->used != b->used)
+  if (a->len != b->len)
     return false;
 
-  for (size_t i = 0; i < a->used; i++) {
+  for (size_t i = 0; i < a->len; i++) {
     item_t *ia = bufAt(a, i);
     item_t *ib = bufAt(b, i);
     if (!itemEquals(ia, ib))
@@ -244,9 +244,9 @@ static bool worldEquals(world_t *a, world_t *b) {
   } else if (a->locations == NULL || b->locations == NULL) {
     return false;
   } else {
-    if (a->locations->used != b->locations->used)
+    if (a->locations->len != b->locations->len)
       return false;
-    for (size_t i = 0; i < a->locations->used; i++) {
+    for (size_t i = 0; i < a->locations->len; i++) {
       location_t *la = bufAt(a->locations, i);
       location_t *lb = bufAt(b->locations, i);
       if (!objectEquals(&la->object, &lb->object))
@@ -257,9 +257,9 @@ static bool worldEquals(world_t *a, world_t *b) {
       if ((la->exits == NULL) != (lb->exits == NULL))
         return false;
       if (la->exits && lb->exits) {
-        if (la->exits->used != lb->exits->used)
+        if (la->exits->len != lb->exits->len)
           return false;
-        for (size_t j = 0; j < la->exits->used; j++) {
+        for (size_t j = 0; j < la->exits->len; j++) {
           location_t *ea = bufAt(la->exits, j);
           location_t *eb = bufAt(lb->exits, j);
           if (strcmp(ea->object.name, eb->object.name) != 0)
@@ -467,8 +467,8 @@ void endings(void) {
   };
   static endings_t multiple_endings = {
       .data = {&escape_ending, &death_ending},
-      .used = 2,
-      .length = 2,
+      .len = 2,
+      .cap = 2,
   };
   static world_t multiple_world = {
       .items = &test_items,
@@ -663,8 +663,8 @@ void items(void) {
   };
   static items_t key_items = {
       .data = {&key_item},
-      .used = 1,
-      .length = 1,
+      .len = 1,
+      .cap = 1,
   };
   static world_t key_world = {
       .items = &key_items,
@@ -682,8 +682,8 @@ void items(void) {
   static char box_desc2[] = "An open box";
   static descriptions_t box_descs = {
       .data = {box_desc1, box_desc2},
-      .used = 2,
-      .length = 2,
+      .len = 2,
+      .cap = 2,
   };
   static requirements_t box_reqs = {
       .inventory = NULL,
@@ -715,8 +715,8 @@ void items(void) {
   };
   static items_t box_items = {
       .data = {&box_item},
-      .used = 1,
-      .length = 1,
+      .len = 1,
+      .cap = 1,
   };
   static world_t box_world = {
       .items = &box_items,
@@ -761,8 +761,8 @@ void items(void) {
   };
   static items_t multi_items = {
       .data = {&sword_item, &shield_item},
-      .used = 2,
-      .length = 2,
+      .len = 2,
+      .cap = 2,
   };
   static world_t multi_world = {
       .items = &multi_items,
@@ -1168,18 +1168,18 @@ void locations(void) {
     };
     static locations_t hall_exits = {
         .data = {&kitchen_location},
-        .used = 1,
-        .length = 1,
+        .len = 1,
+        .cap = 1,
     };
     static locations_t kitchen_exits = {
         .data = {&hall2_location},
-        .used = 1,
-        .length = 1,
+        .len = 1,
+        .cap = 1,
     };
     static locations_t multi_locations = {
         .data = {&hall2_location, &kitchen_location},
-        .used = 2,
-        .length = 2,
+        .len = 2,
+        .cap = 2,
     };
     // Assign exits now that buffers are built
     static bool init_links_done = false;
@@ -1249,8 +1249,8 @@ void locations(void) {
     static char lab_desc2[] = "A lit lab";
     static descriptions_t lab_descs = {
         .data = {lab_desc1, lab_desc2},
-        .used = 2,
-        .length = 2,
+        .len = 2,
+        .cap = 2,
     };
     static requirements_t lab_reqs = {
         .inventory = NULL,
