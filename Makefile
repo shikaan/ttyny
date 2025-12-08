@@ -97,8 +97,8 @@ test: tests/buffers.test tests/map.test tests/world.test tests/json.test tests/s
 .PHONY: clean
 clean:
 	rm -f ./ttyny
-	rm -f tests/*.test
-	rm -rf **/*.dSYM **/*.plist *.plist
+	rm -f tests/*.test tests/*.time tests/*.snap
+	rm -rf **/*.dSYM **/*.plist *.plist *.dSYM
 	find . -type f -name '*.o' -not -path './build/*' -delete
 
 .PHONY: deep-clean
