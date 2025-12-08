@@ -2,9 +2,9 @@
 #include "../src/lib/buffers.h"
 #include "../src/utils.h"
 #include "fixtures/world.h"
+#include "stat.h"
 #include "test.h"
 #include "timers.h"
-#include <math.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -20,15 +20,6 @@ void expectLtf(const double a, const double b, const char *name) {
 
 #define SAMPLE_SIZE 100
 const int MICROSECONDS = 10000000;
-
-double_t avg(size_t size, uint64_t samples[SAMPLE_SIZE]) {
-  uint64_t sum = 0;
-  for (size_t i = 0; i < size; i++) {
-    sum += (samples)[i];
-  }
-
-  return (double)sum / (double)size;
-}
 
 void describeLocation(void) {
   string_t *buffer cleanup(strDestroy) = strCreate(1024);
@@ -49,13 +40,26 @@ void describeLocation(void) {
     samples[i] = elapsed;
     masterForget(master, &room->object, LOCATION_NAMESPACE);
 
-    if (i != 0 && (i % 10) == 0) {
-      info("current average: %fs\n", avg(i, samples) / (double)MICROSECONDS);
+    if (((i + 1) % 10) == 0) {
+      info("snapshot at %lu", i + 1);
+      info("  average: %fs", avgllu(i, samples) / (double)MICROSECONDS);
+      info("   median: %fs",
+           (double)percllu(50, i, samples) / (double)MICROSECONDS);
+      info("      p90: %fs",
+           (double)percllu(90, i, samples) / (double)MICROSECONDS);
+      info("      max: %fs",
+           (double)percllu(100, i, samples) / (double)MICROSECONDS);
     }
   }
 
-  expectLtf(avg(SAMPLE_SIZE, samples) / (double)MICROSECONDS, 5.0,
-            "average generation time is < 5s");
+  double average = avgllu(SAMPLE_SIZE, samples) / (double)MICROSECONDS;
+  double median =
+      (double)percllu(50, SAMPLE_SIZE, samples) / (double)MICROSECONDS;
+  double p90 = (double)percllu(90, SAMPLE_SIZE, samples) / (double)MICROSECONDS;
+
+  expectLtf(average, 2.0, "average generation time is < 2s");
+  expectLtf(median, 2.0, "median generation time is < 2s");
+  expectLtf(p90, 3.0, "p90 generation time is < 3s");
 }
 
 int main(void) {

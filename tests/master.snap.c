@@ -6,8 +6,10 @@
 #include "timers.h"
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 
-#define SAMPLE_SIZE 100
+#define SAMPLE_SIZE 50
+const int MICROSECONDS = 10000000;
 
 void describeEndgame(void) {
   string_t *buffer cleanup(strDestroy) = strCreate(1024);
@@ -97,12 +99,9 @@ void describeEndgame(void) {
           (double)elapsed / (double)MICROSECONDS);
     samples[i] = elapsed;
     printf("RESPONSE (end: %s, input: %s, state: %s)\n > %s\n---\n",
-          world->end_game, end_game[scenario_idx].input,
-          state == GAME_STATE_VICTORY ? "victory" : "dead", buffer->data);
+           world->end_game, end_game[scenario_idx].input,
+           state == GAME_STATE_VICTORY ? "victory" : "dead", buffer->data);
 
-    if (i != 0 && (i % 10) == 0) {
-      info("current average: %fs\n", avg(i, samples) / (double)MICROSECONDS);
-    }
     deallocate(&world->end_game);
   }
 }
