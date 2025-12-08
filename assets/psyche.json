@@ -634,7 +634,7 @@
     },
     {
       "state": "lose",
-      "reason": "The wolves awaken from their enchanted sleep and see you with their sacred treasure! In a fury, they attack. You stood no chance against the pack. The golden pelt falls from your lifeless hands. You should have left the meadow while the wolves still slumbered.",
+      "reason": "The wolves see you with their sacred treasure! In a fury, they attack. You stood no chance against the pack. The golden pelt falls from your lifeless hands.",
       "requirements": {
         "inventory": ["Golden Pelt"],
         "items": null,
