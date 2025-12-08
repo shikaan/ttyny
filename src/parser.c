@@ -2,6 +2,7 @@
 #include "configs/qwen.h"
 #include "lib/panic.h"
 #include "utils.h"
+#include "world/action.h"
 #include <stddef.h>
 
 static string_t ACTION_GRAMMAR = strConst(
@@ -14,22 +15,29 @@ typedef struct {
 
 static action_shot_t action_shots[] = {
     {"examine book", &ACTION_EXAMINE},
-    {"take apple", &ACTION_TAKE},
-    {"move to garden", &ACTION_MOVE},
-    {"use knife", &ACTION_USE},
-    {"drop the ball", &ACTION_DROP},
-
     {"look at the key", &ACTION_EXAMINE},
-    {"grab the sword", &ACTION_TAKE},
-    {"walk to kitchen", &ACTION_MOVE},
-    {"use crowbar on chest", &ACTION_USE},
-    {"put down the cup", &ACTION_DROP},
-
     {"check behind painting", &ACTION_EXAMINE},
+    {"read the note", &ACTION_EXAMINE},
+
+    {"take apple", &ACTION_TAKE},
+    {"grab the sword", &ACTION_TAKE},
     {"pick up coin", &ACTION_TAKE},
-    {"head north", &ACTION_MOVE},
+    {"get the key please", &ACTION_TAKE},
+
+    {"use knife", &ACTION_USE},
     {"eat bread", &ACTION_USE},
-    {"throw away rock", &ACTION_DROP},
+    {"open the chest", &ACTION_USE},
+    {"push button", &ACTION_USE},
+
+    {"move to garden", &ACTION_MOVE},
+    {"walk to kitchen", &ACTION_MOVE},
+    {"head north", &ACTION_MOVE},
+    {"enter the hall", &ACTION_MOVE},
+
+    {"drop the ball", &ACTION_DROP},
+    {"put the cup on the table", &ACTION_DROP},
+    {"leave the key", &ACTION_DROP},
+    {"throw the rock", &ACTION_DROP},
 };
 
 static const char *item_shots_tpls[] = {"look at the %s", "grab the %s",

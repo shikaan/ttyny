@@ -2,6 +2,13 @@
 #include "../src/utils.h"
 #include "test.h"
 
+void expectEqlAction(int a, int b, const char *msg) {
+  char buffer[1024] = {0};
+  snprintf(buffer, sizeof(buffer), "expected %s got %s", action_names[a]->data,
+           action_names[b]->data);
+  expect(a == b, msg, buffer);
+}
+
 void actions(void) {
   parser_t *parser cleanup(parserDestroy) = parserCreate();
   panicif(!parser, "cannot initialize parser");
@@ -16,7 +23,7 @@ void actions(void) {
   strFmt(cmd, "%s", Command);                                                  \
   parserGetOperation(parser, &op, cmd);                                        \
   action = op.as.action;                                                       \
-  expectEqli(action, Action, Command);
+  expectEqlAction(Action, action, Command);
 
   case("move");
   test("go to the hall", ACTION_TYPE_MOVE);
@@ -25,6 +32,8 @@ void actions(void) {
   test("move to hall", ACTION_TYPE_MOVE);
   test("travel to hall", ACTION_TYPE_MOVE);
   test("I want to go to the hall", ACTION_TYPE_MOVE);
+  test("head north", ACTION_TYPE_MOVE);
+  test("run to the hall", ACTION_TYPE_MOVE);
 
   case("take");
   test("grab the key from the table", ACTION_TYPE_TAKE);
@@ -34,6 +43,7 @@ void actions(void) {
   test("take the key", ACTION_TYPE_TAKE);
   test("I want to take the key", ACTION_TYPE_TAKE);
   test("retrieve the key", ACTION_TYPE_TAKE);
+  test("collect the key", ACTION_TYPE_TAKE);
 
   case("examine");
   test("look at the key", ACTION_TYPE_EXAMINE);
@@ -42,18 +52,28 @@ void actions(void) {
   test("check out the coin", ACTION_TYPE_EXAMINE);
   test("study the key", ACTION_TYPE_EXAMINE);
   test("observe coin", ACTION_TYPE_EXAMINE);
+  test("read the note", ACTION_TYPE_EXAMINE);
+  test("check the logs", ACTION_TYPE_EXAMINE);
 
   case("use");
   test("use the key", ACTION_TYPE_USE);
-  test("activate key", ACTION_TYPE_USE);
-  test("apply the coin", ACTION_TYPE_USE);
+  test("activate lift", ACTION_TYPE_USE);
+  test("apply paint", ACTION_TYPE_USE);
   test("employ the lantern", ACTION_TYPE_USE);
   test("utilize the sword", ACTION_TYPE_USE);
+  test("open the chest", ACTION_TYPE_USE);
+  test("push the button", ACTION_TYPE_USE);
+  test("pull the lever", ACTION_TYPE_USE);
 
   case("drop");
   test("drop the key on the ground", ACTION_TYPE_DROP);
   test("put down the coin", ACTION_TYPE_DROP);
   test("discard the lantern", ACTION_TYPE_DROP);
+  test("lay the vessel on the altar", ACTION_TYPE_DROP);
+  test("put the pelt on the altar", ACTION_TYPE_DROP);
+  test("leave the key here", ACTION_TYPE_DROP);
+  test("release the coin", ACTION_TYPE_DROP);
+  test("abandon the sword", ACTION_TYPE_DROP);
 #undef test
 }
 
