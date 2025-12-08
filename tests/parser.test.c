@@ -77,6 +77,47 @@ void actions(void) {
 #undef test
 }
 
+void commands(void) {
+  parser_t *parser cleanup(parserDestroy) = parserCreate();
+  panicif(!parser, "cannot initialize parser");
+
+  string_t *cmd cleanup(strDestroy) = strCreate(128);
+  panicif(!cmd, "cannot initialize command buffer");
+
+  command_type_t command;
+  operation_t op;
+
+#define test(Command, CommandType)                                           \
+    strFmt(cmd, "%s", Command);                                                \
+    parserGetOperation(parser, &op, cmd);                                      \
+    command = op.as.command;                                                   \
+    expectEqli(command, CommandType, Command);
+
+  case("help");
+  test("/help", COMMAND_TYPE_HELP);
+  test("/he", COMMAND_TYPE_HELP);
+  test("/h", COMMAND_TYPE_HELP);
+
+  case("status");
+  test("/status", COMMAND_TYPE_STATUS);
+  test("/stat", COMMAND_TYPE_STATUS);
+  test("/s", COMMAND_TYPE_STATUS);
+
+  case("quit");
+  test("/quit", COMMAND_TYPE_QUIT);
+  test("/q", COMMAND_TYPE_QUIT);
+
+  case("tldr");
+  test("/tldr", COMMAND_TYPE_TLDR);
+  test("/t", COMMAND_TYPE_TLDR);
+
+  case("unknown");
+  test("/unknown", COMMAND_TYPE_UNKNOWN);
+  test("/invalid", COMMAND_TYPE_UNKNOWN);
+  test("/", COMMAND_TYPE_UNKNOWN);
+#undef test
+}
+
 void targets(void) {
   parser_t *parser cleanup(parserDestroy) = parserCreate();
   panicif(!parser, "cannot initialize parser");
@@ -167,6 +208,7 @@ void targets(void) {
 
 int main(void) {
   suite(actions);
+  suite(commands);
   suite(targets);
   return report();
 }
