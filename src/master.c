@@ -347,11 +347,13 @@ void masterDescribeEndGame(master_t *self, const string_t *last_action,
   const string_t *usr_prompt_tpl = config->prompt_templates[PROMPT_TYPE_USR];
   const string_t *res_prompt_tpl = config->prompt_templates[PROMPT_TYPE_RES];
 
+  // Need to do it before everything, else it scrambles the prompt
+  masterDescribeLocation(self, world->location, self->summary);
+
   strFmt(self->prompt, sys_prompt_tpl->data, MASTER_END_GAME_SYS_PROMPT.data);
 
   // Using a shot to provide some context
   strFmtAppend(self->prompt, usr_prompt_tpl->data, "look around");
-  masterDescribeLocation(self, world->location, self->summary);
   strFmtAppend(self->prompt, res_prompt_tpl->data, self->summary->data);
 
   strFmt(self->summary, "ACTION: %s\nENDING: %s\nREASON: %s", last_action->data,
