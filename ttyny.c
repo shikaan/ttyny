@@ -1,72 +1,52 @@
+#include "src/cli.h"
+#include "src/fmt.h"
 #include "src/lib/buffers.h"
 #include "src/lib/panic.h"
 #include "src/master.h"
 #include "src/parser.h"
-#include "src/screen.h"
+#include "src/ui.h"
 #include "src/utils.h"
 #include "src/world/action.h"
 #include "src/world/command.h"
 #include "src/world/item.h"
 #include "src/world/object.h"
 #include "src/world/world.h"
-#include <ggml.h>
-#include <linenoise.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-typedef void (*print_callback_t)(string_t *);
-
-void completion(const char *buf, linenoiseCompletions *lc) {
-  if (buf[0] == '/') {
-    for (size_t i = 0; i < COMMAND_TYPES; i++) {
-      if (strncmp(buf, command_names[i]->data, strlen(buf)) == 0) {
-        linenoiseAddCompletion(lc, command_names[i]->data);
-      }
-    }
-  }
-}
-
 int quit(string_t *response, ui_handle_t *loading, const world_t *world) {
-  loadingStop(&loading);
-  printEndGame(response, GAME_STATE_DEAD, world);
+  uiLoadingStop(&loading);
+  uiPrintEndGame(response, GAME_STATE_DEAD, world);
   return 0;
 }
 
-void usage(const char *name) {
-  fprintf(stderr,
-          "%s is a small-language-model-powered game engine to play text "
-          "adventure games in your terminal.\n"
-          "Usage:\n"
-          "  %s <path-to-story.json>\n"
-          "\n"
-          "Flags:\n"
-          "  -h, --help      show this help\n"
-          "  -v, --version   show version\n"
-          "\n"
-          "For more information https://github.com/shikaan/%s\n",
-          name, name, name);
-  exit(1);
-}
-
 int main(int argc, char **argv) {
-  const char *name = strrchr(argv[0], '/') + 1;
-  if (argc != 2) {
-    usage(name);
-  }
-  const char *story_path = argv[1];
+  cli_args_t cli_args;
+  cliParseArgs(argc, argv, &cli_args);
 
-  world_t *world cleanup(worldDestroy) = worldFromJSONFile(story_path);
+  world_result_t world_result;
+  world_t *world cleanup(worldDestroy) =
+      worldFromJSONFile(cli_args.story_path, &world_result);
   if (!world) {
-    fprintf(stderr, "%s: ", name);
-    perror(story_path);
-    usage(name);
+    const char *msg =
+        world_result == WORLD_RESULT_INVALID_JSON
+            ? "invalid story. Check the logs or run ./tools/validate "
+              "<path-to-story.json> for more information."
+            : "cannot open provided file. Ensure the file exists and it's "
+              "readable.";
+    cliPrintError(msg);
+    cliPrintUsageAndExit();
   }
 
   string_t *input cleanup(strDestroy) = strCreate(512);
   string_t *response cleanup(strDestroy) = strCreate(4096);
+
+  // TODO: this should be a list of 3 items
   string_t *state cleanup(strDestroy) = strCreate(1024);
+
+  string_t *transition cleanup(strDestroy) = strCreate(1024);
   string_t *target cleanup(strDestroy) = strCreate(128);
 
   master_t *master cleanup(masterDestroy) = masterCreate(world);
@@ -79,48 +59,45 @@ int main(int argc, char **argv) {
       locationsCreate(world->locations->cap);
   items_t *items cleanup(itemsDestroy) = itemsCreate(world->items->cap);
 
-  screenClear();
+  uiClearScreen();
 #ifndef DEBUG
-  formatWelcomeScreen(response);
-  printCommandOutput(response);
+  fmtWelcomeScreen(response);
+  uiPrintCommandOutput(response);
   fgetc(stdin);
-  screenClear();
+  uiClearScreen();
 
-  printOpeningCredits(world);
+  uiPrintOpeningCredits(world);
   fgetc(stdin);
-  screenClear();
+  uiClearScreen();
 #endif
-  ui_handle_t *loading = loadingStart();
+  ui_handle_t *loading = uiLoadingStart();
 
   masterDescribeLocation(master, world->location, response);
-  loadingStop(&loading);
-  printDescription(response);
+  uiLoadingStop(&loading);
+  uiPrintDescription(response);
 
-  formatLocationChange(response, world->location);
-  printStateUpdate(response);
+  fmtLocationChange(response, world->location);
+  uiPrintStateUpdate(response);
 
-  linenoiseHistorySetMaxLen(15);
-  linenoiseSetCompletionCallback(completion);
+  cliPromptInit();
   game_state_t game_state;
+  cli_readline_result_t readline_result;
 
   while (1) {
-    char *line = linenoise("> ");
+    readline_result = cliReadline(input);
 
-    // This is invoked on Ctrl+C/D
-    if (!line) {
+    switch (readline_result) {
+    case CLI_READLINE_RESULT_EMPTY:
+      continue;
+    case CLI_READLINE_RESULT_QUIT:
       return quit(response, loading, world);
+    case CLI_READLINE_RESULT_OK:
+    default:
+      break;
     }
 
-    strFmt(input, "%s", line);
-    linenoiseFree(line);
-
-    if (bufIsEmpty(input))
-      continue;
-
-    linenoiseHistoryAdd(input->data);
-
     strClear(response);
-    loading = loadingStart();
+    loading = uiLoadingStart();
 
     operation_t operation;
     parserGetOperation(parser, &operation, input);
@@ -128,21 +105,21 @@ int main(int argc, char **argv) {
     if (operation.type == OPERATION_TYPE_COMMAND) {
       switch (operation.as.command) {
       case COMMAND_TYPE_HELP: {
-        formatHelp(response, world);
-        loadingStop(&loading);
-        printCommandOutput(response);
+        fmtHelp(response, world);
+        uiLoadingStop(&loading);
+        uiPrintCommandOutput(response);
         break;
       }
       case COMMAND_TYPE_STATUS: {
-        formatStatus(response, world);
-        loadingStop(&loading);
-        printCommandOutput(response);
+        fmtStatus(response, world);
+        uiLoadingStop(&loading);
+        uiPrintCommandOutput(response);
         break;
       }
       case COMMAND_TYPE_TLDR: {
-        formatTldr(response, world);
-        loadingStop(&loading);
-        printCommandOutput(response);
+        fmtTldr(response, world);
+        uiLoadingStop(&loading);
+        uiPrintCommandOutput(response);
         break;
       }
       case COMMAND_TYPE_QUIT: {
@@ -152,8 +129,8 @@ int main(int argc, char **argv) {
       case COMMAND_TYPES:
       default: {
         strFmt(response, "That's not a command I recognize...");
-        loadingStop(&loading);
-        printError(response);
+        uiLoadingStop(&loading);
+        uiPrintError(response);
         break;
       }
       }
@@ -163,8 +140,8 @@ int main(int argc, char **argv) {
     // Perform some cheap validation before invoking further AI
     if (!strchr(input->data, ' ')) {
       strFmt(response, "I need more details...");
-      loadingStop(&loading);
-      printError(response);
+      uiLoadingStop(&loading);
+      uiPrintError(response);
       continue;
     }
 
@@ -181,7 +158,7 @@ int main(int argc, char **argv) {
     strClear(state);
 
     transition_result_t trans_result;
-    print_callback_t printCallback = printDescription;
+    print_callback_t printCallback = uiPrintDescription;
 
     switch (action) {
     case ACTION_TYPE_MOVE: {
@@ -190,7 +167,7 @@ int main(int argc, char **argv) {
 
       if (!location) {
         strFmt(response, "You cannot go there!");
-        printCallback = printError;
+        printCallback = uiPrintError;
         break;
       }
 
@@ -198,18 +175,18 @@ int main(int argc, char **argv) {
           worldExecuteTransition(world, &location->object, action, NULL, NULL);
       if (trans_result == TRANSITION_RESULT_MISSING_ITEM) {
         strFmt(response, "You need an item or a key to go there...");
-        printCallback = printError;
+        printCallback = uiPrintError;
         break;
       } else if (trans_result == TRANSITION_RESULT_INVALID_TARGET) {
         strFmt(response, "This way is locked by some contraption.");
-        printCallback = printError;
+        printCallback = uiPrintError;
         break;
       }
 
       world->location = location;
       masterDescribeLocation(master, location, response);
-      printCallback = printDescription;
-      formatLocationChange(state, world->location);
+      printCallback = uiPrintDescription;
+      fmtLocationChange(state, world->location);
       break;
     }
     case ACTION_TYPE_EXAMINE: {
@@ -225,22 +202,22 @@ int main(int argc, char **argv) {
 
         if (item->readable) {
           masterReadItem(master, item, response);
-          printCallback = printReadable;
+          printCallback = uiPrintReadable;
         } else {
           masterDescribeObject(master, &item->object, response);
-          printCallback = printDescription;
+          printCallback = uiPrintDescription;
         }
         break;
       }
 
       if (location) {
         masterDescribeObject(master, &location->object, response);
-        printCallback = printDescription;
+        printCallback = uiPrintDescription;
         break;
       }
 
       strFmt(response, "I don't understand... Can you rephrase that?");
-      printCallback = printError;
+      printCallback = uiPrintError;
       break;
     }
     case ACTION_TYPE_TAKE: {
@@ -249,13 +226,13 @@ int main(int argc, char **argv) {
 
       if (!item) {
         strFmt(response, "Take what? You need to be more specific than that.");
-        printCallback = printError;
+        printCallback = uiPrintError;
         break;
       }
 
       if (!item->collectible) {
         strFmt(response, "You cannot pick that up.");
-        printCallback = printError;
+        printCallback = uiPrintError;
         break;
       }
 
@@ -266,7 +243,7 @@ int main(int argc, char **argv) {
       if (trans_result != TRANSITION_RESULT_OK &&
           trans_result != TRANSITION_RESULT_NO_TRANSITION) {
         strFmt(response, "You cannot take that.");
-        printCallback = printError;
+        printCallback = uiPrintError;
         break;
       }
 
@@ -280,8 +257,8 @@ int main(int argc, char **argv) {
       masterForget(master, &world->location->object, LOCATION_NAMESPACE);
       masterForget(master, &world->location->object, OBJECT_NAMESPACE);
 
-      printCallback = printDescription;
-      formatTake(state, item);
+      printCallback = uiPrintDescription;
+      fmtTake(state, item);
       break;
     }
     case ACTION_TYPE_DROP: {
@@ -290,7 +267,7 @@ int main(int argc, char **argv) {
 
       if (!item) {
         strFmt(response, "You cannot drop something that you don't own.");
-        printCallback = printError;
+        printCallback = uiPrintError;
         break;
       }
 
@@ -301,7 +278,7 @@ int main(int argc, char **argv) {
       if (trans_result != TRANSITION_RESULT_OK &&
           trans_result != TRANSITION_RESULT_NO_TRANSITION) {
         strFmt(response, "You cannot drop that.");
-        printCallback = printError;
+        printCallback = uiPrintError;
         break;
       }
 
@@ -315,8 +292,8 @@ int main(int argc, char **argv) {
       masterForget(master, &world->location->object, LOCATION_NAMESPACE);
       masterForget(master, &world->location->object, OBJECT_NAMESPACE);
 
-      printCallback = printDescription;
-      formatDrop(state, item);
+      printCallback = uiPrintDescription;
+      fmtDrop(state, item);
 
       break;
     }
@@ -327,7 +304,7 @@ int main(int argc, char **argv) {
 
       if (!item) {
         strFmt(response, "Not sure what you mean.");
-        printCallback = printError;
+        printCallback = uiPrintError;
         break;
       }
 
@@ -343,22 +320,22 @@ int main(int argc, char **argv) {
         masterForget(master, &item->object, OBJECT_NAMESPACE);
         masterForget(master, &item->object, ITEM_NAMESPACE);
 
-        printCallback = printDescription;
-        formatUse(state, item);
+        printCallback = uiPrintDescription;
+        fmtTransition(state, affected);
         break;
       case TRANSITION_RESULT_MISSING_ITEM:
         strFmt(response, "You need a utensil for that.");
-        printCallback = printError;
+        printCallback = uiPrintError;
         break;
       case TRANSITION_RESULT_INVALID_TARGET:
         strFmt(response, "Something isn't quite right for that.");
-        printCallback = printError;
+        printCallback = uiPrintError;
         break;
       case TRANSITION_RESULT_NO_TRANSITION:
       default:
         strFmt(response, "Did you mean %s? Unfortunately, it cannot be used...",
                item->object.name);
-        printCallback = printError;
+        printCallback = uiPrintError;
         break;
       }
       break;
@@ -367,22 +344,22 @@ int main(int argc, char **argv) {
     case ACTION_TYPE_UNKNOWN:
     default:
       strFmt(response, "Not sure how to do that...");
-      printCallback = printError;
+      printCallback = uiPrintError;
     }
 
     worldDigest(world, &game_state);
     if (game_state != GAME_STATE_CONTINUE) {
       masterDescribeEndGame(master, input, world, game_state, response);
-      loadingStop(&loading);
-      printDescription(response);
-      printEndGame(response, game_state, world);
+      uiLoadingStop(&loading);
+      uiPrintDescription(response);
+      uiPrintEndGame(response, game_state, world);
       return 0;
     }
 
-    loadingStop(&loading);
+    uiLoadingStop(&loading);
     printCallback(response);
     if (!bufIsEmpty(state)) {
-      printStateUpdate(state);
+      uiPrintStateUpdate(state);
     }
   }
 

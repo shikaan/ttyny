@@ -618,7 +618,7 @@ void endings(void) {
     parser_test_t tc = tests[i];
     string_t *buf cleanup(strDestroy) = strCreate(2048);
     strFmt(buf, "%s", tc.json);
-    world_t *world cleanup(worldDestroy) = worldFromJSONString(buf);
+    world_t *world cleanup(worldDestroy) = worldFromJSONString(buf, NULL);
     expectTrue(worldEquals(world, tc.expected), tc.name);
   }
 }
@@ -1079,7 +1079,7 @@ void items(void) {
     parser_test_t tc = tests[i];
     string_t *buf cleanup(strDestroy) = strCreate(4096);
     strFmt(buf, "%s", tc.json);
-    world_t *world cleanup(worldDestroy) = worldFromJSONString(buf);
+    world_t *world cleanup(worldDestroy) = worldFromJSONString(buf, NULL);
     expectTrue(worldEquals(world, tc.expected), tc.name);
   }
 
@@ -1348,7 +1348,7 @@ void locations(void) {
       parser_test_t tc = tests[i];
       string_t *buf cleanup(strDestroy) = strCreate(4096);
       strFmt(buf, "%s", tc.json);
-      world_t *world cleanup(worldDestroy) = worldFromJSONString(buf);
+      world_t *world cleanup(worldDestroy) = worldFromJSONString(buf, NULL);
       expectTrue(worldEquals(world, tc.expected), tc.name);
     }
 }

@@ -44,31 +44,35 @@ ttyny: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
 	-Ivendor/llama.cpp/ggml/include -Ivendor/linenoise -Ivendor/yyjson/src
 ttyny: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
 	-framework Foundation -framework Metal -framework MetalKit
-ttyny: src/ai.o src/screen.o src/master.o src/parser.o src/world/world.o \
-	build/linenoise.o build/yyjson.o $(LLAMA_STATIC_LIBS)
+ttyny: src/ai.o src/master.o src/parser.o src/world/world.o src/ui.o src/cli.o \
+	src/fmt.o build/linenoise.o build/yyjson.o $(LLAMA_STATIC_LIBS)
 
 tests/parser.test: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
 	-Ivendor/llama.cpp/ggml/include
-tests/parser.test: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
-	-framework Foundation -framework Metal -framework MetalKit
+tests/parser.test: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ \
+  -framework Accelerate -framework Foundation -framework Metal \
+  -framework MetalKit
 tests/parser.test: src/ai.o src/parser.o $(LLAMA_STATIC_LIBS)
 
 tests/master.time: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
 	-Ivendor/llama.cpp/ggml/include
-tests/master.time: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
-	-framework Foundation -framework Metal -framework MetalKit
+tests/master.time: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ \
+	-framework Accelerate -framework Foundation -framework Metal \
+	-framework MetalKit
 tests/master.time: src/ai.o src/master.o $(LLAMA_STATIC_LIBS)
 
 tests/master.snap: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
 	-Ivendor/llama.cpp/ggml/include
-tests/master.snap: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
-	-framework Foundation -framework Metal -framework MetalKit
+tests/master.snap: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ \
+	-framework Accelerate -framework Foundation -framework Metal \
+	-framework MetalKit
 tests/master.snap: src/ai.o src/master.o $(LLAMA_STATIC_LIBS)
 
 tests/master.test: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
 	-Ivendor/llama.cpp/ggml/include -Ivendor/yyjson/src
-tests/master.test: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
-	-framework Foundation -framework Metal -framework MetalKit
+tests/master.test: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ \
+	-framework Accelerate -framework Foundation -framework Metal \
+	-framework MetalKit
 tests/master.test: src/ai.o src/master.o $(LLAMA_STATIC_LIBS)
 
 tests/json.test: src/world/world.o build/yyjson.o
@@ -111,4 +115,5 @@ start: all
 
 .PHONY: start-profile
 start-profile: all
-	ASAN_OPTIONS=detect_leaks=1 LSAN_OPTIONS=suppressions=asan.supp ./ttyny assets/psyche.json
+	ASAN_OPTIONS=detect_leaks=1 LSAN_OPTIONS=suppressions=asan.supp \
+	./ttyny assets/psyche.json

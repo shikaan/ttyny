@@ -30,6 +30,12 @@ struct meta_t {
   char *author;
 };
 
+typedef enum {
+  WORLD_RESULT_OK,
+  WORLD_RESULT_UNABLE_TO_READ_PATH,
+  WORLD_RESULT_INVALID_JSON,
+} world_result_t;
+
 struct world_t {
   // All item definitions available in the story.
   // This is an owning list: the rest uses these items, but don't own them
@@ -66,10 +72,10 @@ struct world_t {
 };
 
 // Creates a world from a JSON string allocating all the required resources
-world_t *worldFromJSONString(string_t *);
+world_t *worldFromJSONString(string_t *, world_result_t*);
 
 // Creates a world from a JSON file allocating all the required resources
-world_t *worldFromJSONFile(const char *);
+world_t *worldFromJSONFile(const char *, world_result_t*);
 
 // Destroy a world and frees all allocated resources
 void worldDestroy(world_t **);
