@@ -7,6 +7,11 @@
 
 #define cleanup(Callback) __attribute__((cleanup(Callback)))
 
+#define NAMESTR "ttyny"
+static const char *NAME_NO_TTY = NAMESTR;
+static const char *NAME = fg_green(bold(NAMESTR));
+#undef NAMESTR
+
 #define LOG_DEBUG 2
 #define LOG_INFO 1
 #define LOG_ERROR 0

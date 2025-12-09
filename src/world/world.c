@@ -742,8 +742,7 @@ static world_t *worldFromJSONDoc(yyjson_doc *doc) {
   world->discovered_locations = setCreate(world->locations->cap);
 
   // Assuming at most one puzzle per object
-  world->solved_puzzles =
-      setCreate(world->items->cap + world->locations->cap);
+  world->solved_puzzles = setCreate(world->items->cap + world->locations->cap);
 
   if (!world->inventory || !world->discovered_items ||
       !world->discovered_locations || !world->solved_puzzles) {
@@ -754,22 +753,45 @@ static world_t *worldFromJSONDoc(yyjson_doc *doc) {
   return world;
 }
 
-world_t *worldFromJSONString(string_t *json) {
+world_t *worldFromJSONString(string_t *json, world_result_t *res) {
+  if (res)
+    *res = WORLD_RESULT_OK;
+
   yyjson_doc *doc = yyjson_read(json->data, json->len, 0);
-  if (!doc)
+  if (!doc) {
+    if (res)
+      *res = WORLD_RESULT_INVALID_JSON;
     return NULL;
+  }
 
   world_t *world = worldFromJSONDoc(doc);
   yyjson_doc_free(doc);
+
+  if (!world) {
+    if (res)
+      *res = WORLD_RESULT_INVALID_JSON;
+  }
+
   return world;
 }
 
-world_t *worldFromJSONFile(const char *path) {
+world_t *worldFromJSONFile(const char *path, world_result_t *res) {
+  *res = WORLD_RESULT_OK;
+
   yyjson_doc *doc = yyjson_read_file(path, 0, NULL, NULL);
-  if (!doc)
+  if (!doc) {
+    if (res)
+      *res = WORLD_RESULT_UNABLE_TO_READ_PATH;
     return NULL;
+  }
 
   world_t *world = worldFromJSONDoc(doc);
   yyjson_doc_free(doc);
+
+  if (!world) {
+    if (res)
+      *res = WORLD_RESULT_INVALID_JSON;
+  }
+
   return world;
 }
