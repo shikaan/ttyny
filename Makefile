@@ -1,7 +1,9 @@
 include flags.mk
 
 LOG_LEVEL := -1
-CFLAGS := $(CFLAGS) -DLOG_LEVEL=$(LOG_LEVEL)
+VERSION := v0.0.0
+SHA := dev
+CFLAGS := $(CFLAGS) -DLOG_LEVEL=$(LOG_LEVEL) -DVERSION='"$(VERSION)"' -DSHA='"$(SHA)"'
 BUILD_DIR := build
 
 .PHONY: all
