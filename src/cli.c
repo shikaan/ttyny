@@ -61,13 +61,12 @@ void cliParseArgs(int argc, char **argv, cli_args_t *args) {
   const char* arg = argv[argc - 1];
 
   if (!strcmp(arg, "-h") || !strcmp(arg, "--help")) {
-    return cliPrintUsageAndExit();
+    cliPrintUsageAndExit();
   }
 
   if (!strcmp(arg, "-v") || !strcmp(arg, "--version")) {
     fprintf(stderr, "%s - %s (%s)\n", NAME_NO_TTY, VERSION, SHA);
     exit(1);
-    return;
   }
 
   args->story_path = argv[argc - 1];
