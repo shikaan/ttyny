@@ -12,7 +12,7 @@ typedef enum {
   CLI_READLINE_RESULT_QUIT,
 } cli_readline_result_t;
 
-// Initalize the CLI interface
+// Initialize the CLI interface
 void cliPromptInit(void);
 cli_readline_result_t cliReadline(string_t *);
 
