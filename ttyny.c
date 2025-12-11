@@ -38,7 +38,7 @@ string_t *statesNext(states_t *self) {
 }
 
 void statesDestroy(states_t **self) {
-  if (self || *self)
+  if (!self || !(*self))
     return;
 
   for (size_t i = 0; i < (*self)->cap; i++) {
