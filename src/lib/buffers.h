@@ -201,6 +201,49 @@ static inline string_t *strDup(const string_t *self) {
   return strFrom(self->data);
 }
 
+// If failing, returns pointer to first failing replacement - else null
+static inline char *strReplace(string_t *self, const char *from,
+                               const char *to) {
+  if (!from || !to)
+    return NULL;
+
+  size_t from_len = strlen(from);
+  size_t to_len = strlen(to);
+
+  if (from_len == 0)
+    return NULL;
+
+  char *token;
+  char *search_start = self->data;
+  while ((token = strstr(search_start, from)) != NULL) {
+    if (from_len == to_len) {
+      memmove(token, to, from_len);
+      search_start = token + to_len;
+      continue;
+    }
+
+    size_t tok_len = strlen(token);
+
+    size_t delta = to_len - from_len;
+    if (from_len < to_len) {
+      if (self->len + delta >= self->cap) {
+        return token;
+      }
+
+      memmove(token + to_len, token + from_len, tok_len - from_len + 1);
+      memmove(token, to, to_len);
+    } else {
+      memmove(token, to, to_len);
+      memmove(token + to_len, token + from_len, tok_len - from_len + 1);
+    }
+    self->len += delta;
+
+    search_start = token + to_len;
+  }
+
+  return token;
+}
+
 static inline void strClear(string_t *self) { bufClear(self, 0); }
 
 typedef Buffer(string_t *) strings_t;
