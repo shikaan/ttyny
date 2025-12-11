@@ -12,6 +12,14 @@ static const char *NAME_NO_TTY = NAMESTR;
 static const char *NAME = fg_green(bold(NAMESTR));
 #undef NAMESTR
 
+#ifndef VERSION
+#define VERSION "v0.0.0"
+#endif
+
+#ifndef SHA
+#define SHA "dev"
+#endif
+
 #define LOG_DEBUG 2
 #define LOG_INFO 1
 #define LOG_ERROR 0
