@@ -133,9 +133,15 @@ void uiPrintError(string_t *response) {
   printResponse(response, failfmt(" !  "));
 }
 
-void uiPrintStateUpdate(string_t *response) {
-  printf("\n");
-  printResponse(response, " ~> ");
+void uiPrintStateUpdates(strings_t *states) {
+  if (!bufIsEmpty(states)) {
+    printf("\n");
+    size_t i;
+    bufEach(states, i) {
+      string_t *state = bufAt(states, i);
+      printResponse(state, " ~> ");
+    }
+  }
 }
 
 void uiPrintCommandOutput(string_t *response) {

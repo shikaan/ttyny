@@ -1,5 +1,6 @@
 #include "src/cli.h"
 #include "src/fmt.h"
+#include "src/lib/alloc.h"
 #include "src/lib/buffers.h"
 #include "src/lib/panic.h"
 #include "src/master.h"
@@ -15,6 +16,38 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+typedef strings_t states_t;
+states_t *statesCreate(size_t cap) {
+  states_t *states;
+  bufCreate(states_t, string_t *, states, cap);
+
+  for (size_t i = 0; i < cap; i++) {
+    bufPush(states, strCreate(256));
+  }
+
+  states->len = 0;
+  return states;
+}
+
+void statesReset(states_t *self) { self->len = 0; }
+
+string_t *statesNext(states_t *self) {
+  self->len++;
+  return bufAt(self, self->len - 1);
+}
+
+void statesDestroy(states_t **self) {
+  if (self || *self)
+    return;
+
+  for (size_t i = 0; i < (*self)->cap; i++) {
+    string_t *str = bufAt(*self, i);
+    strDestroy(&str);
+  }
+
+  deallocate(self);
+}
 
 int quit(string_t *response, ui_handle_t *loading, const world_t *world) {
   uiLoadingStop(&loading);
@@ -43,8 +76,7 @@ int main(int argc, char **argv) {
   string_t *input cleanup(strDestroy) = strCreate(512);
   string_t *response cleanup(strDestroy) = strCreate(4096);
 
-  // TODO: this should be a list of 3 items
-  string_t *state cleanup(strDestroy) = strCreate(1024);
+  states_t *states cleanup(statesDestroy) = statesCreate(3);
 
   string_t *transition cleanup(strDestroy) = strCreate(1024);
   string_t *target cleanup(strDestroy) = strCreate(128);
@@ -76,8 +108,9 @@ int main(int argc, char **argv) {
   uiLoadingStop(&loading);
   uiPrintDescription(response);
 
-  fmtLocationChange(response, world->location);
-  uiPrintStateUpdate(response);
+  string_t *state = statesNext(states);
+  fmtLocationChange(state, world->location);
+  uiPrintStateUpdates(states);
 
   cliPromptInit();
   game_state_t game_state;
@@ -155,10 +188,10 @@ int main(int argc, char **argv) {
 
     bufClear(items, NULL);
     bufClear(locations, NULL);
-    strClear(state);
+    statesReset(states);
 
     transition_result_t trans_result;
-    print_callback_t printCallback = uiPrintDescription;
+    print_string_callback_t printCallback = uiPrintDescription;
 
     switch (action) {
     case ACTION_TYPE_MOVE: {
@@ -186,6 +219,8 @@ int main(int argc, char **argv) {
       world->location = location;
       masterDescribeLocation(master, location, response);
       printCallback = uiPrintDescription;
+
+      state = statesNext(states);
       fmtLocationChange(state, world->location);
       break;
     }
@@ -258,7 +293,13 @@ int main(int argc, char **argv) {
       masterForget(master, &world->location->object, OBJECT_NAMESPACE);
 
       printCallback = uiPrintDescription;
+      state = statesNext(states);
       fmtTake(state, item);
+
+      if (affected) {
+        state = statesNext(states);
+        fmtTransition(state, affected);
+      }
       break;
     }
     case ACTION_TYPE_DROP: {
@@ -293,7 +334,13 @@ int main(int argc, char **argv) {
       masterForget(master, &world->location->object, OBJECT_NAMESPACE);
 
       printCallback = uiPrintDescription;
+      state = statesNext(states);
       fmtDrop(state, item);
+
+      if (affected) {
+        state = statesNext(states);
+        fmtTransition(state, affected);
+      }
 
       break;
     }
@@ -321,7 +368,14 @@ int main(int argc, char **argv) {
         masterForget(master, &item->object, ITEM_NAMESPACE);
 
         printCallback = uiPrintDescription;
-        fmtTransition(state, affected);
+        state = statesNext(states);
+        fmtUse(state, item);
+
+        if (affected) {
+          state = statesNext(states);
+          fmtTransition(state, affected);
+        }
+
         break;
       case TRANSITION_RESULT_MISSING_ITEM:
         strFmt(response, "You need a utensil for that.");
@@ -358,9 +412,7 @@ int main(int argc, char **argv) {
 
     uiLoadingStop(&loading);
     printCallback(response);
-    if (!bufIsEmpty(state)) {
-      uiPrintStateUpdate(state);
-    }
+    uiPrintStateUpdates(states);
   }
 
   return 0;

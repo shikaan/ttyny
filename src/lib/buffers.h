@@ -202,3 +202,5 @@ static inline string_t *strDup(const string_t *self) {
 }
 
 static inline void strClear(string_t *self) { bufClear(self, 0); }
+
+typedef Buffer(string_t *) strings_t;

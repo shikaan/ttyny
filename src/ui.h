@@ -14,12 +14,13 @@ void uiLoadingStop(ui_handle_t **);
 
 void uiClearScreen(void);
 
-typedef void (*print_callback_t)(string_t *);
+typedef void (*print_string_callback_t)(string_t *);
 void uiPrintError(string_t *);
-void uiPrintStateUpdate(string_t *);
 void uiPrintCommandOutput(string_t *);
 void uiPrintDescription(string_t *);
 void uiPrintReadable(string_t *);
+
+void uiPrintStateUpdates(strings_t *);
 
 // TODO: these area both printing and formatting. They don't conform to the
 // print_callback_t type
