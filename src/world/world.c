@@ -776,7 +776,8 @@ world_t *worldFromJSONString(string_t *json, world_result_t *res) {
 }
 
 world_t *worldFromJSONFile(const char *path, world_result_t *res) {
-  *res = WORLD_RESULT_OK;
+  if (res)
+    *res = WORLD_RESULT_OK;
 
   yyjson_doc *doc = yyjson_read_file(path, 0, NULL, NULL);
   if (!doc) {
