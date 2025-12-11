@@ -78,7 +78,6 @@ int main(int argc, char **argv) {
 
   states_t *states cleanup(statesDestroy) = statesCreate(3);
 
-  string_t *transition cleanup(strDestroy) = strCreate(1024);
   string_t *target cleanup(strDestroy) = strCreate(128);
 
   master_t *master cleanup(masterDestroy) = masterCreate(world);
