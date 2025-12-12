@@ -173,10 +173,10 @@ static void generateAndValidate(ai_t *ai, const string_t *prompt,
   debug("Prompt:\n%s", prompt->data);
   int valid = 0;
   ai_result_t result;
-#ifndef DEBUG
-  static const size_t MAX_ATTEMPTS = 20;
-#else
+#ifdef DISABLE_VALIDATION
   static const size_t MAX_ATTEMPTS = 1;
+#else
+  static const size_t MAX_ATTEMPTS = 20;
 #endif
   for (size_t i = 0; i < MAX_ATTEMPTS && !valid; i++) {
     strClear(response);
