@@ -8,7 +8,7 @@
       "name": "Cupid's Letter",
       "type": "item",
       "descriptions": [
-        "My dearest Psyche,\n\nI cannot bear to see you, but know that I still love you. You have angered my mother, Venus, by your mortal beauty that rivals her own. She will not allow our reunion until you prove yourself worthy.\n\nSeek her at her Courtyard. She will set tasks for you - four impossible trials. Only by completing all four can we be together again.\n\nBe brave, my love. Look for help in unexpected places.\n\nForever yours,\nCupid\n\nP.S. Gather what you can from the cottage. You will need supplies for a long journey."
+        "My dearest,\n\nI cannot bear to see you, but know that I still love you. You have angered my mother, Venus, by your mortal beauty that rivals her own. She will not allow our reunion until you prove yourself worthy.\n\nSeek her at her Courtyard. She will set tasks for you - four impossible trials. Only by completing all four can we be together again.\n\nBe brave, my love. Look for help in unexpected places.\n\nForever yours,\nCupid\n\nP.S. Gather what you can from the cottage. You will need supplies for a long journey."
       ],
       "transitions": [],
       "collectible": true,
@@ -422,7 +422,7 @@
       "name": "Cottage",
       "type": "location",
       "descriptions": [
-        "A humble cottage where you, Psyche, have been living in exile since angering Venus. Empty and lonely without Cupid's presence."
+        "A humble cottage where you have been living in exile since angering Venus. Empty and lonely without Cupid's presence."
       ],
       "transitions": [],
       "items": [
