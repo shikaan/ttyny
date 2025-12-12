@@ -202,7 +202,7 @@ static inline string_t *strDup(const string_t *self) {
 }
 
 // If failing, returns pointer to first failing replacement - else null
-static inline char *strReplace(string_t *self, const char *from,
+static inline char *strCaseReplace(string_t *self, const char *from,
                                const char *to) {
   if (!from || !to)
     return NULL;
@@ -215,7 +215,7 @@ static inline char *strReplace(string_t *self, const char *from,
 
   char *token;
   char *search_start = self->data;
-  while ((token = strstr(search_start, from)) != NULL) {
+  while ((token = strcasestr(search_start, from)) != NULL) {
     if (from_len == to_len) {
       memmove(token, to, from_len);
       search_start = token + to_len;

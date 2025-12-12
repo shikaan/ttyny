@@ -82,65 +82,65 @@ void stringReplace(void) {
   string_t *subject cleanup(strDestroy) = strCreate(32);
   strFmt(subject, "%s", "this is a test");
 
-  strReplace(subject, "this", "that");
+  strCaseReplace(subject, "THIS", "that");
   expectEqls(subject->data, "that is a test", 32,
              "same length, single replacement");
 
-  strReplace(subject, "that", "one");
+  strCaseReplace(subject, "ThAt", "one");
   expectEqls(subject->data, "one is a test", 32, "shorter, single replacement");
   expectEqllu(subject->len, 13, "updates len");
 
-  strReplace(subject, "one", "something");
+  strCaseReplace(subject, "one", "something");
   expectEqls(subject->data, "something is a test", 32,
              "longer, single replacement");
   expectEqllu(subject->len, 19, "updates len");
 
-  strReplace(subject, "e", "8");
+  strCaseReplace(subject, "e", "8");
   expectEqls(subject->data, "som8thing is a t8st", 32,
              "same length, multiple replacement");
 
-  strReplace(subject, "8", "**");
+  strCaseReplace(subject, "8", "**");
   expectEqls(subject->data, "som**thing is a t**st", 32,
              "longer, multiple replacement");
   expectEqllu(subject->len, 21, "updates len");
 
-  strReplace(subject, "**", "!");
+  strCaseReplace(subject, "**", "!");
   expectEqls(subject->data, "som!thing is a t!st", 32,
              "shorter, multiple replacement");
   expectEqllu(subject->len, 19, "updates len");
 
-  strReplace(subject, "", "!");
+  strCaseReplace(subject, "", "!");
   expectEqls(subject->data, "som!thing is a t!st", 32, "noop with emmpty from");
 
-  strReplace(subject, "!", "");
+  strCaseReplace(subject, "!", "");
   expectEqls(subject->data, "somthing is a tst", 32, "deletes with empty to");
 
-  strReplace(subject, "123", "456");
+  strCaseReplace(subject, "123", "456");
   expectEqls(subject->data, "somthing is a tst", 32, "noop with not found");
 
   strFmt(subject, "%s", "hello");
-  strReplace(subject, "hello", "goodbye");
+  strCaseReplace(subject, "hello", "goodbye");
   expectEqls(subject->data, "goodbye", 32, "replace entire string");
   expectEqllu(subject->len, 7, "updates len");
 
-  strReplace(subject, "good", "bad");
+  strCaseReplace(subject, "good", "bad");
   expectEqls(subject->data, "badbye", 32, "replace at start");
 
-  strReplace(subject, "bye", "tie");
+  strCaseReplace(subject, "bye", "tie");
   expectEqls(subject->data, "badtie", 32, "replace at end");
 
   strFmt(subject, "%s", "aaaaaaaa");
-  strReplace(subject, "aa", "b");
+  strCaseReplace(subject, "aa", "b");
   expectEqls(subject->data, "bbbb", 32, "replace repeated sequences");
 
   strFmt(subject, "%s", "abcdefghijklmnopqrstuvwxyz01234");
-  char *failed_ptr = strReplace(subject, "c", "111");
+  char *failed_ptr = strCaseReplace(subject, "c", "111");
   expectEqls(subject->data, "abcdefghijklmnopqrstuvwxyz01234", 32,
              "noop when out of bounds");
   expectEqli(failed_ptr[0], 'c', "returns correct pointer to failure");
 
   strFmt(subject, "%s", "c------------------c**********");
-  failed_ptr = strReplace(subject, "c", "11");
+  failed_ptr = strCaseReplace(subject, "c", "11");
   expectEqls(subject->data, "11------------------c**********", 32,
              "replaces only one");
   expectEqls(failed_ptr, "c**********", 12, "returns correct pointer to failure");
