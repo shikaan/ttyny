@@ -139,10 +139,11 @@ void stringReplace(void) {
              "noop when out of bounds");
   expectEqli(failed_ptr[0], 'c', "returns correct pointer to failure");
 
-  strFmt(subject, "%s", "c------------------c----------");
+  strFmt(subject, "%s", "c------------------c**********");
   failed_ptr = strReplace(subject, "c", "11");
-  expectEqls(subject->data, "11------------------c----------", 32, "replaces only one");
-  expectEqls(failed_ptr, "c----------", 12, "returns correct pointer to failure");
+  expectEqls(subject->data, "11------------------c**********", 32,
+             "replaces only one");
+  expectEqls(failed_ptr, "c**********", 12, "returns correct pointer to failure");
 }
 
 void buffer(void) {
