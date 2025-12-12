@@ -154,7 +154,7 @@ void uiPrintReadable(string_t *response) {
   printResponse(response, "    " ESC_ITALIC);
 }
 
-void uiPrintEndGame(string_t *buffer, game_state_t state,
+void uiFormatAndPrintEndGame(string_t *buffer, game_state_t state,
                     const world_t *world) {
   const char *state_text = state == GAME_STATE_VICTORY
                                ? successfmt("~~~>   YOU WON!   <~~~")
@@ -227,7 +227,7 @@ void uiPrintEndGame(string_t *buffer, game_state_t state,
 
 void uiClearScreen(void) { puts("\e[1;1H\e[2J"); }
 
-void uiPrintOpeningCredits(const world_t *world) {
+void uiFormatAndPrintOpeningCredits(const world_t *world) {
   uiClearScreen();
   char buffer[1024] = {};
 

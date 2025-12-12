@@ -51,7 +51,7 @@ void statesDestroy(states_t **self) {
 
 int quit(string_t *response, ui_handle_t *loading, const world_t *world) {
   uiLoadingStop(&loading);
-  uiPrintEndGame(response, GAME_STATE_DEAD, world);
+  uiFormatAndPrintEndGame(response, GAME_STATE_DEAD, world);
   return 0;
 }
 
@@ -405,7 +405,7 @@ int main(int argc, char **argv) {
       masterDescribeEndGame(master, input, world, game_state, response);
       uiLoadingStop(&loading);
       uiPrintDescription(response);
-      uiPrintEndGame(response, game_state, world);
+      uiFormatAndPrintEndGame(response, game_state, world);
       return 0;
     }
 

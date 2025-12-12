@@ -22,7 +22,6 @@ void uiPrintReadable(string_t *);
 
 void uiPrintStateUpdates(strings_t *);
 
-// TODO: these area both printing and formatting. They don't conform to the
-// print_callback_t type
-void uiPrintEndGame(string_t *, game_state_t, const world_t *);
-void uiPrintOpeningCredits(const world_t *);
+
+void uiFormatAndPrintEndGame(string_t *, game_state_t, const world_t *);
+void uiFormatAndPrintOpeningCredits(const world_t *);
