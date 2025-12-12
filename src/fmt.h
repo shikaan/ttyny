@@ -20,3 +20,4 @@ void fmtTake(string_t *, const item_t *);
 void fmtDrop(string_t *, const item_t *);
 void fmtUse(string_t *, const item_t *);
 void fmtTransition(string_t *, const object_t *);
+void fmtCapitalizeWorldObjects(string_t *, const world_t *);

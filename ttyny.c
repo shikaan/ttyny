@@ -105,6 +105,7 @@ int main(int argc, char **argv) {
 
   masterDescribeLocation(master, world->location, response);
   uiLoadingStop(&loading);
+  fmtCapitalizeWorldObjects(response, world);
   uiPrintDescription(response);
 
   string_t *state = statesNext(states);
@@ -410,6 +411,7 @@ int main(int argc, char **argv) {
     }
 
     uiLoadingStop(&loading);
+    fmtCapitalizeWorldObjects(response, world);
     printCallback(response);
     uiPrintStateUpdates(states);
   }

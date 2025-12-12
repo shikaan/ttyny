@@ -138,3 +138,16 @@ void fmtTldr(string_t *response, const world_t *world) {
     strFmtAppend(response, "\n  • " locationfmt("%s"), room_exit->object.name);
   }
 }
+
+void fmtCapitalizeWorldObjects(string_t * response, const world_t * world) {
+  size_t i = 0;
+  bufEach(world->items, i) {
+    item_t* item = bufAt(world->items, i);
+    strCaseReplace(response, item->object.name, item->object.name);
+  }
+
+  bufEach(world->locations, i) {
+    location_t* location = bufAt(world->locations, i);
+    strCaseReplace(response, location->object.name, location->object.name);
+  }
+}
