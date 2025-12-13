@@ -91,13 +91,13 @@ int main(int argc, char **argv) {
   items_t *items cleanup(itemsDestroy) = itemsCreate(world->items->cap);
 
   uiClearScreen();
-#ifndef DEBUG
+#ifdef NDEBUG
   fmtWelcomeScreen(response);
   uiPrintCommandOutput(response);
   fgetc(stdin);
   uiClearScreen();
 
-  uiPrintOpeningCredits(world);
+  uiFormatAndPrintOpeningCredits(world);
   fgetc(stdin);
   uiClearScreen();
 #endif
