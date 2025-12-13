@@ -1,0 +1,649 @@
+{
+  "meta": {
+    "title": "Aladdin and the Magic Lamp",
+    "author": "shikaan <shikaan@disroot.org>"
+  },
+  "items": [
+    {
+      "name": "Sorcerer's Note",
+      "type": "item",
+      "descriptions": [
+        "Aladdin,\n\nYou will enter the cave beyond the ancient ruins and retrieve for me a simple oil lamp. It sits in the deepest chamber.\n\nDo NOT touch any other treasure. The cave's magic punishes greed. Take only the lamp and return it to me. Do this and you will be rewarded beyond your dreams.\n\nThe cave holds many dangers. Bring rope for climbing, a torch for darkness, and pay attention to any inscriptions you find. They may save your life.\n\nDo not fail me.\n— The Sorcerer"
+      ],
+      "transitions": [],
+      "collectible": true,
+      "readable": true
+    },
+    {
+      "name": "Rope",
+      "type": "item",
+      "descriptions": ["Strong rope, good for climbing."],
+      "transitions": [],
+      "collectible": true,
+      "readable": false
+    },
+    {
+      "name": "Flint",
+      "type": "item",
+      "descriptions": [
+        "A jagged piece of flint. It can spark a flame to bring light to the darkness."
+      ],
+      "transitions": [],
+      "collectible": true,
+      "readable": false
+    },
+    {
+      "name": "Ancient Tablet",
+      "type": "item",
+      "descriptions": [
+        "WARNING TO ALL WHO ENTER\n\nThis cave was built by ancient sorcerers to guard a powerful artifact. Its magic protects the treasure within.\n\nHEED THIS RULE:\n\nTake ONLY what you came for. Touch no gold, no jewels, no fruits of temptation. Greed awakens the cave's wrath.\n\nThe cursed treasures are marked by their beauty and abundance. If you see gold piled high or jewels growing on trees, LEAVE THEM BE.\n\nTake only the lamp. All else leads to doom."
+      ],
+      "transitions": [],
+      "collectible": false,
+      "readable": true
+    },
+    {
+      "name": "Whispering Mirror",
+      "type": "item",
+      "descriptions": [
+        "No reflection do I show, no image can I bear... but touch me, dear traveler, if you dare..."
+      ],
+      "transitions": [
+        {
+          "actions": ["use"],
+          "target": "Stone Door.0",
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": null,
+            "items": null,
+            "locations": null,
+            "turns": null,
+            "current_location": null
+          }
+        }
+      ],
+      "collectible": false,
+      "readable": true
+    },
+    {
+      "name": "Stone Door",
+      "type": "item",
+      "descriptions": [
+        "A stone door blocks the passage deeper into the cave. It has no keyhole or handle.",
+        "The door has opened, revealing the path forward."
+      ],
+      "transitions": [],
+      "collectible": false,
+      "readable": false
+    },
+    {
+      "name": "Jeweled Fruits",
+      "type": "item",
+      "descriptions": [
+        "Fruits made of rubies, emeralds, and sapphires hang from the trees. They sparkle temptingly. The tablet warned about greed.",
+        "You took the cursed treasure. The cave shudders violently. Cracks spread across the ceiling. Rocks rain down. The cave collapses around you. You are buried alive, your greed your doom."
+      ],
+      "transitions": [
+        {
+          "actions": ["take"],
+          "target": "Jeweled Fruits.0",
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": null,
+            "items": null,
+            "locations": null,
+            "turns": null,
+            "current_location": null
+          }
+        }
+      ],
+      "collectible": true,
+      "readable": false
+    },
+    {
+      "name": "Silver Bell",
+      "type": "item",
+      "descriptions": [
+        "Ring me where the serpent sleeps,\nLet this chime through cavern deeps,\nAncient guardian, fierce and old,\nYields to songs from silver's fold."
+      ],
+      "transitions": [
+        {
+          "actions": ["use"],
+          "target": "Serpent's Coil.0",
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": null,
+            "items": null,
+            "locations": null,
+            "turns": null,
+            "current_location": "Serpent's Coil"
+          }
+        }
+      ],
+      "collectible": true,
+      "readable": true
+    },
+    {
+      "name": "Bronze Key",
+      "type": "item",
+      "descriptions": [
+        "An old bronze key. It looks like it fits a chest or lock."
+      ],
+      "transitions": [
+        {
+          "actions": ["use"],
+          "target": "Vitrine.0",
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": null,
+            "items": null,
+            "locations": null,
+            "turns": null,
+            "current_location": "Treasury"
+          }
+        }
+      ],
+      "collectible": true,
+      "readable": false
+    },
+    {
+      "name": "Torch",
+      "type": "item",
+      "descriptions": [
+        "An unlit torch mounted on the stone wall. Its oil-soaked tip awaits a spark.",
+        "The torch burns brightly, casting dancing shadows and illuminating the path ahead."
+      ],
+      "transitions": [
+        {
+          "actions": ["use"],
+          "target": "Crystal Bridge.1",
+          "from": 1,
+          "to": 2,
+          "requirements": {
+            "inventory": ["Flint"],
+            "items": null,
+            "locations": null,
+            "turns": null,
+            "current_location": null
+          }
+        }
+      ],
+      "collectible": false,
+      "readable": false
+    },
+    {
+      "name": "Bridge Warning",
+      "type": "item",
+      "descriptions": [
+        "This bridge is made of enchanted crystal. It is slippery and treacherous in darkness.\n\nMany have fallen into the chasm below by crossing without light.\n\nLight the torch on the wall to illuminate your path safely."
+      ],
+      "transitions": [],
+      "collectible": false,
+      "readable": true
+    },
+    {
+      "name": "Gold Coins",
+      "type": "item",
+      "descriptions": [
+        "Piles of gold coins cover the floor. They gleam invitingly. But they feel wrong - cursed.",
+        "You took the cursed gold. The cave trembles. The ceiling cracks. Massive stones crash down. The chamber collapses. You are crushed beneath the weight of your greed."
+      ],
+      "transitions": [
+        {
+          "actions": ["take"],
+          "target": "Gold Coins.0",
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": null,
+            "items": null,
+            "locations": null,
+            "turns": null,
+            "current_location": null
+          }
+        }
+      ],
+      "collectible": true,
+      "readable": false
+    },
+    {
+      "name": "Vitrine",
+      "type": "item",
+      "descriptions": [
+        "A glass case with a lock. You can see a chalice inside. It looks safe to open.",
+        "The vitrine is open. You can now take the bronze chalice."
+      ],
+      "transitions": [],
+      "collectible": false,
+      "readable": false
+    },
+    {
+      "name": "Bronze Chalice",
+      "type": "item",
+      "descriptions": [
+        "A precious chalice, currently preserved in a locked vitrine.",
+        "A ceremonial bronze chalice. It could hold liquid.",
+        "The chalice is filled with Enchanted Water that can extinguish magical flames."
+      ],
+      "transitions": [
+        {
+          "actions": ["use"],
+          "target": "Bronze Chalice.1",
+          "from": 1,
+          "to": 2,
+          "requirements": {
+            "inventory": null,
+            "items": null,
+            "locations": null,
+            "turns": null,
+            "current_location": "Fountain Court"
+          }
+        },
+        {
+          "actions": ["take"],
+          "target": "Bronze Chalice.0",
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": null,
+            "items": ["Vitrine.1"],
+            "locations": null,
+            "turns": null,
+            "current_location": null
+          }
+        },
+        {
+          "actions": ["use"],
+          "target": "Flame Trap.0",
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": ["Bronze Chalice.2"],
+            "items": null,
+            "locations": null,
+            "turns": null,
+            "current_location": "Lamp Chamber"
+          }
+        }
+      ],
+      "collectible": true,
+      "readable": false
+    },
+    {
+      "name": "Vitrine Placard",
+      "type": "item",
+      "descriptions": [
+        "In the Fountain Court lies a magical spring. Its waters hold ancient power.\n\nFill the bronze chalice with this enchanted water. It can extinguish even magical flames.\n\nYou will need it to reach the lamp. The final chamber is guarded by fire that cannot be doused by ordinary means."
+      ],
+      "transitions": [],
+      "collectible": true,
+      "readable": true
+    },
+    {
+      "name": "Magical Fountain",
+      "type": "item",
+      "descriptions": [
+        "A beautiful fountain flows with glowing water. The water sparkles with magic."
+      ],
+      "transitions": [],
+      "collectible": false,
+      "readable": false
+    },
+    {
+      "name": "Warrior Statue",
+      "type": "item",
+      "descriptions": [
+        "A stone statue of a warrior in battle stance. It's inviting you for a fight.",
+        "The warrior statue's sword points downward. It has been defeated."
+      ],
+      "transitions": [
+        {
+          "actions": ["use"],
+          "target": "Warrior Statue.0",
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": null,
+            "items": null,
+            "locations": null,
+            "turns": null,
+            "current_location": null
+          }
+        }
+      ],
+      "collectible": false,
+      "readable": false
+    },
+    {
+      "name": "Scholar Statue",
+      "type": "item",
+      "descriptions": [
+        "A stone statue of a scholar holding an open book, gazing expectantly.",
+        "The scholar statue's eyes light up. It has seen the ancient scroll."
+      ],
+      "transitions": [
+        {
+          "actions": ["use"],
+          "target": "Scholar Statue.0",
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": ["Ancient Scroll"],
+            "items": ["Warrior Statue.1"],
+            "locations": null,
+            "turns": null,
+            "current_location": null
+          }
+        }
+      ],
+      "collectible": false,
+      "readable": false
+    },
+    {
+      "name": "Merchant Statue",
+      "type": "item",
+      "descriptions": [
+        "A stone statue of a merchant examining goods, looking for something valuable.",
+        "The merchant statue nods approvingly. It has seen the bronze key."
+      ],
+      "transitions": [
+        {
+          "actions": ["use"],
+          "target": "Chamber Door.0",
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": ["Bronze Key"],
+            "items": ["Warrior Statue.1", "Scholar Statue.1"],
+            "locations": null,
+            "turns": null,
+            "current_location": null
+          }
+        }
+      ],
+      "collectible": false,
+      "readable": false
+    },
+    {
+      "name": "Gallery Inscription",
+      "type": "item",
+      "descriptions": [
+        "Three guardians guard the inner door,\nSatisfy them all to reach the core.\n\nFirst the WARRIOR stands to fight,\nStrike him down with all your might.\n\nNext the SCHOLAR craves the lore,\nShow the scroll he's waiting for.\n\nLast the MERCHANT seeks his prize,\nPresent the key before his eyes.\n\nComplete this trial, unlock the way,\nThe lamp awaits at end of day."
+      ],
+      "transitions": [],
+      "collectible": false,
+      "readable": true
+    },
+    {
+      "name": "Flame Trap",
+      "type": "item",
+      "descriptions": [
+        "Magical flames surround the lamp's pedestal. They burn with unnatural heat. Ordinary water cannot stop them.",
+        "The enchanted water douses the magical flames. The pedestal is now accessible."
+      ],
+      "transitions": [],
+      "collectible": false,
+      "readable": false
+    },
+    {
+      "name": "Magic Lamp",
+      "type": "item",
+      "descriptions": [
+        "An ancient oil lamp rests on the pedestal. This is what you came for."
+      ],
+      "transitions": [
+        {
+          "actions": ["take"],
+          "target": "Lamp Chamber",
+          "from": 1,
+          "to": 2,
+          "requirements": {
+            "inventory": null,
+            "items": ["Flame Trap.1"],
+            "locations": null,
+            "turns": null,
+            "current_location": null
+          }
+        }
+      ],
+      "collectible": true,
+      "readable": false
+    },
+    {
+      "name": "Ancient Scroll",
+      "type": "item",
+      "descriptions": [
+        "A scroll filled with unreadable runes in an unknown language."
+      ],
+      "transitions": [],
+      "collectible": true,
+      "readable": false
+    }
+  ],
+  "locations": [
+    {
+      "name": "Ancient Ruins",
+      "type": "location",
+      "descriptions": [
+        "You stand in front of stone structures around a dark cave entrance. The sorcerer, your patron, left supplies here for your journey."
+      ],
+      "transitions": [],
+      "items": ["Sorcerer's Note", "Rope", "Flint", "Ancient Tablet"],
+      "exits": ["Hall of Mirrors"]
+    },
+    {
+      "name": "Hall of Mirrors",
+      "type": "location",
+      "descriptions": [
+        "A chamber filled with ornate mirrors. They reflect endlessly. A stone door blocks the way forward. One mirror seems different from the others..."
+      ],
+      "transitions": [],
+      "items": ["Whispering Mirror", "Stone Door"],
+      "exits": ["Ancient Ruins", "Garden of Jeweled Trees"]
+    },
+    {
+      "name": "Garden of Jeweled Trees",
+      "type": "location",
+      "descriptions": [
+        "A magical garden with trees bearing fruit made of gems. Blocked by the Stone Door.",
+        "A magical garden with trees bearing fruit made of gems. Beautiful but dangerous. A silver bell rests beneath one tree. A bronze key lies on the ground."
+      ],
+      "transitions": [
+        {
+          "actions": ["move"],
+          "target": "Garden of Jeweled Trees",
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": null,
+            "locations": null,
+            "turns": null,
+            "current_location": null,
+            "items": ["Stone Door.1"]
+          }
+        }
+      ],
+      "items": ["Jeweled Fruits", "Silver Bell", "Bronze Key"],
+      "exits": ["Hall of Mirrors", "Treasury", "Serpent's Coil"]
+    },
+    {
+      "name": "Crystal Bridge",
+      "type": "location",
+      "descriptions": [
+        "A giant serpent block the access.",
+        "A narrow bridge of crystal spans a deep chasm. It's dark and treacherous. A warning is carved into the stone.",
+        "The torch illuminates the crystal bridge. It's safe to cross now."
+      ],
+      "transitions": [
+        {
+          "actions": ["move"],
+          "target": "Crystal Bridge",
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": null,
+            "locations": ["Serpent's Coil.1"],
+            "turns": null,
+            "current_location": null,
+            "items": null
+          }
+        }
+      ],
+      "items": ["Torch", "Bridge Warning"],
+      "exits": ["Serpent's Coil", "Stone Gallery"]
+    },
+    {
+      "name": "Treasury",
+      "type": "location",
+      "descriptions": [
+        "Gold spills across the floor in glittering heaps. The air tingles with ancient magic—beautiful, tempting, and wrong."
+      ],
+      "transitions": [],
+      "items": [
+        "Gold Coins",
+        "Vitrine",
+        "Bronze Chalice",
+        "Vitrine Placard",
+        "Ancient Scroll"
+      ],
+      "exits": ["Garden of Jeweled Trees", "Fountain Court"]
+    },
+    {
+      "name": "Fountain Court",
+      "type": "location",
+      "descriptions": [
+        "A courtyard with a magical fountain. The water glows with enchantment."
+      ],
+      "transitions": [],
+      "items": ["Magical Fountain"],
+      "exits": ["Treasury", "Lamp Chamber"]
+    },
+    {
+      "name": "Serpent's Coil",
+      "type": "location",
+      "descriptions": [
+        "A massive serpent coils here, blocking all passages forward. You need to calm it to proceed.",
+        "The serpent sleeps peacefully. The passages are clear."
+      ],
+      "transitions": [],
+      "items": [],
+      "exits": ["Garden of Jeweled Trees", "Crystal Bridge"]
+    },
+    {
+      "name": "Stone Gallery",
+      "type": "location",
+      "descriptions": [
+        "Ancient stone statues line the walls. Three statues stand here: a warrior, a scholar, and a merchant. They are the key to your progression."
+      ],
+      "transitions": [],
+      "items": [
+        "Warrior Statue",
+        "Scholar Statue",
+        "Merchant Statue",
+        "Gallery Inscription"
+      ],
+      "exits": ["Crystal Bridge", "Lamp Chamber"]
+    },
+    {
+      "name": "Lamp Chamber",
+      "type": "location",
+      "descriptions": [
+        "The inner sanctum. A massive door guards the chamber.",
+        "Magical flames surround a pedestal holding the lamp. This where you came here for.",
+        "The cave shakes violently! Dust and rocks fall. The walls crack. A passage opens to the north - you must escape now!"
+      ],
+      "transitions": [
+        {
+          "actions": ["move"],
+          "target": "Lamp Chamber",
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": null,
+            "items": ["Merchant Statue.1"],
+            "locations": null,
+            "turns": null,
+            "current_location": null
+          }
+        }
+      ],
+      "items": ["Flame Trap", "Magic Lamp"],
+      "exits": ["Fountain Court", "Stone Gallery", "Merchant's Quarter"]
+    },
+    {
+      "name": "Merchant's Quarter",
+      "type": "location",
+      "descriptions": [
+        "An opening on the ceiling shows a way out. You need a rope to get out there.",
+        "You emerge into the bustling marketplace. Sunlight and fresh air greet you. You've escaped the cave with the magic lamp!"
+      ],
+      "transitions": [
+        {
+          "actions": ["move"],
+          "target": "Merchant's Quarter",
+          "from": 0,
+          "to": 1,
+          "requirements": {
+            "inventory": ["Rope"],
+            "items": null,
+            "locations": null,
+            "turns": null,
+            "current_location": "Lamp Chamber.2"
+          }
+        }
+      ],
+      "items": [],
+      "exits": []
+    }
+  ],
+  "endings": [
+    {
+      "state": "win",
+      "reason": "You escape the collapsing cave with the magic lamp! The sorcerer waits in the marketplace, eager to claim his prize. But the lamp is yours now - and with it, the power of the djinn. You have survived the cave's trials and claimed the greatest treasure of all.",
+      "requirements": {
+        "inventory": ["Magic Lamp"],
+        "items": null,
+        "locations": null,
+        "turns": null,
+        "current_location": "Merchant's Quarter"
+      }
+    },
+    {
+      "state": "lose",
+      "reason": "Your greed awakened the cave's wrath. The cursed treasure triggered the ancient magic. The cave collapses violently. Rocks and debris crush you. Your body is buried forever beneath the ruins. The lamp remains unclaimed.",
+      "requirements": {
+        "inventory": null,
+        "items": ["Jeweled Fruits.1"],
+        "locations": null,
+        "turns": null,
+        "current_location": null
+      }
+    },
+    {
+      "state": "lose",
+      "reason": "Your greed has doomed you. Taking the cursed gold triggered the cave's ancient protection. The ceiling collapses. Massive stones rain down. You are crushed beneath tons of rock. The treasure you craved has become your grave.",
+      "requirements": {
+        "inventory": null,
+        "items": ["Gold Coins.1"],
+        "locations": null,
+        "turns": null,
+        "current_location": null
+      }
+    },
+    {
+      "state": "lose",
+      "reason": "You tried to cross the crystal bridge in darkness. Your foot slips on the slick crystal. You tumble over the edge. The chasm swallows you. Your screams echo as you fall into the endless depths below.",
+      "requirements": {
+        "inventory": null,
+        "items": null,
+        "locations": ["Crystal Bridge.0"],
+        "turns": null,
+        "current_location": "Stone Gallery"
+      }
+    }
+  ]
+}
