@@ -22,13 +22,103 @@ const story = await Bun.file(storyPath).json();
 const ajv = new Ajv();
 const validate = ajv.compile(schema);
 
-console.log(`Validating ${storyPath}...`);
+console.log(`Schema is valid...`);
 const isValid = validate(story);
 
 if (!isValid) {
-  console.error("Invalid story!");
+  console.log(`Schema is valid... FAIL`);
+  console.error("Errors:");
   console.error(validate.errors);
   process.exit(1);
 } else {
-  console.log(`Validating ${storyPath}... OK`);
+  console.log(`Schema is valid... OK`);
+}
+
+const getObjectName = (str) => str.split('.')[0]
+const getRequirements = ({requirements}) =>
+  [
+    ...(requirements.items || []),
+    ...(requirements.locations || []),
+    ...(requirements.inventory || []),
+    ...(requirements.current_location ? [requirements.current_location] : [])
+  ]
+
+console.log(`Referenced objects exist...`);
+const itemNames = story.items.map(i => i.name);
+const locationNames = story.locations.map(i => i.name);
+const locationByName = Object.fromEntries(story.locations.map(i => [i.name, i]));
+
+const errors = [];
+for (const location of story.locations) {
+  const locationItemNames = location.items.map(getObjectName);
+  const locationExitNames = location.exits.map(getObjectName);
+  const locationRequirementNames = location.transitions.flatMap(getRequirements).map(getObjectName);
+
+  const unknownItems = locationItemNames.filter(i => !itemNames.includes(i));
+  if (unknownItems.length > 0) {
+    errors.push(`Location ${location.name} has unknown items: ${unknownItems.join(', ')}`);
+  }
+
+  const unknownExits = locationExitNames.filter(i => !locationNames.includes(i));
+  if (unknownExits.length > 0) {
+    errors.push(`Location ${location.name} has unknown exits: ${unknownExits.join(', ')}`);
+  }
+
+  const unknownRequirements = locationRequirementNames.filter(i => {
+    return !locationNames.includes(i) && !itemNames.includes(i);
+  });
+  if (unknownRequirements.length > 0) {
+    errors.push(`Location ${location.name} has unknown requirements: ${unknownRequirements.join(', ')}`);
+  }
+}
+
+for (const item of story.items) {
+  const itemRequirementNames = item.transitions.flatMap(getRequirements).map(getObjectName);
+  const unknownRequirements = itemRequirementNames.filter(i => {
+    return !itemNames.includes(i) && !locationNames.includes(i);
+  });
+  if (unknownRequirements.length > 0) {
+    errors.push(`Item ${item.name} has unknown requirements: ${unknownRequirements.join(', ')}`);
+  }
+}
+
+for (const ending of story.endings) {
+  const endingRequirementNames = getRequirements(ending).map(getObjectName);
+  const unknownRequirements = endingRequirementNames.filter(i => {
+    return !itemNames.includes(i) && !locationNames.includes(i);
+  });
+  if (unknownRequirements.length > 0) {
+    errors.push(`Ending ${ending.name} has unknown requirements: ${unknownRequirements.join(', ')}`);
+  }
+}
+
+if (errors.length === 0) {
+  console.log(`Referenced objects exist... OK`);
+} else {
+  console.log(`Referenced objects exist... FAIL`);
+  console.error("Errors:");
+  errors.map(err => console.error(` - ${err}`));
+  process.exit(1);
+}
+
+console.log("Paths are walkable...");
+
+const walkedLocations = new Set();
+const walk = (location) => {
+  if (walkedLocations.has(location.name)) return;
+  walkedLocations.add(location.name);
+  location.exits.forEach((i) => {
+    walk(locationByName[getObjectName(i)])
+  });
+}
+walk(story.locations[0]);
+
+if (story.locations.length === walkedLocations.size) {
+  console.log("Paths are walkable... OK");
+} else {
+  console.log(`Paths are walkable... FAIL`);
+  console.error("Errors:");
+  const missing = story.locations.filter(l => !walkedLocations.has(l.name));
+  missing.map(location => console.error(` - Locaation ${location.name} is not reacheable`));
+  process.exit(1);
 }
