@@ -211,7 +211,7 @@ int main(int argc, char **argv) {
         printCallback = uiPrintError;
         break;
       } else if (trans_result == TRANSITION_RESULT_INVALID_TARGET) {
-        strFmt(response, "This way is locked by some contraption.");
+        strFmt(response, "This way is blocked by some contraption.");
         printCallback = uiPrintError;
         break;
       }
