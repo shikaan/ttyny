@@ -10,6 +10,11 @@
 #include <stdio.h>
 #include <string.h>
 
+// Set to 1 to always use the first response from the AI, without validation
+#ifndef DISABLE_PROMPT_VALIDATION
+#define DISABLE_PROMPT_VALIDATION 0
+#endif
+
 // This class represent the Game Master. It's the AI recounting the state of
 // the world, describing situations and locations. It has a memory such that
 // descriptions don't have to be recreated from scratch every time.
