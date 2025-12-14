@@ -168,8 +168,8 @@ int masterIsValidResponse(string_t *response, words_t *must_haves) {
   return !hasStopWords(response) && hasAllMustHaves(response, must_haves);
 }
 
-static void generateAndValidate(ai_t *ai, const string_t *prompt,
-                                string_t *response, words_t *must_haves) {
+static int generateAndValidate(ai_t *ai, const string_t *prompt,
+                               string_t *response, words_t *must_haves) {
   debug("Prompt:\n%s", prompt->data);
   int valid = 0;
   ai_result_t result;
@@ -193,8 +193,9 @@ static void generateAndValidate(ai_t *ai, const string_t *prompt,
       debug("Rejected:\n%s\n", response->data);
   }
   if (!valid) {
-    error("Invalid output: giving up.")
+    error("Invalid output: giving up.") return -1;
   }
+  return 0;
 }
 
 void masterDescribeLocation(master_t *self, const location_t *location,
@@ -235,12 +236,12 @@ void masterDescribeLocation(master_t *self, const location_t *location,
     bufPush(must_haves, exit->object.name);
   }
 
-  generateAndValidate(self->ai, self->prompt, description, must_haves);
-
-  char *description_data = strdup(description->data);
-  char *description_key = strdup(cache_key);
-  (void)mapSet(self->descriptions, description_key, description_data);
-  debug("written cache at: %s\n", cache_key);
+  if (!generateAndValidate(self->ai, self->prompt, description, must_haves)) {
+    char *description_data = strdup(description->data);
+    char *description_key = strdup(cache_key);
+    (void)mapSet(self->descriptions, description_key, description_data);
+    debug("written cache at: %s\n", cache_key);
+  };
 }
 
 void masterReadItem(master_t *self, const item_t *item, string_t *description) {
@@ -278,11 +279,11 @@ void masterDescribeObject(master_t *self, const object_t *object,
 
   strFmtAppend(self->prompt, res_prompt_tpl->data, "");
 
-  generateAndValidate(self->ai, self->prompt, description, NULL);
-
-  char *copy = strdup(description->data);
-  (void)mapSet(self->descriptions, cache_key, copy);
-  debug("written cache at: %s\n", cache_key);
+  if (!generateAndValidate(self->ai, self->prompt, description, NULL)) {
+    char *copy = strdup(description->data);
+    (void)mapSet(self->descriptions, cache_key, copy);
+    debug("written cache at: %s\n", cache_key);
+  }
 }
 
 void masterDescribeAction(master_t *self, const world_t *world,
