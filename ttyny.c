@@ -299,6 +299,10 @@ int main(int argc, char **argv) {
       if (affected) {
         state = statesNext(states);
         fmtTransition(state, affected);
+        masterForget(master, affected,
+                     affected->type == OBJECT_TYPE_ITEM ? ITEM_NAMESPACE
+                                                        : LOCATION_NAMESPACE);
+        masterForget(master, affected, OBJECT_NAMESPACE);
       }
       break;
     }
@@ -340,6 +344,10 @@ int main(int argc, char **argv) {
       if (affected) {
         state = statesNext(states);
         fmtTransition(state, affected);
+        masterForget(master, affected,
+                     affected->type == OBJECT_TYPE_ITEM ? ITEM_NAMESPACE
+                                                        : LOCATION_NAMESPACE);
+        masterForget(master, affected, OBJECT_NAMESPACE);
       }
 
       break;
@@ -374,6 +382,10 @@ int main(int argc, char **argv) {
         if (affected) {
           state = statesNext(states);
           fmtTransition(state, affected);
+          masterForget(master, affected,
+                       affected->type == OBJECT_TYPE_ITEM ? ITEM_NAMESPACE
+                                                          : LOCATION_NAMESPACE);
+          masterForget(master, affected, OBJECT_NAMESPACE);
         }
 
         break;
