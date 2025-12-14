@@ -83,13 +83,14 @@ void fmtHelp(string_t *response, const world_t *world) {
          "Available commands:\n"
          "   • %s - shows the player status\n"
          "   • %s   - displays this help\n"
+         "   • %s - repeats last room's description\n"
          "   • %s   - summarizes the current location\n"
          "   • %s   - ends the game\n"
          "\n"
          "Based on your last input, you could try %s.",
          NAME, promptfmt("Light the lamp"), promptfmt("Go to the garden"),
-         commandfmt("/status"), commandfmt("/help"), commandfmt("/tldr"),
-         commandfmt("/quit"), suggestion->data);
+         commandfmt("/status"), commandfmt("/help"), commandfmt("/repeat"),
+         commandfmt("/tldr"), commandfmt("/quit"), suggestion->data);
 }
 
 void fmtStatus(string_t *response, const world_t *world) {
@@ -139,15 +140,15 @@ void fmtTldr(string_t *response, const world_t *world) {
   }
 }
 
-void fmtCapitalizeWorldObjects(string_t * response, const world_t * world) {
+void fmtCapitalizeWorldObjects(string_t *response, const world_t *world) {
   size_t i = 0;
   bufEach(world->items, i) {
-    item_t* item = bufAt(world->items, i);
+    item_t *item = bufAt(world->items, i);
     strCaseReplace(response, item->object.name, item->object.name);
   }
 
   bufEach(world->locations, i) {
-    location_t* location = bufAt(world->locations, i);
+    location_t *location = bufAt(world->locations, i);
     strCaseReplace(response, location->object.name, location->object.name);
   }
 }
