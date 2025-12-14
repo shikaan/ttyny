@@ -111,6 +111,10 @@ void commands(void) {
   test("/tldr", COMMAND_TYPE_TLDR);
   test("/t", COMMAND_TYPE_TLDR);
 
+  case("repeat");
+  test("/repeat", COMMAND_TYPE_REPEAT);
+  test("/r", COMMAND_TYPE_REPEAT);
+
   case("unknown");
   test("/unknown", COMMAND_TYPE_UNKNOWN);
   test("/invalid", COMMAND_TYPE_UNKNOWN);

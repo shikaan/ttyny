@@ -3,6 +3,7 @@
 #include "lib/panic.h"
 #include "utils.h"
 #include "world/action.h"
+#include "world/location.h"
 #include <stddef.h>
 
 static string_t ACTION_GRAMMAR = strConst(
@@ -89,6 +90,9 @@ void parserGetOperation(parser_t *self, operation_t *operation,
       return;
     } else if (strStartsWith(&COMMAND_TLDR, input)) {
       operation->as.command = COMMAND_TYPE_TLDR;
+      return;
+    } else if (strStartsWith(&COMMAND_REPEAT, input)) {
+      operation->as.command = COMMAND_TYPE_REPEAT;
       return;
     }
 

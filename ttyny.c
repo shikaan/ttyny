@@ -163,6 +163,12 @@ int main(int argc, char **argv) {
       case COMMAND_TYPE_QUIT: {
         return quit(response, loading, world);
       }
+      case COMMAND_TYPE_REPEAT: {
+        masterDescribeLocation(master, world->location, response);
+        uiLoadingStop(&loading);
+        uiPrintDescription(response);
+        break;
+      }
       case COMMAND_TYPE_UNKNOWN:
       case COMMAND_TYPES:
       default: {
