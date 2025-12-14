@@ -51,7 +51,12 @@ void statesDestroy(states_t **self) {
 
 int quit(string_t *response, ui_handle_t *loading, const world_t *world) {
   uiLoadingStop(&loading);
+#if defined(NDEBUG) || !defined(DEBUG)
   uiFormatAndPrintEndGame(response, GAME_STATE_DEAD, world);
+#else
+  (void)response;
+  (void)world;
+#endif
   return 0;
 }
 
@@ -91,7 +96,7 @@ int main(int argc, char **argv) {
   items_t *items cleanup(itemsDestroy) = itemsCreate(world->items->cap);
 
   uiClearScreen();
-#ifdef NDEBUG
+#if defined(NDEBUG) || !defined(DEBUG)
   fmtWelcomeScreen(response);
   uiPrintCommandOutput(response);
   fgetc(stdin);
@@ -415,10 +420,12 @@ int main(int argc, char **argv) {
 
     worldDigest(world, &game_state);
     if (game_state != GAME_STATE_CONTINUE) {
+#if defined(NDEBUG) || !defined(DEBUG)
       masterDescribeEndGame(master, input, world, game_state, response);
       uiLoadingStop(&loading);
       uiPrintDescription(response);
       uiFormatAndPrintEndGame(response, game_state, world);
+#endif
       return 0;
     }
 
