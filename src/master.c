@@ -173,7 +173,7 @@ static void generateAndValidate(ai_t *ai, const string_t *prompt,
   debug("Prompt:\n%s", prompt->data);
   int valid = 0;
   ai_result_t result;
-#if DISABLE_PROMPT_VALIDATION != 0
+#if RESPONSE_VALIDATION == 0
   static const size_t MAX_ATTEMPTS = 1;
 #else
   static const size_t MAX_ATTEMPTS = 20;
