@@ -193,7 +193,8 @@ static int generateAndValidate(ai_t *ai, const string_t *prompt,
       debug("Rejected:\n%s\n", response->data);
   }
   if (!valid) {
-    error("Invalid output: giving up.") return -1;
+    error("Invalid output: giving up.");
+    return -1;
   }
   return 0;
 }
