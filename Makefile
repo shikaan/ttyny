@@ -1,10 +1,19 @@
 include flags.mk
 
-LOG_LEVEL := -1
+# Release flags. Set by CI in release builds
 VERSION := v0.0.0
 SHA := dev
-DISABLE_PROMPT_VALIDATION := 0
-CFLAGS := $(CFLAGS) -DLOG_LEVEL=$(LOG_LEVEL) -DVERSION='"$(VERSION)"' -DSHA='"$(SHA)"' -DDISABLE_PROMPT_VALIDATION='$(DISABLE_PROMPT_VALIDATION)'
+
+# Set to 2 to see all the logs, -1 to disable
+LOG_LEVEL := -1
+
+# Set to 0 to disable validation and always accept the first AI response
+RESPONSE_VALIDATION := 1
+
+CFLAGS := $(CFLAGS) -DVERSION='"$(VERSION)"' -DSHA='"$(SHA)"' \
+	-DLOG_LEVEL=$(LOG_LEVEL) \
+	-DRESPONSE_VALIDATION='$(RESPONSE_VALIDATION)'
+
 BUILD_DIR := build
 
 .PHONY: all
@@ -115,6 +124,10 @@ deep-clean: clean
 .PHONY: start
 start: all
 	./ttyny assets/psyche.json
+
+.PHONY: replay
+replay: all
+	cat ~/.ttyny | ./ttyny assets/psyche.json
 
 .PHONY: start-profile
 start-profile: all

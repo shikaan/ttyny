@@ -2,8 +2,13 @@
 #include "linenoise.h"
 #include "utils.h"
 #include "world/command.h"
+#include <stdio.h>
+#include <stdlib.h>
 
-void completion(const char *buf, linenoiseCompletions *lc) {
+static const char session_filename[] = ".ttyny";
+static char session_path[256] = "";
+
+static void completion(const char *buf, linenoiseCompletions *lc) {
   if (buf[0] == '/') {
     for (size_t i = 0; i < COMMAND_TYPES; i++) {
       if (strncmp(buf, command_names[i]->data, strlen(buf)) == 0) {
@@ -14,7 +19,8 @@ void completion(const char *buf, linenoiseCompletions *lc) {
 }
 
 void cliPromptInit(void) {
-  linenoiseHistorySetMaxLen(15);
+  snprintf(session_path, 256, "%s/%s", getenv("HOME"), session_filename);
+  linenoiseHistorySetMaxLen(256);
   linenoiseSetCompletionCallback(completion);
 }
 
@@ -33,6 +39,7 @@ cli_readline_result_t cliReadline(string_t *input) {
     return CLI_READLINE_RESULT_EMPTY;
 
   linenoiseHistoryAdd(input->data);
+  linenoiseHistorySave(session_path);
 
   return CLI_READLINE_RESULT_OK;
 }
@@ -58,7 +65,7 @@ void cliParseArgs(int argc, char **argv, cli_args_t *args) {
     cliPrintUsageAndExit();
   }
 
-  const char* arg = argv[argc - 1];
+  const char *arg = argv[argc - 1];
 
   if (!strcmp(arg, "-h") || !strcmp(arg, "--help")) {
     cliPrintUsageAndExit();

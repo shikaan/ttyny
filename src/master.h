@@ -10,9 +10,9 @@
 #include <stdio.h>
 #include <string.h>
 
-// Set to 1 to always use the first response from the AI, without validation
-#ifndef DISABLE_PROMPT_VALIDATION
-#define DISABLE_PROMPT_VALIDATION 0
+// Set to 0 to disable validation and always accept the first AI response
+#ifndef RESPONSE_VALIDATION
+#define RESPONSE_VALIDATION 1
 #endif
 
 // This class represent the Game Master. It's the AI recounting the state of

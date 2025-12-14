@@ -3,7 +3,7 @@
 #include "lib/buffers.h"
 
 typedef struct {
-  const char* story_path;
+  const char *story_path;
 } cli_args_t;
 
 typedef enum {
@@ -19,4 +19,4 @@ cli_readline_result_t cliReadline(string_t *);
 void cliPrintError(const char *);
 void cliPrintUsageAndExit(void);
 
-void cliParseArgs(int, char**, cli_args_t*);
+void cliParseArgs(int, char **, cli_args_t *);
