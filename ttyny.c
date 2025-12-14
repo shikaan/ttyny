@@ -232,8 +232,9 @@ int main(int argc, char **argv) {
     case ACTION_TYPE_EXAMINE: {
       bufCat(items, world->location->items);
       bufCat(items, world->inventory);
-      parserExtractTarget(parser, input, world->location->exits, items,
-                          &location, &item);
+      bufCat(locations, world->location->exits);
+      bufPush(locations, world->location);
+      parserExtractTarget(parser, input, locations, items, &location, &item);
 
       if (item) {
         // This is non-functional transition. No need to check result
@@ -251,7 +252,7 @@ int main(int argc, char **argv) {
       }
 
       if (location) {
-        masterDescribeObject(master, &location->object, response);
+        masterDescribeLocation(master, location, response);
         printCallback = uiPrintDescription;
         break;
       }
