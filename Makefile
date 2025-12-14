@@ -129,6 +129,11 @@ start: all
 replay: all
 	cat ~/.ttyny | ./ttyny assets/psyche.json
 
+.PHONY: dump-replay
+dump-replay:
+	cp ~/.ttyny .session
+	cat .session | ./ttyny assets/psyche.json
+
 .PHONY: start-profile
 start-profile: all
 	ASAN_OPTIONS=detect_leaks=1 LSAN_OPTIONS=suppressions=asan.supp \
