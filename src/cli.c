@@ -1,4 +1,5 @@
 #include "cli.h"
+#include "lib/buffers.h"
 #include "linenoise.h"
 #include "utils.h"
 #include "world/command.h"
@@ -6,7 +7,7 @@
 #include <stdlib.h>
 
 static const char session_filename[] = ".ttyny";
-static char session_path[256] = "";
+static char session_path[256] = {};
 
 static void completion(const char *buf, linenoiseCompletions *lc) {
   if (buf[0] == '/') {
@@ -19,7 +20,10 @@ static void completion(const char *buf, linenoiseCompletions *lc) {
 }
 
 void cliPromptInit(void) {
-  snprintf(session_path, 256, "%s/%s", getenv("HOME"), session_filename);
+  char *home = getenv("HOME");
+  if (home) {
+    snprintf(session_path, 256, "%s/%s", getenv("HOME"), session_filename);
+  }
   linenoiseHistorySetMaxLen(256);
   linenoiseSetCompletionCallback(completion);
 }
@@ -39,7 +43,9 @@ cli_readline_result_t cliReadline(string_t *input) {
     return CLI_READLINE_RESULT_EMPTY;
 
   linenoiseHistoryAdd(input->data);
-  linenoiseHistorySave(session_path);
+  if (session_path[0] != 0) {
+    linenoiseHistorySave(session_path);
+  }
 
   return CLI_READLINE_RESULT_OK;
 }
