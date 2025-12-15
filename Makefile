@@ -87,8 +87,8 @@ tests/master.test: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ \
 	-framework MetalKit
 tests/master.test: src/ai.o src/master.o $(LLAMA_STATIC_LIBS)
 
-tests/json.test: src/world/world.o build/yyjson.o
-tests/world.test: src/world/world.o build/yyjson.o
+tests/json.test: src/world/world.o src/log.o build/yyjson.o
+tests/world.test: src/world/world.o src/log.o build/yyjson.o
 
 .PHONY: snap
 snap: tests/master.snap
