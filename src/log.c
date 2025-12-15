@@ -14,7 +14,7 @@ static inline int logLevelToSyslogPriority(log_level_t level) {
     return LOG_DEBUG;
   case LOG_LEVEL_UNKNOWN:
   default:
-    panic("unreacheable");
+    panic("unreachable");
   }
   return -1;
 }
