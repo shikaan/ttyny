@@ -60,9 +60,18 @@ make snap
 # Build a test binary
 make all
 
-# Build with logging (2 = debug, 1 = info, 0 = error)
-make LOG_LEVEL=2 all
-
 # Build production binary
 make BUILD_TYPE=release all
 ```
+
+Launch with debug logging enabled
+```bash
+ttyny -ldebug story.json
+```
+
+You can see the log stream with
+```bash
+make log-stream
+```
+
+or in general using `log`, the Apple unified Logs utility.

@@ -121,10 +121,6 @@ clean:
 deep-clean: clean
 	rm -rf build/*
 
-.PHONY: start
-start: all
-	./ttyny assets/psyche.json
-
 .PHONY: replay
 replay: all
 	cat ~/.ttyny | ./ttyny assets/psyche.json
@@ -133,6 +129,14 @@ replay: all
 dump-replay:
 	cp ~/.ttyny .session
 	cat .session | ./ttyny assets/psyche.json
+
+.PHONY: log-stream
+log-stream:
+	log stream --predicate 'process == "ttyny" && sender == "ttyny"' --info --debug
+
+.PHONY: start
+start: all
+		./ttyny assets/psyche.json
 
 .PHONY: start-profile
 start-profile: all
