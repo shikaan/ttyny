@@ -1,9 +1,11 @@
 #pragma once
 
 #include "lib/buffers.h"
+#include "log.h"
 
 typedef struct {
   const char *story_path;
+  log_level_t log_level;
 } cli_args_t;
 
 typedef enum {

@@ -3,6 +3,7 @@
 #include "src/lib/alloc.h"
 #include "src/lib/buffers.h"
 #include "src/lib/panic.h"
+#include "src/log.h"
 #include "src/master.h"
 #include "src/parser.h"
 #include "src/ui.h"
@@ -77,6 +78,8 @@ int main(int argc, char **argv) {
     cliPrintError(msg);
     cliPrintUsageAndExit();
   }
+
+  logInit(cli_args.log_level);
 
   string_t *input cleanup(strDestroy) = strCreate(512);
   string_t *response cleanup(strDestroy) = strCreate(4096);
