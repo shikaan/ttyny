@@ -81,7 +81,7 @@ void describeEndgame(void) {
   strClear(buffer); // we don't really care about this description though
 
   size_t num_scenarios = arrLen(end_game);
-  info("doing %d measurements across %zu scenarios\n", SAMPLE_SIZE,
+  printf("doing %d measurements across %zu scenarios\n", SAMPLE_SIZE,
        num_scenarios);
 
   for (size_t i = 0; i < SAMPLE_SIZE; i++) {
@@ -95,7 +95,7 @@ void describeEndgame(void) {
     masterDescribeEndGame(master, input, world, state, buffer);
     elapsed = readTimer() - elapsed;
 
-    debug("Attempt #%lu duration: %f\n", i + 1,
+    printf("Attempt #%lu duration: %f\n", i + 1,
           (double)elapsed / (double)MICROSECONDS);
     samples[i] = elapsed;
     printf("RESPONSE (end: %s, input: %s, state: %s)\n > %s\n---\n",

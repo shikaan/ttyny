@@ -3,6 +3,7 @@
 #include "lib/alloc.h"
 #include "lib/buffers.h"
 #include "lib/map.h"
+#include "log.h"
 #include "utils.h"
 #include "world/item.h"
 #include "world/object.h"
@@ -65,34 +66,34 @@ master_t *masterCreate(world_t *world) {
           "need to initialize world first");
   master_t *master = allocate(sizeof(master_t));
   if (!master) {
-    error("cannot allocate master");
+    loge("cannot allocate master");
     return NULL;
   }
 
   ai_result_t result;
   master->ai = aiCreate(&NARRATOR_CONFIG, &result);
   if (result != AI_RESULT_OK) {
-    error("cannot allocate AI for master");
+    loge("cannot allocate AI for master");
     return NULL;
   }
 
   master->prompt = strCreate(4096);
   if (!master->prompt) {
-    error("cannot allocate prompt buffer");
+    loge("cannot allocate prompt buffer");
     masterDestroy(&master);
     return NULL;
   }
 
   master->summary = strCreate(4096);
   if (!master->summary) {
-    error("cannot allocate summary buffer");
+    loge("cannot allocate summary buffer");
     masterDestroy(&master);
     return NULL;
   }
 
   master->descriptions = mapCreate(world->items->len + world->locations->len);
   if (!master->descriptions) {
-    error("cannot allocate summary buffer");
+    loge("cannot allocate summary buffer");
     masterDestroy(&master);
     return NULL;
   }
@@ -121,7 +122,7 @@ static int hasStopWords(string_t *response) {
     for (size_t i = 0; i < STOP_WORDS.len; i++) {
       const char *word = bufAt(&STOP_WORDS, i);
       if (strcasecmp(token, word) == 0) {
-        info("Invalid: Found a STOP WORD %s", word);
+        logi("Invalid: Found a STOP WORD %s", word);
         return 1;
       }
     }
@@ -129,7 +130,7 @@ static int hasStopWords(string_t *response) {
     for (size_t i = 0; i < STOP_WORDS_CASE.len; i++) {
       const char *word = bufAt(&STOP_WORDS_CASE, i);
       if (strcmp(token, word) == 0) {
-        info("Invalid: Found a STOP WORD %s", word);
+        logi("Invalid: Found a STOP WORD %s", word);
         return 1;
       }
     }
@@ -150,7 +151,7 @@ static int hasAllMustHaves(string_t *response, words_t *must_haves) {
     const char *word = bufAt(must_haves, i);
     char *word_position = strcasestr(response->data, word);
     if (!word_position) {
-      info("Invalid: Missing must have %s", word);
+      logi("Invalid: Missing must have %s", word);
       return 0;
     }
 
@@ -170,7 +171,7 @@ int masterIsValidResponse(string_t *response, words_t *must_haves) {
 
 static int generateAndValidate(ai_t *ai, const string_t *prompt,
                                string_t *response, words_t *must_haves) {
-  debug("Prompt:\n%s", prompt->data);
+  logd("Prompt:\n%s", prompt->data);
   int valid = 0;
   ai_result_t result;
 #if RESPONSE_VALIDATION == 0
@@ -190,10 +191,10 @@ static int generateAndValidate(ai_t *ai, const string_t *prompt,
     valid = masterIsValidResponse(response, must_haves);
 
     if (!valid)
-      debug("Rejected:\n%s\n", response->data);
+      logd("Rejected:\n%s\n", response->data);
   }
   if (!valid) {
-    error("Invalid output: giving up.");
+    loge("Invalid output: giving up.");
     return -1;
   }
   return 0;
@@ -204,11 +205,11 @@ void masterDescribeLocation(master_t *self, const location_t *location,
   map_key_t cache_key = makeCacheKey(location->object.name, LOCATION_NAMESPACE);
   char *cached = mapGet(self->descriptions, cache_key);
   if (cached) {
-    debug("returning from cache: %s\n", cache_key);
+    logd("returning from cache: %s\n", cache_key);
     strFmt(description, "%s", cached);
     return;
   }
-  debug("cache miss: %s\n", cache_key);
+  logd("cache miss: %s\n", cache_key);
 
   const config_t *config = self->ai->configuration;
   const string_t *usr_prompt_tpl = config->prompt_templates[PROMPT_TYPE_USR];
@@ -241,19 +242,19 @@ void masterDescribeLocation(master_t *self, const location_t *location,
     char *description_data = strdup(description->data);
     char *description_key = strdup(cache_key);
     (void)mapSet(self->descriptions, description_key, description_data);
-    debug("written cache at: %s\n", cache_key);
+    logd("written cache at: %s\n", cache_key);
   };
 }
 
 void masterReadItem(master_t *self, const item_t *item, string_t *description) {
   const object_t object = item->object;
   map_key_t cache_key = makeCacheKey(object.name, ITEM_NAMESPACE);
-  debug("reading cache key: %s\n", cache_key);
+  logd("reading cache key: %s\n", cache_key);
   const char *state_desc = bufAt(object.descriptions, object.state);
   strFmt(description, "%s", state_desc);
   char *copy = strdup(description->data);
   (void)mapSet(self->descriptions, cache_key, copy);
-  debug("written cache at: %s\n", cache_key);
+  logd("written cache at: %s\n", cache_key);
 }
 
 void masterDescribeObject(master_t *self, const object_t *object,
@@ -262,11 +263,11 @@ void masterDescribeObject(master_t *self, const object_t *object,
 
   char *cached = mapGet(self->descriptions, cache_key);
   if (cached) {
-    debug("returning from cache: %s\n", cache_key);
+    logd("returning from cache: %s\n", cache_key);
     strFmt(description, "%s", cached);
     return;
   }
-  debug("cache miss: %s\n", cache_key);
+  logd("cache miss: %s\n", cache_key);
 
   const config_t *config = self->ai->configuration;
   const string_t *sys_prompt_tpl = config->prompt_templates[PROMPT_TYPE_SYS];
@@ -283,7 +284,7 @@ void masterDescribeObject(master_t *self, const object_t *object,
   if (!generateAndValidate(self->ai, self->prompt, description, NULL)) {
     char *copy = strdup(description->data);
     (void)mapSet(self->descriptions, cache_key, copy);
-    debug("written cache at: %s\n", cache_key);
+    logd("written cache at: %s\n", cache_key);
   }
 }
 

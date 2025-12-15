@@ -1,5 +1,5 @@
 #include "world.h"
-#include "../utils.h"
+#include "../log.h"
 #include "action.h"
 #include "ending.h"
 #include "item.h"
@@ -245,7 +245,7 @@ static void parseRequirementTupleFromJSONVal(yyjson_val *raw,
                                              requirement_tuple_t *tuple) {
   if (!yyjson_is_str(raw)) {
     if (!yyjson_is_null(raw))
-      error("requirement tuple is not valid");
+      loge("requirement tuple is not valid");
     return;
   }
 
@@ -266,7 +266,7 @@ static void parseRequirementTupleFromJSONVal(yyjson_val *raw,
 static requirement_tuples_t *requirementTuplesFromJSONVal(yyjson_val *raw) {
   if (!yyjson_is_arr(raw)) {
     if (!yyjson_is_null(raw))
-      error("requirements is not valid");
+      loge("requirements is not valid");
     return NULL;
   }
 
@@ -275,7 +275,7 @@ static requirement_tuples_t *requirementTuplesFromJSONVal(yyjson_val *raw) {
 
   requirement_tuples_t *tuples = requirementTuplesCreate(requirements_len);
   if (!tuples) {
-    error("cannot allocate tuples");
+    loge("cannot allocate tuples");
     return NULL;
   }
 
@@ -317,13 +317,13 @@ static requirements_t *requirementsFromJSONVal(yyjson_val *raw) {
 
 static ending_t *endingFromJSONVal(yyjson_val *raw) {
   if (!yyjson_is_obj(raw)) {
-    error("ending is not an object");
+    loge("ending is not an object");
     return NULL;
   }
 
   ending_t *ending = allocate(sizeof(ending_t));
   if (!ending) {
-    error("cannot create ending");
+    loge("cannot create ending");
     return NULL;
   }
 
@@ -342,7 +342,7 @@ static ending_t *endingFromJSONVal(yyjson_val *raw) {
 
 static endings_t *endingsFromJSONVal(yyjson_val *raw) {
   if (!yyjson_is_arr(raw)) {
-    error("endings is not an array");
+    loge("endings is not an array");
     return NULL;
   }
 
@@ -353,7 +353,7 @@ static endings_t *endingsFromJSONVal(yyjson_val *raw) {
   bufCreate(endings_t, ending_t, endings, endings_len);
 
   if (!endings) {
-    error("cannot create endings");
+    loge("cannot create endings");
     return NULL;
   }
 
@@ -366,7 +366,7 @@ static endings_t *endingsFromJSONVal(yyjson_val *raw) {
 
 static action_type_t actionFromJSONVal(yyjson_val *val) {
   if (!yyjson_is_str(val)) {
-    error("action is not a string");
+    loge("action is not a string");
     return ACTION_TYPE_UNKNOWN;
   }
 
@@ -391,7 +391,7 @@ static void parseTransitionFromJSONVal(yyjson_val *raw,
                                        transition_t *transition,
                                        action_type_t action) {
   if (!yyjson_is_obj(raw)) {
-    error("transition is not an object");
+    loge("transition is not an object");
     return;
   }
 
@@ -415,7 +415,7 @@ static void parseTransitionFromJSONVal(yyjson_val *raw,
 
 static transitions_t *transitionsFromJSONVal(yyjson_val *raw) {
   if (!yyjson_is_arr(raw)) {
-    error("transitions is not an array");
+    loge("transitions is not an array");
     return NULL;
   }
 
@@ -427,20 +427,20 @@ static transitions_t *transitionsFromJSONVal(yyjson_val *raw) {
   bufCreate(transitions_t, transition_t, transitions, transitions_len * 5);
 
   if (!transitions) {
-    error("cannot allocate transitions");
+    loge("cannot allocate transitions");
     return NULL;
   }
 
   yyjson_arr_foreach(raw, i, transitions_len, val) {
     if (!yyjson_is_obj(val)) {
-      error("transition is not an object");
+      loge("transition is not an object");
       continue;
     }
 
     yyjson_val *actions = yyjson_obj_get(val, "actions");
 
     if (!yyjson_is_arr(actions)) {
-      error("actions is not an array");
+      loge("actions is not an array");
       continue;
     }
 
@@ -460,7 +460,7 @@ static transitions_t *transitionsFromJSONVal(yyjson_val *raw) {
 
 static item_t *itemFromJSONVal(yyjson_val *raw) {
   if (!yyjson_is_obj(raw)) {
-    error("item is not an object");
+    loge("item is not an object");
     return NULL;
   }
 
@@ -499,7 +499,7 @@ static item_t *itemFromJSONVal(yyjson_val *raw) {
 
 static items_t *itemsFromJSONVal(yyjson_val *raw) {
   if (!yyjson_is_arr(raw)) {
-    error("items is not an array");
+    loge("items is not an array");
     return NULL;
   }
 
@@ -508,7 +508,7 @@ static items_t *itemsFromJSONVal(yyjson_val *raw) {
 
   items_t *items = itemsCreate(max);
   if (!items) {
-    error("cannot allocate items");
+    loge("cannot allocate items");
     return NULL;
   }
 
@@ -521,7 +521,7 @@ static items_t *itemsFromJSONVal(yyjson_val *raw) {
 
 static location_t *locationFromJSONVal(yyjson_val *raw, items_t *world_items) {
   if (!yyjson_is_obj(raw)) {
-    error("location is not an object");
+    loge("location is not an object");
     return NULL;
   }
 
@@ -557,14 +557,14 @@ static location_t *locationFromJSONVal(yyjson_val *raw, items_t *world_items) {
 
     yyjson_arr_foreach(items, i, length, raw_item) {
       if (!yyjson_is_str(raw_item)) {
-        error("item name is not a string");
+        loge("item name is not a string");
         continue;
       }
 
       const char *item_name = yyjson_get_str(raw_item);
       int item_idx = itemsFindByName(world_items, item_name);
       if (item_idx < 0) {
-        error("cannot find item: %s", item_name);
+        loge("cannot find item: %s", item_name);
         continue;
       }
 
@@ -581,7 +581,7 @@ static location_t *locationFromJSONVal(yyjson_val *raw, items_t *world_items) {
 static locations_t *locationsFromJSONVal(yyjson_val *raw,
                                          items_t *world_items) {
   if (!yyjson_is_arr(raw)) {
-    error("locations is not an array");
+    loge("locations is not an array");
     return NULL;
   }
 
@@ -590,7 +590,7 @@ static locations_t *locationsFromJSONVal(yyjson_val *raw,
 
   locations_t *locations = locationsCreate(length);
   if (!locations) {
-    error("cannot allocate locations");
+    loge("cannot allocate locations");
     return NULL;
   }
 
@@ -604,7 +604,7 @@ static locations_t *locationsFromJSONVal(yyjson_val *raw,
 static void populateLocationsExits(yyjson_val *raw,
                                    locations_t *world_locations) {
   if (!yyjson_is_arr(raw)) {
-    error("locations is not an array");
+    loge("locations is not an array");
     return;
   }
 
@@ -613,20 +613,20 @@ static void populateLocationsExits(yyjson_val *raw,
 
   yyjson_arr_foreach(raw, i, length, raw_location) {
     if (!yyjson_is_obj(raw_location)) {
-      error("location is not an object");
+      loge("location is not an object");
       continue;
     }
 
     yyjson_val *name = yyjson_obj_get(raw_location, "name");
     const char *location_name = yyjson_get_str(name);
     if (!location_name) {
-      error("location name is not a valid string");
+      loge("location name is not a valid string");
       continue;
     }
 
     int location_idx = locationsFindByName(world_locations, location_name);
     if (location_idx < 0) {
-      error("cannot find referenced location");
+      loge("cannot find referenced location");
       continue;
     }
 
@@ -634,7 +634,7 @@ static void populateLocationsExits(yyjson_val *raw,
 
     yyjson_val *exits = yyjson_obj_get(raw_location, "exits");
     if (!yyjson_is_arr(exits)) {
-      error("locations is not an array");
+      loge("locations is not an array");
       continue;
     }
 
@@ -642,13 +642,13 @@ static void populateLocationsExits(yyjson_val *raw,
     yyjson_val *raw_exit;
     location->exits = locationsCreate(exits_length);
     if (!location->exits) {
-      error("cannot allocate locations");
+      loge("cannot allocate locations");
       continue;
     }
 
     yyjson_arr_foreach(exits, raw_exit_idx, exits_length, raw_exit) {
       if (!yyjson_is_str(raw_exit)) {
-        error("exit name is not a string");
+        loge("exit name is not a string");
         continue;
       }
 
@@ -669,21 +669,21 @@ static void populateLocationsExits(yyjson_val *raw,
 
 static void parseMetaFromJSONVal(yyjson_val *raw, meta_t *meta) {
   if (!yyjson_is_obj(raw)) {
-    error("meta is not an object");
+    loge("meta is not an object");
     return;
   }
 
   yyjson_val *title = yyjson_obj_get(raw, "title");
   const char *title_str = yyjson_get_str(title);
   if (!title_str) {
-    error("title is not a valid string");
+    loge("title is not a valid string");
     return;
   }
 
   yyjson_val *author = yyjson_obj_get(raw, "author");
   const char *author_str = yyjson_get_str(author);
   if (!author_str) {
-    error("author is not a valid string");
+    loge("author is not a valid string");
     return;
   }
 
@@ -701,7 +701,7 @@ static world_t *worldFromJSONDoc(yyjson_doc *doc) {
   yyjson_val *endings = yyjson_obj_get(root, "endings");
   world->endings = endingsFromJSONVal(endings);
   if (!world->endings) {
-    error("cannot parse endings");
+    loge("cannot parse endings");
     worldDestroy(&world);
     return NULL;
   }
@@ -709,7 +709,7 @@ static world_t *worldFromJSONDoc(yyjson_doc *doc) {
   yyjson_val *items = yyjson_obj_get(root, "items");
   world->items = itemsFromJSONVal(items);
   if (!world->items || bufIsEmpty(world->items)) {
-    error("cannot parse items");
+    loge("cannot parse items");
     worldDestroy(&world);
     return NULL;
   }
@@ -717,7 +717,7 @@ static world_t *worldFromJSONDoc(yyjson_doc *doc) {
   yyjson_val *locations = yyjson_obj_get(root, "locations");
   world->locations = locationsFromJSONVal(locations, world->items);
   if (!world->locations || bufIsEmpty(world->locations)) {
-    error("cannot parse locations");
+    loge("cannot parse locations");
     worldDestroy(&world);
     return NULL;
   }
@@ -725,7 +725,7 @@ static world_t *worldFromJSONDoc(yyjson_doc *doc) {
   populateLocationsExits(locations, world->locations);
 
   if (!world->locations || bufIsEmpty(world->locations)) {
-    error("world must have at least one location");
+    loge("world must have at least one location");
     worldDestroy(&world);
     return NULL;
   }

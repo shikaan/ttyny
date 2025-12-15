@@ -57,7 +57,7 @@ ttyny: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
 ttyny: LDFLAGS := $(LDFLAGS) -lpthread -lstdc++ -framework Accelerate \
 	-framework Foundation -framework Metal -framework MetalKit
 ttyny: src/ai.o src/master.o src/parser.o src/world/world.o src/ui.o src/cli.o \
-	src/fmt.o build/linenoise.o build/yyjson.o $(LLAMA_STATIC_LIBS)
+	src/fmt.o src/log.o build/linenoise.o build/yyjson.o $(LLAMA_STATIC_LIBS)
 
 tests/parser.test: CFLAGS := $(CFLAGS) -Ivendor/llama.cpp/include \
 	-Ivendor/llama.cpp/ggml/include

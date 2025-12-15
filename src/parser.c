@@ -1,7 +1,7 @@
 #include "parser.h"
 #include "configs/qwen.h"
 #include "lib/panic.h"
-#include "utils.h"
+#include "log.h"
 #include "world/action.h"
 #include "world/location.h"
 #include <stddef.h>
@@ -121,7 +121,7 @@ void parserGetOperation(parser_t *self, operation_t *operation,
   ai_result_t result = aiSetGrammar(self->ai, &ACTION_GRAMMAR);
   panicif(result != AI_RESULT_OK, "cannot set grammar");
   strClear(self->response);
-  debug("%s", self->prompt->data);
+  logd("%s", self->prompt->data);
   result = aiGenerate(self->ai, self->prompt, self->response);
   panicif(result != AI_RESULT_OK, "cannot generate response");
 
@@ -196,7 +196,7 @@ void parserExtractTarget(parser_t *self, const string_t *input,
   bufEach(locations, i) {
     location_t *location = bufAt(locations, i);
     if (objectNameEq(self->response->data, location->object.name)) {
-      debug("found location: %s", location->object.name);
+      logd("found location: %s", location->object.name);
       *result_item = NULL;
       *result_location = location;
       return;
@@ -206,7 +206,7 @@ void parserExtractTarget(parser_t *self, const string_t *input,
   bufEach(items, i) {
     item_t *item = bufAt(items, i);
     if (objectNameEq(self->response->data, item->object.name)) {
-      debug("found item: %s", item->object.name);
+      logd("found item: %s", item->object.name);
       *result_item = item;
       *result_location = NULL;
       return;

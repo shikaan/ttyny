@@ -1,6 +1,7 @@
 #include "cli.h"
 #include "lib/buffers.h"
 #include "linenoise.h"
+#include "log.h"
 #include "utils.h"
 #include "world/command.h"
 #include <stdio.h>
@@ -66,23 +67,57 @@ void cliPrintUsageAndExit(void) {
   exit(1);
 }
 
+static log_level_t parseLogLevel(const char *arg, int len) {
+  const int diff = (arg[len] == '=') ? len + 1 : len;
+
+  if (!strcmp(arg + diff, "info")) {
+    return LOG_LEVEL_INFO;
+  }
+  if (!strcmp(arg + diff, "debug")) {
+    return LOG_LEVEL_DEBUG;
+  }
+  if (!strcmp(arg + diff, "error")) {
+    return LOG_LEVEL_ERROR;
+  }
+
+  char buffer[256];
+  snprintf(buffer, 256,
+           "unrecognized log level %128s. Expected: debug, info, error.",
+           arg + diff);
+
+  cliPrintError(buffer);
+  cliPrintUsageAndExit();
+  return LOG_LEVEL_UNKNOWN;
+}
+
 void cliParseArgs(int argc, char **argv, cli_args_t *args) {
-  if (argc != 2) {
+  if (argc > 3) {
     cliPrintUsageAndExit();
   }
 
-  const char *arg = argv[argc - 1];
-
-  if (!strcmp(arg, "-h") || !strcmp(arg, "--help")) {
-    cliPrintUsageAndExit();
-  }
-
-  if (!strcmp(arg, "-v") || !strcmp(arg, "--version")) {
-    fprintf(stderr, "%s - %s (%s)\n", NAME_NO_TTY, VERSION, SHA);
-    exit(1);
-  }
-
+  args->log_level = LOG_LEVEL_ERROR;
   args->story_path = argv[argc - 1];
+
+  for (int i = 0; i < argc - 1; i++) {
+    const char *arg = argv[i];
+
+    if (!strcmp(arg, "-h") || !strcmp(arg, "--help")) {
+      cliPrintUsageAndExit();
+    }
+
+    if (!strcmp(arg, "-v") || !strcmp(arg, "--version")) {
+      fprintf(stderr, "%s - %s (%s)\n", NAME_NO_TTY, VERSION, SHA);
+      exit(1);
+    }
+
+    if (!strncmp(arg, "-l", 2)) {
+      args->log_level = parseLogLevel(arg, 2);
+    }
+
+    if (!strncmp(arg, "--log", 5)) {
+      args->log_level = parseLogLevel(arg, 5);
+    }
+  }
 }
 
 void cliPrintError(const char *msg) {

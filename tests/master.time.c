@@ -27,7 +27,7 @@ void describeLocation(void) {
 
   uint64_t samples[SAMPLE_SIZE] = {};
 
-  info("doing %d measurements\n", SAMPLE_SIZE);
+  printf("doing %d measurements\n", SAMPLE_SIZE);
   for (size_t i = 0; i < SAMPLE_SIZE; i++) {
     location_t *room =
         (location_t *)world->locations->data[i % world->locations->len];
@@ -35,20 +35,20 @@ void describeLocation(void) {
     uint64_t elapsed = readTimer();
     masterDescribeLocation(master, room, buffer);
     elapsed = readTimer() - elapsed;
-    debug("Attempt #%lu duration: %f\n", i + 1,
-          (double)elapsed / (double)MICROSECONDS);
+    printf("Attempt #%lu duration: %f\n", i + 1,
+           (double)elapsed / (double)MICROSECONDS);
     samples[i] = elapsed;
     masterForget(master, &room->object, LOCATION_NAMESPACE);
 
     if (((i + 1) % 10) == 0) {
-      info("snapshot at %lu", i + 1);
-      info("  average: %fs", avgllu(i, samples) / (double)MICROSECONDS);
-      info("   median: %fs",
-           (double)percllu(50, i, samples) / (double)MICROSECONDS);
-      info("      p90: %fs",
-           (double)percllu(90, i, samples) / (double)MICROSECONDS);
-      info("      max: %fs",
-           (double)percllu(100, i, samples) / (double)MICROSECONDS);
+      printf("snapshot at %lu", i + 1);
+      printf("  average: %fs", avgllu(i, samples) / (double)MICROSECONDS);
+      printf("   median: %fs",
+             (double)percllu(50, i, samples) / (double)MICROSECONDS);
+      printf("      p90: %fs",
+             (double)percllu(90, i, samples) / (double)MICROSECONDS);
+      printf("      max: %fs",
+             (double)percllu(100, i, samples) / (double)MICROSECONDS);
     }
   }
 
