@@ -23,7 +23,8 @@ static void completion(const char *buf, linenoiseCompletions *lc) {
 void cliPromptInit(void) {
   char *home = getenv("HOME");
   if (home) {
-    snprintf(session_path, 256, "%s/%s", getenv("HOME"), session_filename);
+    snprintf(session_path, sizeof(session_path), "%s/%s", home,
+             session_filename);
   }
   linenoiseHistorySetMaxLen(256);
   linenoiseSetCompletionCallback(completion);
@@ -59,8 +60,9 @@ void cliPrintUsageAndExit(void) {
           "  %s <path-to-story.json>\n"
           "\n"
           "Flags:\n"
-          "  -h, --help      show this help\n"
-          "  -v, --version   show version\n"
+          "  -h, --help         show this help\n"
+          "  -v, --version      show version\n"
+          "  -l, --log=<level>  log level (default: error)\n"
           "\n"
           "For more information https://github.com/shikaan/%s\n",
           NAME_NO_TTY, NAME_NO_TTY, NAME_NO_TTY);
@@ -81,8 +83,8 @@ static log_level_t parseLogLevel(const char *arg, int len) {
   }
 
   char buffer[256];
-  snprintf(buffer, 256,
-           "unrecognized log level %128s. Expected: debug, info, error.",
+  snprintf(buffer, sizeof(buffer),
+           "unrecognized log level '%s'. Expected: debug, info, error.",
            arg + diff);
 
   cliPrintError(buffer);
